@@ -1,0 +1,118 @@
+<style>
+  .dk-list.cards { display:flex; flex-direction:column; gap:1.75rem; }
+  .win { border-radius:12px; overflow:hidden; border:1px solid #d9cfbf; box-shadow:0 10px 30px -12px rgb(74 52 30 / .25);
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; color:#2b2520; font-size:12px; background:#f6f2ea; }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ece5d9; border-bottom:1px solid #ddd3c4; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#cdbfa9; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f6f2ea; border-radius:6px; padding:2px 10px; color:#7b6f62; font-size:10.5px; }
+  .app-top { display:flex; align-items:center; gap:18px; padding:10px 22px; border-bottom:1px solid #e7dfd2; background:#fbf7f0; }
+  .brand { font-weight:700; letter-spacing:-.01em; }
+  .tabs { display:flex; gap:4px; }
+  .tab { padding:4px 10px; border-radius:7px; color:#7b6f62; }
+  .tab.on { background:#efe8dc; color:#2b2520; font-weight:600; }
+  .av { margin-left:auto; display:flex; align-items:center; gap:8px; color:#7b6f62; }
+  .av b { width:24px; height:24px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; }
+  .main { padding:20px 22px 24px; }
+  .g12 { display:grid; grid-template-columns:repeat(12,1fr); gap:12px; }
+  .c { background:#fffdf8; border:1px solid #e7dfd2; border-radius:12px; padding:14px; box-shadow:0 1px 2px rgb(74 52 30 / .05); }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea); }
+  .muted { color:#7b6f62; }
+  h5 { margin:0 0 3px; font-size:18px; letter-spacing:-.01em; }
+  .steps { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+  .step { background:#fffdf8; border:1px solid #e7dfd2; border-radius:10px; padding:11px; }
+  .step.off { opacity:.55; }
+  .num { width:22px; height:22px; border-radius:50%; background:#2f2822; color:#fbf7f0; display:grid; place-items:center; font-weight:700; font-size:11px; margin-bottom:6px; }
+  .off .num { background:#efe8dc; color:#7b6f62; }
+  .btn { display:inline-block; margin-top:8px; padding:5px 11px; border-radius:8px; background:#2f2822; color:#fbf7f0; font-weight:600; font-size:11px; }
+  .btn.ghost { background:transparent; color:#2f2822; border:1px solid #ddd3c4; }
+  .skel { border-radius:10px; background:repeating-linear-gradient(90deg,#f1ebe1 0 12px,#ece5d9 12px 24px); display:grid; place-items:center; color:#7b6f62; }
+  .lbl { font-size:10.5px; color:#7b6f62; margin:9px 0 3px; }
+  .inp { border:1px solid #ddd3c4; border-radius:8px; padding:7px 10px; background:#fff; display:flex; justify-content:space-between; font-variant-numeric:tabular-nums; }
+  .stepper { display:flex; gap:8px; align-items:center; margin-bottom:14px; }
+  .stepper span { display:flex; align-items:center; gap:6px; }
+  .stepper .num { margin:0; }
+  .stepper .line { flex:1; height:2px; background:#e7dfd2; }
+  .cap h3 { margin:.75rem 0 4px; }
+  .cap ul { margin:4px 0 0 1.1rem; padding:0; color:var(--text-secondary); font-size:.85rem; }
+  .option-wrap { cursor:pointer; border:2px solid transparent; border-radius:14px; padding:10px; }
+  .option-wrap.selected { border-color:var(--selected-border); background:var(--selected-bg); }
+</style>
+
+<h2>user ใหม่ login ครั้งแรก จะเจออะไร? (desktop)</h2>
+<p class="subtitle">รอบก่อนเลือก A ไว้บนมือถือ · นี่คือ 3 แบบเดิมในขนาด desktop · คลิกเลือกแล้วบอกใน terminal ว่าอยากแก้ตรงไหน</p>
+
+<div class="dk-list cards">
+
+  <!-- A -->
+  <div class="option-wrap card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev</span></div>
+      <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab on">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+      <div class="main">
+        <div class="g12">
+          <div class="c hero" style="grid-column:span 8">
+            <h5>ยินดีต้อนรับ</h5>
+            <div class="muted">เริ่มใช้ 3 ขั้น แล้วหน้านี้จะสรุปการเงินของคุณให้</div>
+            <div class="steps">
+              <div class="step"><div class="num">1</div><b>วางแผนเงินรายเดือน</b><div class="muted">รายรับ · ออม/ลงทุน · รายจ่าย</div><span class="btn">ไป Planning</span></div>
+              <div class="step"><div class="num">2</div><b>กรอกงบดุลเดือนแรก</b><div class="muted">เงินในบัญชี กองทุน หนี้ ณ วันนี้</div><span class="btn ghost">ไป Balance</span></div>
+              <div class="step off"><div class="num">3</div><b>ปิดเดือน</b><div class="muted">กราฟสรุปจะขึ้นในหน้านี้</div></div>
+            </div>
+          </div>
+          <div class="c" style="grid-column:span 4">
+            <b>หน้านี้จะมีอะไร</b>
+            <ul class="muted" style="margin:8px 0 0 1rem;padding:0;line-height:1.7">
+              <li>Net worth และการเปลี่ยนแปลงรายเดือน</li>
+              <li>แผนรายเดือนจาก Planning</li>
+              <li>สัดส่วนสินทรัพย์ หนี้ต่อสินทรัพย์ เงินสำรอง</li>
+              <li>พอร์ตลงทุนเทียบเป้า (ถ้าใส่ tier)</li>
+            </ul>
+          </div>
+          <div class="skel" style="grid-column:span 6;height:120px">Net worth history</div>
+          <div class="skel" style="grid-column:span 6;height:120px">Asset mix</div>
+        </div>
+      </div>
+    </div>
+    <div class="cap"><h3>A · Checklist บน Overview (แนะนำ · รอบก่อนเลือกแบบนี้)</h3>
+      <ul><li>ใช้หน้าเดิม ไม่มี flow แยก งานน้อยสุด ข้ามขั้นได้ ขั้นที่ทำแล้วติ๊กเอง</li><li>กราฟโชว์เป็นโครงไว้ให้เห็นว่ากรอกแล้วจะได้อะไร</li></ul></div>
+  </div>
+
+  <!-- B -->
+  <div class="option-wrap card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev/setup</span></div>
+      <div class="app-top"><span class="brand">money-plan</span><span class="muted">ตั้งค่าครั้งแรก</span><span class="av">someone@gmail.com <b>S</b></span></div>
+      <div class="main" style="display:grid;place-items:center;padding:28px">
+        <div class="c" style="width:440px">
+          <div class="stepper"><span><span class="num">1</span>รายรับ</span><span class="line"></span><span class="off"><span class="num">2</span>รายจ่าย / ออม</span><span class="line"></span><span class="off"><span class="num">3</span>สินทรัพย์ / หนี้</span></div>
+          <h5>รายรับต่อเดือน</h5>
+          <div class="muted">ใส่ยอดโดยประมาณก็ได้ แก้ทีหลังในหน้า Planning</div>
+          <div class="lbl">เงินเดือน</div><div class="inp"><span>50000</span><span class="muted">50,000.00 THB</span></div>
+          <div class="lbl">รายได้เสริม</div><div class="inp"><span class="muted">0</span><span class="muted">0.00 THB</span></div>
+          <span class="btn ghost">+ เพิ่มรายรับ</span>
+          <div style="display:flex;justify-content:space-between;margin-top:18px"><span class="btn ghost">ข้าม</span><span class="btn">ถัดไป</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="cap"><h3>B · Wizard 3 ขั้น</h3>
+      <ul><li>คนไม่เคยทำงบทำตามง่ายสุด จบแล้วเข้า Overview ที่มีกราฟเลย</li><li>ต้องสร้าง flow ใหม่แยกจากหน้าจริง งานเพิ่มขึ้นมาก</li></ul></div>
+  </div>
+
+  <!-- C -->
+  <div class="option-wrap card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev</span></div>
+      <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab on">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+      <div class="main" style="display:grid;place-items:center;padding:44px">
+        <div class="c" style="width:400px;text-align:center">
+          <h5>ยังไม่มีข้อมูล</h5>
+          <div class="muted">กรอกงบดุลเดือนแรกในหน้า Balance แล้วกราฟจะขึ้นที่นี่</div>
+          <span class="btn">ไปหน้า Balance</span> <span class="btn ghost">วางแผนใน Planning</span>
+        </div>
+      </div>
+    </div>
+    <div class="cap"><h3>C · หน้าว่างธรรมดา</h3>
+      <ul><li>ง่ายที่สุด</li><li>ไม่บอกลำดับ คนใหม่อาจไม่รู้ว่าเริ่มตรงไหน</li></ul></div>
+  </div>
+
+</div>

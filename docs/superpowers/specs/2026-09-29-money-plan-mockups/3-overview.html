@@ -1,0 +1,100 @@
+<style>
+  .win { border-radius:12px; overflow:hidden; border:1px solid #d9cfbf; box-shadow:0 10px 30px -12px rgb(74 52 30 / .25); position:relative;
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; font-size:12px; text-align:left;
+         --ink:#2b2520; --mut:#7b6f62; --b:#e7dfd2; --card:#fffdf8; --top:#fbf7f0; --chip:#efe8dc; background:#f6f2ea; color:var(--ink); }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ece5d9; border-bottom:1px solid #ddd3c4; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#cdbfa9; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f6f2ea; border-radius:6px; padding:2px 10px; color:#7b6f62; font-size:10.5px; }
+  .app-top { display:flex; align-items:center; gap:18px; padding:10px 22px; border-bottom:1px solid var(--b); background:var(--top); }
+  .brand { font-weight:700; }
+  .tabs { display:flex; gap:4px; }
+  .tab { padding:4px 10px; border-radius:7px; color:var(--mut); }
+  .tab.on { background:var(--chip); color:var(--ink); font-weight:600; }
+  .av { margin-left:auto; display:flex; align-items:center; gap:8px; color:var(--mut); }
+  .av b { width:24px; height:24px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; }
+  .main { padding:18px 22px 22px; }
+  .g12 { display:grid; grid-template-columns:repeat(12,1fr); gap:12px; align-items:stretch; margin-bottom:12px; }
+  .c { background:var(--card); border:1px solid var(--b); border-radius:12px; padding:12px 14px; }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea); }
+  .t { font-weight:650; font-size:12.5px; }
+  .d { color:var(--mut); font-size:10.5px; margin-bottom:8px; }
+  .muted { color:var(--mut); }
+  .num { font-variant-numeric:tabular-nums; }
+  .up { color:#2f7d5b; font-weight:600; }
+  .btn { display:inline-block; padding:3px 9px; border-radius:7px; border:1px solid var(--b); font-size:10.5px; font-weight:600; color:var(--ink); background:var(--card); }
+  .seg { display:inline-flex; border:1px solid var(--b); border-radius:8px; overflow:hidden; }
+  .seg span { padding:3px 10px; font-size:10.5px; border-right:1px solid var(--b); } .seg span:last-child { border-right:0; }
+  .seg span.on { background:#2f2822; color:#fbf7f0; font-weight:600; }
+  .meter { height:7px; border-radius:7px; background:var(--chip); overflow:hidden; margin:6px 0 3px; } .meter i { display:block; height:100%; }
+  .lg { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:10.5px; color:var(--mut); }
+  .lg span::before { content:""; display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; background:var(--c); vertical-align:-1px; }
+  .rowb { display:grid; grid-template-columns:100px 1fr 90px; gap:8px; align-items:center; margin:5px 0; font-size:11px; }
+  .bar { height:9px; border-radius:4px; background:var(--chip); position:relative; } .bar i { position:absolute; inset:0 auto 0 0; border-radius:4px; }
+  .bar b { position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--ink); }
+  .sec { display:flex; align-items:baseline; gap:10px; margin:6px 2px 8px; } .sec b { font-size:14px; }
+  .hl { outline:2px solid #c0763a; outline-offset:3px; }
+  .tag { display:inline-block; font-size:10px; font-weight:700; color:#fff; background:#c0763a; border-radius:5px; padding:1px 6px; margin-left:6px; vertical-align:1px; }
+  svg { display:block; width:100%; }
+</style>
+
+<h2>Overview แบบ B · "เงินเดือนไปไหน" เป็น Sankey แบบหน้า Flow</h2>
+<p class="subtitle">ส่วนที่เปลี่ยนมีกรอบส้ม · ที่เหลือเหมือนรอบก่อน · ตัวเลขสมมติ</p>
+
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab on">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+  <div class="main">
+    <div class="g12">
+      <div class="c hero" style="grid-column:span 7">
+        <div class="muted">ความมั่งคั่งสุทธิ · Net worth · ต.ค. 2569</div>
+        <div style="display:flex;align-items:baseline;gap:10px"><span class="num" style="font-size:32px;font-weight:650;letter-spacing:-.02em">1,348,000</span><span class="up">+18,400 (+1.4%) จาก ก.ย.</span></div>
+        <svg viewBox="0 0 300 50" style="margin-top:8px"><polyline fill="none" stroke="#2f2822" stroke-width="2" points="0,40 60,36 120,31 180,26 240,19 300,12"/><polyline fill="rgb(201 165 122 / .18)" stroke="none" points="0,50 0,40 60,36 120,31 180,26 240,19 300,12 300,50"/></svg>
+        <div class="muted">5 เดือนที่ผ่านมา +97,000 · เฉลี่ย +19,400 / เดือน</div>
+      </div>
+      <div style="grid-column:span 5;display:grid;gap:8px">
+        <div class="c"><div style="display:flex;justify-content:space-between"><span class="muted">ออม + ลงทุนต่อเดือน</span><span class="num"><b>18,000</b> <span class="muted">/ 65,000</span></span></div><div class="meter"><i style="width:27.7%;background:#3f7f76"></i></div><div class="muted">27.7% ของรายได้ · จาก Planning (ปัจจุบัน)</div></div>
+        <div class="c"><div style="display:flex;justify-content:space-between"><span class="muted">เงินสำรองฉุกเฉิน</span><span class="num"><b>5.6</b> <span class="muted">/ 6 เดือน</span></span></div><div class="meter"><i style="width:93%;background:#c0763a"></i></div><div class="muted">180,000 จากเป้า 192,000 (6 × รายจ่ายตอนตกงาน)</div></div>
+        <div class="c"><div style="display:flex;justify-content:space-between"><span class="muted">หนี้ต่อสินทรัพย์</span><span class="num"><b>55%</b></span></div><div class="meter"><i style="width:55%;background:#b0496b"></i></div><div class="muted">หนี้ 1,662,000 · ส่วนใหญ่เป็นสินเชื่อคอนโด</div></div>
+      </div>
+    </div>
+
+    <div class="g12">
+      <div class="c hl" style="grid-column:span 12">
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <div><div class="t">เงินเดือนไปไหน <span class="tag">ใหม่</span></div><div class="d">Planning · รายรับ 65,000 / เดือน → รายจ่าย / ออม / ลงทุน → แต่ละหมวด · ชี้ที่เส้นเพื่อดูยอดและรายการย่อย</div></div>
+          <span style="margin-left:auto" class="seg"><span class="on">ปัจจุบัน</span><span>Projection</span><span>ตกงาน</span></span>
+          <span class="btn">แก้ใน Planning →</span>
+        </div>
+        <svg viewBox="0 0 900 300" style="width:100%;font-size:10.5px"><path d="M110,134.7 C220,134.7 220,142.7 330,142.7" fill="none" stroke="#b8a58c" stroke-opacity=".38" stroke-width="175.4"/><path d="M110,245.7 C220,245.7 220,237.7 330,237.7" fill="none" stroke="#b8a58c" stroke-opacity=".38" stroke-width="14.6"/><path d="M340,114.9 C440,114.9 440,93.9 540,93.9" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="119.8"/><path d="M340,186.5 C440,186.5 440,179.5 540,179.5" fill="none" stroke="#5b83b0" stroke-opacity=".38" stroke-width="23.4"/><path d="M340,212.8 C440,212.8 440,219.8 540,219.8" fill="none" stroke="#3f7f76" stroke-opacity=".38" stroke-width="29.2"/><path d="M340,236.2 C440,236.2 440,257.2 540,257.2" fill="none" stroke="#d9cfbf" stroke-opacity=".38" stroke-width="17.5"/><path d="M550,60.3 C635,60.3 635,49.6 720,49.6" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="52.6"/><path d="M550,104.2 C635,104.2 635,102.4 720,102.4" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="35.1"/><path d="M550,129.7 C635,129.7 635,137.0 720,137.0" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="16.1"/><path d="M550,142.2 C635,142.2 635,158.4 720,158.4" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="8.8"/><path d="M550,150.2 C635,150.2 635,175.5 720,175.5" fill="none" stroke="#c9a57a" stroke-opacity=".38" stroke-width="7.3"/><path d="M550,175.2 C635,175.2 635,195.4 720,195.4" fill="none" stroke="#5b83b0" stroke-opacity=".38" stroke-width="14.6"/><path d="M550,186.8 C635,186.8 635,216.1 720,216.1" fill="none" stroke="#5b83b0" stroke-opacity=".38" stroke-width="8.8"/><path d="M550,211.1 C635,211.1 635,235.3 720,235.3" fill="none" stroke="#3f7f76" stroke-opacity=".38" stroke-width="11.7"/><path d="M550,221.3 C635,221.3 635,254.6 720,254.6" fill="none" stroke="#3f7f76" stroke-opacity=".38" stroke-width="8.8"/><path d="M550,230.1 C635,230.1 635,272.3 720,272.3" fill="none" stroke="#3f7f76" stroke-opacity=".38" stroke-width="8.8"/><rect x="100" y="47.0" width="10" height="175.4" rx="2" fill="#b8a58c"/><text x="94" y="138.2" text-anchor="end" fill="#2b2520">เงินเดือน <tspan fill="#7b6f62">60,000</tspan></text><rect x="100" y="238.4" width="10" height="14.6" rx="2" fill="#b8a58c"/><text x="94" y="249.2" text-anchor="end" fill="#2b2520">รายได้เสริม <tspan fill="#7b6f62">5,000</tspan></text><rect x="330" y="55.0" width="10" height="190.0" rx="2" fill="#b8a58c"/><text x="335" y="49.0" text-anchor="middle" fill="#2b2520" font-weight="600">รายรับ 65,000</text><rect x="540" y="34.0" width="10" height="119.8" rx="2" fill="#c9a57a"/><text x="556" y="97.4" fill="#2b2520" paint-order="stroke" stroke="#fffdf8" stroke-width="3" stroke-linejoin="round" font-weight="600">รายจ่าย <tspan fill="#7b6f62">41,000 · 63%</tspan></text><rect x="540" y="167.8" width="10" height="23.4" rx="2" fill="#5b83b0"/><text x="556" y="183.0" fill="#2b2520" paint-order="stroke" stroke="#fffdf8" stroke-width="3" stroke-linejoin="round" font-weight="600">ออม <tspan fill="#7b6f62">8,000 · 12%</tspan></text><rect x="540" y="205.2" width="10" height="29.2" rx="2" fill="#3f7f76"/><text x="556" y="223.3" fill="#2b2520" paint-order="stroke" stroke="#fffdf8" stroke-width="3" stroke-linejoin="round" font-weight="600">ลงทุน <tspan fill="#7b6f62">10,000 · 15%</tspan></text><rect x="540" y="248.5" width="10" height="17.5" rx="2" fill="#d9cfbf"/><text x="556" y="260.7" fill="#2b2520" paint-order="stroke" stroke="#fffdf8" stroke-width="3" stroke-linejoin="round" font-weight="600">ยังไม่จัดสรร <tspan fill="#7b6f62">6,000 · 9%</tspan></text><rect x="720" y="23.3" width="10" height="52.6" rx="2" fill="#c9a57a"/><text x="736" y="53.1" fill="#2b2520" >ที่อยู่อาศัย <tspan fill="#7b6f62">18,000</tspan></text><rect x="720" y="84.9" width="10" height="35.1" rx="2" fill="#c9a57a"/><text x="736" y="105.9" fill="#2b2520" >ค่าใช้จ่ายประจำวัน <tspan fill="#7b6f62">12,000</tspan></text><rect x="720" y="129.0" width="10" height="16.1" rx="2" fill="#c9a57a"/><text x="736" y="140.5" fill="#2b2520" >อื่นๆ <tspan fill="#7b6f62">5,500</tspan></text><rect x="720" y="154.0" width="10" height="8.8" rx="2" fill="#c9a57a"/><text x="736" y="161.9" fill="#2b2520" >ค่าน้ำไฟ / โทรศัพท์ <tspan fill="#7b6f62">3,000</tspan></text><rect x="720" y="171.8" width="10" height="7.3" rx="2" fill="#c9a57a"/><text x="736" y="179.0" fill="#2b2520" >ประกัน <tspan fill="#7b6f62">2,500</tspan></text><rect x="720" y="188.1" width="10" height="14.6" rx="2" fill="#5b83b0"/><text x="736" y="198.9" fill="#2b2520" >เงินสำรองฉุกเฉิน <tspan fill="#7b6f62">5,000</tspan></text><rect x="720" y="211.7" width="10" height="8.8" rx="2" fill="#5b83b0"/><text x="736" y="219.6" fill="#2b2520" >เงินออม <tspan fill="#7b6f62">3,000</tspan></text><rect x="720" y="229.5" width="10" height="11.7" rx="2" fill="#3f7f76"/><text x="736" y="238.8" fill="#2b2520" >PVD <tspan fill="#7b6f62">4,000</tspan></text><rect x="720" y="250.2" width="10" height="8.8" rx="2" fill="#3f7f76"/><text x="736" y="258.1" fill="#2b2520" >RMF <tspan fill="#7b6f62">3,000</tspan></text><rect x="720" y="268.0" width="10" height="8.8" rx="2" fill="#3f7f76"/><text x="736" y="275.8" fill="#2b2520" >กองทุนหุ้น <tspan fill="#7b6f62">3,000</tspan></text></svg>
+
+        <div class="lg"><span style="--c:#c9a57a">รายจ่าย 41,000 · 63%</span><span style="--c:#5b83b0">ออม 8,000 · 12%</span><span style="--c:#3f7f76">ลงทุน 10,000 · 15%</span><span style="--c:#d9cfbf">ยังไม่จัดสรร 6,000 · 9%</span></div>
+      </div>
+    </div>
+
+    <div class="g12">
+      <div class="c" style="grid-column:span 7"><div class="t">สินทรัพย์ vs หนี้ รายเดือน</div><div class="d">ปิดแล้ว 6 เดือน</div>
+        <svg viewBox="0 0 320 90"><g fill="#c9a57a"><rect x="10" y="12" width="18" height="78"/><rect x="62" y="11" width="18" height="79"/><rect x="114" y="10" width="18" height="80"/><rect x="166" y="9" width="18" height="81"/><rect x="218" y="8" width="18" height="82"/><rect x="270" y="6" width="18" height="84"/></g><g fill="#b0496b"><rect x="30" y="44" width="18" height="46"/><rect x="82" y="44" width="18" height="46"/><rect x="134" y="45" width="18" height="45"/><rect x="186" y="45" width="18" height="45"/><rect x="238" y="46" width="18" height="44"/><rect x="290" y="46" width="18" height="44"/></g></svg>
+        <div class="lg"><span style="--c:#c9a57a">สินทรัพย์</span><span style="--c:#b0496b">หนี้</span></div></div>
+      <div class="c" style="grid-column:span 5"><div class="t">เดือนนี้เปลี่ยนเพราะอะไร</div><div class="d">เทียบ ก.ย. · หนี้ลด = บวก</div>
+        <div class="rowb" style="grid-template-columns:100px 1fr 60px"><span>PVD</span><span class="bar"><i style="width:40%;background:#3f7f76"></i></span><span class="num up">+7,200</span></div>
+        <div class="rowb" style="grid-template-columns:100px 1fr 60px"><span>สินเชื่อคอนโด</span><span class="bar"><i style="width:30%;background:#3f7f76"></i></span><span class="num up">+5,400</span></div>
+        <div class="rowb" style="grid-template-columns:100px 1fr 60px"><span>กองทุนหุ้น</span><span class="bar"><i style="width:25%;background:#3f7f76"></i></span><span class="num up">+4,500</span></div>
+        <div class="rowb" style="grid-template-columns:100px 1fr 60px"><span>เงินสด</span><span class="bar"><i style="width:8%;background:#3f7f76"></i></span><span class="num up">+1,300</span></div></div>
+    </div>
+
+    <div class="g12">
+      <div class="c" style="grid-column:span 12"><div class="t">สัดส่วนสินทรัพย์ตามเวลา</div><div class="d">asset mix · กดซ่อนหมวดได้</div>
+        <svg viewBox="0 0 640 90" preserveAspectRatio="none" style="height:90px"><polygon fill="#e3c9a5" points="0,90 0,20 128,19 256,18 384,17 512,16 640,15 640,90"/><polygon fill="#3f7f76" points="0,90 0,56 128,55 256,53 384,52 512,50 640,48 640,90"/><polygon fill="#5b83b0" points="0,90 0,70 128,69 256,68 384,67 512,66 640,65 640,90"/><polygon fill="#c0763a" points="0,90 0,80 128,80 256,79 384,79 512,78 640,78 640,90"/></svg>
+        <div class="lg"><span style="--c:#e3c9a5">อสังหาฯ</span><span style="--c:#3f7f76">PVD + กองทุน</span><span style="--c:#5b83b0">เงินสด / EF</span><span style="--c:#c0763a">ประกัน</span></div></div>
+    </div>
+
+    <div class="sec"><b>พอร์ตลงทุน</b><span class="muted">550,000 · ใส่ tier แล้ว 2 รายการ</span><span class="btn" style="margin-left:auto">แก้เป้า</span></div>
+    <div class="g12">
+      <div class="c" style="grid-column:span 7"><div class="t">เทียบเป้า</div><div class="d">เป้า 10 / 40 / 35 / 15</div>
+        <div class="rowb"><span>Foundation</span><span class="bar"><i style="width:56%;background:#5b83b0"></i><b style="left:10%"></b></span><span class="num">56% · เป้า 10%</span></div>
+        <div class="rowb"><span>Core</span><span class="bar"><i style="width:44%;background:#3f7f76"></i><b style="left:40%"></b></span><span class="num">44% · เป้า 40%</span></div></div>
+      <div class="c" style="grid-column:span 5"><div class="t">ตามประเภท / ประเทศ</div><div class="d">Fund 100% · Thailand 56% · Global 44%</div></div>
+    </div>
+    <div class="c muted" style="text-align:center">Balance sheet (ตารางสินทรัพย์ / หนี้สิน ของเดือนที่ปิดล่าสุด)</div>
+  </div>
+</div>

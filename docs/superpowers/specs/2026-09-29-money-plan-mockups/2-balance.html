@@ -1,0 +1,169 @@
+<style>
+  .dk-list.cards { display:flex; flex-direction:column; gap:1.75rem; }
+  .win { border-radius:12px; overflow:hidden; border:1px solid #d9cfbf; box-shadow:0 10px 30px -12px rgb(74 52 30 / .25); position:relative;
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; color:#2b2520; font-size:12px; background:#f6f2ea; text-align:left; }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ece5d9; border-bottom:1px solid #ddd3c4; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#cdbfa9; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f6f2ea; border-radius:6px; padding:2px 10px; color:#7b6f62; font-size:10.5px; }
+  .app-top { display:flex; align-items:center; gap:18px; padding:10px 22px; border-bottom:1px solid #e7dfd2; background:#fbf7f0; }
+  .brand { font-weight:700; }
+  .tabs { display:flex; gap:4px; }
+  .tab { padding:4px 10px; border-radius:7px; color:#7b6f62; }
+  .tab.on { background:#efe8dc; color:#2b2520; font-weight:600; }
+  .av { margin-left:auto; display:flex; align-items:center; gap:8px; color:#7b6f62; }
+  .av b { width:24px; height:24px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; }
+  .main { padding:18px 22px 22px; }
+  .g12 { display:grid; grid-template-columns:repeat(12,1fr); gap:12px; align-items:start; }
+  .c { background:#fffdf8; border:1px solid #e7dfd2; border-radius:12px; padding:12px 14px; box-shadow:0 1px 2px rgb(74 52 30 / .05); }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea); }
+  .muted { color:#7b6f62; }
+  .num { font-variant-numeric:tabular-nums; }
+  .mh { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; }
+  .mh h5 { margin:0; font-size:22px; letter-spacing:-.01em; display:flex; align-items:center; gap:10px; }
+  .pill { font-size:10px; padding:2px 8px; border-radius:999px; background:#f3e6cf; color:#8a5a1f; font-weight:600; }
+  .draft { display:flex; align-items:center; gap:14px; padding:8px 12px; border-radius:10px; background:#fffdf8; border:1px solid #e7dfd2; margin-bottom:12px; }
+  .prog { flex:1; height:6px; border-radius:6px; background:#efe8dc; overflow:hidden; } .prog i { display:block; height:100%; width:20%; background:#2f2822; }
+  .btn { display:inline-block; padding:5px 11px; border-radius:8px; background:#2f2822; color:#fbf7f0; font-weight:600; font-size:11px; white-space:nowrap; }
+  .btn.ghost { background:transparent; color:#2f2822; border:1px solid #ddd3c4; }
+  .btn.dis { opacity:.45; }
+  .big { font-size:30px; font-weight:650; letter-spacing:-.02em; }
+  .side-h { display:flex; justify-content:space-between; align-items:baseline; margin:4px 2px 7px; }
+  .side-h b { font-size:15px; }
+  .cat { background:#fffdf8; border:1px solid #e7dfd2; border-radius:12px; margin-bottom:8px; overflow:hidden; }
+  .cat-h { display:flex; justify-content:space-between; padding:8px 12px; }
+  .cat-h small { color:#7b6f62; margin-left:6px; }
+  .row { display:grid; grid-template-columns:1fr 150px 22px; gap:10px; align-items:center; padding:6px 12px; border-top:1px solid #f1ebe1; }
+  .inp { border:1px solid #ddd3c4; border-radius:7px; padding:4px 8px; background:#fff; text-align:right; }
+  .inp.l { text-align:left; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; padding:0 12px 10px; }
+  .chip { border:1px dashed #cdbfa9; border-radius:999px; padding:3px 10px; color:#5f5347; }
+  .form { border-top:1px solid #f1ebe1; padding:10px 12px; background:#fbf7f0; display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+  .fl { display:flex; flex-direction:column; gap:3px; font-size:10.5px; color:#7b6f62; }
+  .ck { display:flex; align-items:center; gap:6px; font-weight:600; color:#2b2520; font-size:11.5px; }
+  .ck i { width:13px; height:13px; border-radius:3px; background:#2f2822; display:inline-block; }
+  .seg { display:flex; border:1px solid #ddd3c4; border-radius:8px; overflow:hidden; }
+  .seg span { padding:4px 8px; border-right:1px solid #ddd3c4; font-size:10.5px; } .seg span:last-child { border-right:0; }
+  .seg span.on { background:#2f2822; color:#fbf7f0; font-weight:600; }
+  .tip { font-size:10px; color:#7b6f62; margin-top:2px; }
+  .dim { position:absolute; inset:0; background:rgb(43 37 32 / .38); }
+  .modal { position:absolute; left:50%; top:52%; transform:translate(-50%,-50%); width:440px; background:#fffdf8; border-radius:14px; padding:16px; box-shadow:0 20px 50px -10px rgb(43 37 32 / .45); }
+  .gc-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .gc { border:1px solid #e7dfd2; border-radius:9px; padding:7px 4px; text-align:center; font-size:10.5px; }
+  .gc.on { border-color:#2f2822; background:#f6f2ea; font-weight:600; }
+  .cap h3 { margin:.75rem 0 4px; }
+  .cap ul { margin:4px 0 0 1.1rem; padding:0; color:var(--text-secondary); font-size:.85rem; }
+  .ctx { display:flex; gap:14px; align-items:center; margin-bottom:1.5rem; }
+  .ctx .win { width:420px; flex:none; }
+</style>
+
+<h2>Balance เดือนแรก: จะเพิ่มรายการแบบไหน?</h2>
+
+<div class="ctx">
+  <div class="win">
+    <div class="win-bar"><i></i><i></i><i></i></div>
+    <div class="main" style="display:grid;place-items:center;padding:26px">
+      <div class="c" style="width:320px">
+        <b style="font-size:14px">ยังไม่มีงบดุล</b>
+        <div class="muted" style="margin:4px 0 10px">เลือกเดือนที่จะเริ่ม แล้วกรอกยอด ณ สิ้นเดือนนั้น</div>
+        <div style="display:flex;gap:8px"><span class="inp l" style="flex:1">ตุลาคม 2569 ▾</span><span class="btn">เริ่มกรอกเดือนแรก</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="subtitle" style="margin:0">ก่อนถึงจอด้านล่าง user ใหม่จะเจอการ์ดนี้ในหน้า Balance (ส่วนนี้ไม่ต้องเลือก)<br>ข้างล่างมี 2 แบบว่าหลังเริ่มเดือนแรกแล้วจะเพิ่มรายการยังไง</p>
+</div>
+
+<div class="dk-list cards">
+
+  <!-- A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)" style="padding:10px">
+    <div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev/balance</span></div>
+      <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab">Planning</span><span class="tab on">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+      <div class="main">
+        <div class="mh"><div><div class="muted">Balance Sheet · งบดุลส่วนตัว</div><h5>ตุลาคม 2569 <span class="pill">ร่าง</span></h5></div></div>
+        <div class="draft"><span>กรอกแล้ว <b>1</b> รายการ</span><span class="prog"><i></i></span><span class="btn ghost">ลบร่าง</span><span class="btn">ปิดเดือน</span></div>
+        <div class="g12">
+          <div style="grid-column:span 8">
+            <div class="side-h"><b>สินทรัพย์</b><span class="num">85,000.00</span></div>
+            <div class="cat"><div class="cat-h"><span><b>เงินสด / บัญชีออมทรัพย์</b><small>Cash</small></span><span class="num">85,000.00</span></div>
+              <div class="row"><span>บัญชีออมทรัพย์ SCB</span><span class="inp num">85,000.00</span><span class="muted">✓</span></div>
+              <div class="chips" style="padding-top:8px"><span class="chip">+ เงินสด</span><span class="chip">+ เพิ่มเอง</span></div></div>
+            <div class="cat"><div class="cat-h"><span><b>หุ้น &amp; กองทุนหุ้น</b><small>Equity</small></span><span class="muted">–</span></div>
+              <div class="chips"><span class="chip">+ RMF</span><span class="chip">+ SSF</span><span class="chip">+ ThaiESG</span><span class="chip">+ หุ้นไทย</span><span class="chip">+ หุ้นต่างประเทศ</span><span class="chip">+ เพิ่มเอง</span></div>
+              <div class="form">
+                <label class="fl">ชื่อ<span class="inp l" style="width:150px">RMF</span></label>
+                <label class="fl">ยอด (THB)<span class="inp num" style="width:150px">120000+5000</span><span class="tip">= 125,000.00</span></label>
+                <div class="fl"><span class="ck"><i></i>นับเป็นพอร์ตลงทุน</span>
+                  <span class="seg"><span>Foundation</span><span class="on">Core</span><span>Growth</span><span>High Risk</span></span>
+                  <span class="tip">Core = ลงทุนหลักระยะยาว (ไม่บังคับ)</span></div>
+                <label class="fl">ประเภท<span class="inp l">Fund ▾</span></label>
+                <label class="fl">ประเทศ<span class="inp l">Global ▾</span></label>
+                <span style="margin-left:auto;display:flex;gap:6px"><span class="btn ghost">ยกเลิก</span><span class="btn">เพิ่ม</span></span>
+              </div></div>
+            <div class="cat"><div class="cat-h"><span><b>เงินสำรองฉุกเฉิน</b><small>Emergency Funds</small></span><span class="muted">–</span></div>
+              <div class="chips"><span class="chip">+ บัญชีดอกเบี้ยสูง</span><span class="chip">+ กองทุนตลาดเงิน</span><span class="chip">+ เพิ่มเอง</span></div></div>
+            <div class="cat"><div class="cat-h"><span><b>กองทุนสำรองเลี้ยงชีพ</b><small>PVD</small></span><span class="muted">–</span></div>
+              <div class="chips"><span class="chip">+ PVD</span></div></div>
+            <div class="muted" style="padding:2px 4px 10px">… ประกัน &amp; ประกันสังคม · ตราสารหนี้ · ทองคำ · คริปโต · อสังหาฯ · อื่นๆ</div>
+            <div class="side-h"><b>หนี้สิน</b><span class="num">0.00</span></div>
+            <div class="cat" style="padding-top:10px"><div class="chips"><span class="chip">+ สินเชื่อบ้าน</span><span class="chip">+ สินเชื่อรถ</span><span class="chip">+ บัตรเครดิต</span><span class="chip">+ เพิ่มเอง</span></div></div>
+          </div>
+          <div style="grid-column:span 4;display:flex;flex-direction:column;gap:10px">
+            <div class="c hero"><div class="muted">ความมั่งคั่งสุทธิ · Net worth</div><div class="big num">85,000.00</div><div class="muted">สินทรัพย์ 85,000.00 · หนี้ 0.00</div></div>
+            <div class="c"><div class="muted">พอร์ตลงทุน</div><b class="num" style="font-size:18px">0.00</b><div class="muted">นับเฉพาะรายการที่ติ๊ก "นับเป็นพอร์ตลงทุน"</div></div>
+            <div class="c"><div class="muted">เงินสำรองฉุกเฉิน</div><div class="muted" style="margin-top:4px">ตั้ง scenario "ตกงาน" ใน Planning แล้วจะเห็นเป้า (6 เดือน × รายจ่าย)</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="cap"><h3>A · ทุกหมวดโชว์ + ชิปรายการยอดนิยม (แนะนำ)</h3>
+      <ul><li>เห็นหมวดทั้งหมดตั้งแต่แรก กดชิป → ฟอร์มเปิดในการ์ดหมวดนั้นพร้อมชื่อที่กรอกให้ เหลือใส่ยอด</li>
+      <li>ฟอร์มเพิ่ม "ยอด" เข้าไปเลย (ตอนนี้ต้องเพิ่มชื่อก่อนแล้วค่อยกรอกยอดในแถว)</li>
+      <li>หน้ายาวในเดือนแรก · ตั้งแต่เดือนที่ 2 หมวดที่ว่างจะยุบเหลือบรรทัดเดียว</li></ul></div>
+  </div>
+
+  <!-- B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)" style="padding:10px">
+    <div class="win">
+      <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev/balance</span></div>
+      <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab">Planning</span><span class="tab on">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+      <div class="main" style="min-height:420px">
+        <div class="mh"><div><div class="muted">Balance Sheet · งบดุลส่วนตัว</div><h5>ตุลาคม 2569 <span class="pill">ร่าง</span></h5></div></div>
+        <div class="draft"><span>กรอกแล้ว <b>1</b> รายการ</span><span class="prog"><i></i></span><span class="btn ghost">ลบร่าง</span><span class="btn">ปิดเดือน</span></div>
+        <div class="g12">
+          <div style="grid-column:span 8">
+            <div class="side-h"><b>สินทรัพย์</b><span class="num">85,000.00</span></div>
+            <div class="cat"><div class="cat-h"><span><b>เงินสด / บัญชีออมทรัพย์</b><small>Cash</small></span><span class="num">85,000.00</span></div>
+              <div class="row"><span>บัญชีออมทรัพย์ SCB</span><span class="inp num">85,000.00</span><span class="muted">✓</span></div></div>
+            <div class="side-h" style="margin-top:14px"><b>หนี้สิน</b><span class="num">0.00</span></div>
+            <div class="muted" style="padding:4px 2px 14px">ยังไม่มี</div>
+            <span class="btn">+ เพิ่มรายการ</span>
+          </div>
+          <div style="grid-column:span 4;display:flex;flex-direction:column;gap:10px">
+            <div class="c hero"><div class="muted">ความมั่งคั่งสุทธิ · Net worth</div><div class="big num">85,000.00</div></div>
+            <div class="c"><div class="muted">พอร์ตลงทุน</div><b class="num" style="font-size:18px">0.00</b></div>
+          </div>
+        </div>
+      </div>
+      <div class="dim"></div>
+      <div class="modal">
+        <b style="font-size:14px">เพิ่มรายการ</b>
+        <div class="fl" style="margin-top:10px">หมวด</div>
+        <div class="gc-grid" style="margin-top:4px">
+          <div class="gc">เงินสด</div><div class="gc">สำรองฉุกเฉิน</div><div class="gc">PVD</div><div class="gc">ประกัน</div><div class="gc on">หุ้น/กองทุน</div>
+          <div class="gc">ตราสารหนี้</div><div class="gc">ทองคำ</div><div class="gc">คริปโต</div><div class="gc">อสังหาฯ</div><div class="gc">หนี้สิน</div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px">
+          <label class="fl" style="flex:1">ชื่อ<span class="inp l">RMF</span></label>
+          <label class="fl" style="flex:1">ยอด (THB)<span class="inp num">120000+5000</span><span class="tip">= 125,000.00</span></label>
+        </div>
+        <div class="fl" style="margin-top:8px"><span class="ck"><i></i>นับเป็นพอร์ตลงทุน</span>
+          <span class="seg" style="align-self:flex-start"><span>Foundation</span><span class="on">Core</span><span>Growth</span><span>High Risk</span></span></div>
+        <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:12px"><span class="btn ghost">ยกเลิก</span><span class="btn">เพิ่ม</span></div>
+      </div>
+    </div>
+    <div class="cap"><h3>B · ปุ่มเดียว เลือกหมวดใน dialog</h3>
+      <ul><li>หน้าสั้น โชว์เฉพาะหมวดที่มีของ</li><li>คนใหม่ต้องนึกเองว่ามีอะไรบ้าง ลืม PVD / ประกันสังคมได้ง่าย</li></ul></div>
+  </div>
+
+</div>

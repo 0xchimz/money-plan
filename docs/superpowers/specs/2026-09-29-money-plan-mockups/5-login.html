@@ -1,0 +1,47 @@
+<style>
+  .win { border-radius:12px; overflow:hidden; border:1px solid #d9cfbf; box-shadow:0 10px 30px -12px rgb(74 52 30 / .25); margin-bottom:1.25rem;
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; font-size:12px; text-align:left; background:#f6f2ea; color:#2b2520; }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ece5d9; border-bottom:1px solid #ddd3c4; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#cdbfa9; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f6f2ea; border-radius:6px; padding:2px 10px; color:#7b6f62; font-size:10.5px; }
+  .stage { min-height:340px; display:grid; place-items:center; background:radial-gradient(ellipse at top, #f3e6cf 0%, #f6f2ea 60%); }
+  .card { width:360px; background:#fffdf8; border:1px solid #e7dfd2; border-radius:16px; padding:26px 26px 22px; box-shadow:0 1px 2px rgb(74 52 30 / .05), 0 12px 32px -12px rgb(74 52 30 / .18); text-align:center; }
+  .logo { width:42px; height:42px; border-radius:12px; background:#2f2822; color:#fbf7f0; display:grid; place-items:center; font-weight:700; margin:0 auto 12px; font-size:18px; }
+  h5 { margin:0 0 4px; font-size:19px; letter-spacing:-.01em; }
+  .muted { color:#7b6f62; }
+  .g { display:flex; align-items:center; justify-content:center; gap:10px; margin:18px auto 10px; padding:9px 14px; border:1px solid #dadce0; border-radius:999px; background:#fff; font-weight:600; color:#3c4043; width:250px; }
+  .g svg { width:16px; height:16px; }
+  .err { margin-top:12px; padding:9px 11px; border-radius:10px; background:#fbeaea; color:#8a2c2c; text-align:left; font-size:11px; }
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+</style>
+
+<h2>หน้า login (ใหม่ · แทน Zero Trust)</h2>
+<p class="subtitle">ซ้าย: ยังไม่ได้ login · ขวา: login ด้วยอีเมลที่ไม่อยู่ใน allowlist · เห็นหน้านี้ทุกครั้งที่ session หมด (30 วัน) หรือกดออกจากระบบ</p>
+
+<div class="split">
+  <div class="win">
+    <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev</span></div>
+    <div class="stage">
+      <div class="card">
+        <div class="logo">฿</div>
+        <h5>money-plan</h5>
+        <div class="muted">วางแผนเงินรายเดือน · งบดุลส่วนตัว · สรุปการเงินของคุณ</div>
+        <div class="g"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</div>
+        <div class="muted" style="font-size:10.5px">เฉพาะอีเมลที่ได้รับเชิญ · ข้อมูลของแต่ละคนแยกกัน คนอื่นมองไม่เห็น</div>
+      </div>
+    </div>
+  </div>
+  <div class="win">
+    <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev</span></div>
+    <div class="stage">
+      <div class="card">
+        <div class="logo">฿</div>
+        <h5>money-plan</h5>
+        <div class="muted">วางแผนเงินรายเดือน · งบดุลส่วนตัว · สรุปการเงินของคุณ</div>
+        <div class="g"><svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.5l6.7-6.7C35.6 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.8 6C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.3.8-4.7l-7.8-6C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>เข้าสู่ระบบด้วย Google</div>
+        <div class="err"><b>stranger@gmail.com ยังไม่ได้รับสิทธิ์</b><br>ขอให้ Chin เพิ่มอีเมลนี้ก่อน แล้วลองใหม่อีกครั้ง</div>
+      </div>
+    </div>
+  </div>
+</div>
+<p class="subtitle">หลัง login แล้ว มุมขวาบนของทุกหน้าจะเป็นรูปโปรไฟล์ Google + อีเมล · กดแล้วมี "ออกจากระบบ"</p>

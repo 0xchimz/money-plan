@@ -1,0 +1,102 @@
+<style>
+  .win { border-radius:12px; overflow:hidden; border:1px solid #d9cfbf; box-shadow:0 10px 30px -12px rgb(74 52 30 / .25); position:relative; margin-bottom:1.5rem;
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; font-size:12px; text-align:left;
+         --ink:#2b2520; --mut:#7b6f62; --b:#e7dfd2; --card:#fffdf8; --top:#fbf7f0; --chip:#efe8dc; background:#f6f2ea; color:var(--ink); }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ece5d9; border-bottom:1px solid #ddd3c4; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#cdbfa9; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f6f2ea; border-radius:6px; padding:2px 10px; color:#7b6f62; font-size:10.5px; }
+  .app-top { display:flex; align-items:center; gap:18px; padding:10px 22px; border-bottom:1px solid var(--b); background:var(--top); }
+  .brand { font-weight:700; }
+  .tabs { display:flex; gap:4px; }
+  .tab { padding:4px 10px; border-radius:7px; color:var(--mut); }
+  .tab.on { background:var(--chip); color:var(--ink); font-weight:600; }
+  .av { margin-left:auto; display:flex; align-items:center; gap:8px; color:var(--mut); }
+  .av b { width:24px; height:24px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; }
+  .main { padding:18px 22px 22px; }
+  .g12 { display:grid; grid-template-columns:repeat(12,1fr); gap:12px; align-items:start; margin-bottom:12px; }
+  .c { background:var(--card); border:1px solid var(--b); border-radius:12px; padding:12px 14px; }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea); }
+  .muted { color:var(--mut); }
+  .num { font-variant-numeric:tabular-nums; }
+  .ph { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; }
+  .ph h5 { margin:0; font-size:22px; letter-spacing:-.01em; }
+  .segs { display:inline-flex; background:var(--chip); border-radius:14px; padding:3px; }
+  .segs span { padding:5px 14px; border-radius:11px; color:var(--mut); }
+  .segs span.on { background:var(--card); color:var(--ink); font-weight:600; box-shadow:0 1px 3px rgb(74 52 30 / .12); }
+  .big { font-size:30px; font-weight:650; letter-spacing:-.02em; }
+  .sc { background:var(--card); border:1px solid var(--b); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .sc-h { display:flex; justify-content:space-between; align-items:baseline; padding:10px 12px 6px; }
+  .sc-h b { font-size:13.5px; }
+  .row { display:grid; grid-template-columns:1fr 150px 120px 60px; gap:10px; align-items:center; padding:6px 12px; border-top:1px solid #f1ebe1; }
+  .inp { border:1px solid #ddd3c4; border-radius:7px; padding:4px 8px; background:#fff; }
+  .r { text-align:right; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; padding:4px 12px 11px; }
+  .chip { border:1px dashed #cdbfa9; border-radius:999px; padding:3px 10px; color:#5f5347; }
+  .btn { display:inline-block; padding:5px 11px; border-radius:8px; background:#2f2822; color:#fbf7f0; font-weight:600; font-size:11px; white-space:nowrap; }
+  .btn.ghost { background:transparent; color:#2f2822; border:1px solid #ddd3c4; }
+  .empty { text-align:center; padding:34px 20px; }
+  .empty h6 { margin:0 0 4px; font-size:15px; }
+  .cmp { width:100%; border-collapse:collapse; font-size:11px; } .cmp td, .cmp th { padding:4px 6px; border-top:1px solid #f1ebe1; text-align:right; } .cmp th:first-child, .cmp td:first-child { text-align:left; }
+  .hl { outline:2px solid #c0763a; outline-offset:3px; }
+  .tag { display:inline-block; font-size:10px; font-weight:700; color:#fff; background:#c0763a; border-radius:5px; padding:1px 6px; margin-left:6px; vertical-align:1px; }
+</style>
+
+<h2>Planning ของ user ใหม่</h2>
+<p class="subtitle">หน้าจอ 1: scenario "ปัจจุบัน" ที่ยังว่าง · หน้าจอ 2: scenario "ตกงาน" ที่ยังว่าง · ส่วนที่ต่างจากหน้า Budget ตอนนี้มีกรอบส้ม</p>
+
+<!-- 1: current scenario, just started -->
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev/planning</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab on">Planning</span><span class="tab">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+  <div class="main">
+    <div class="ph"><div><div class="muted">Planning · แผนการเงินรายเดือน</div><h5>แผนการใช้เงินต่อเดือน</h5></div>
+      <span class="segs"><span class="on">ปัจจุบัน</span><span>Projection</span><span>ตกงาน</span></span></div>
+    <div class="c hero" style="margin-bottom:12px;display:grid;grid-template-columns:5fr 7fr;gap:20px">
+      <div><div class="muted">ออมและลงทุนต่อเดือน</div><div class="big num">0.00</div><div class="muted">รายรับ 60,000.00 · ยังไม่ได้ใส่เงินออม/ลงทุน</div></div>
+      <div><b>เงินออมไปที่ไหน</b><div class="muted" style="margin-top:6px">ยังไม่มีรายการออมหรือลงทุนในงบนี้</div></div>
+    </div>
+    <div class="g12">
+      <div style="grid-column:span 8">
+        <div class="sc"><div class="sc-h"><b>รายรับ</b><span class="num">60,000.00</span></div>
+          <div class="row"><span>เงินเดือน</span><span class="inp r num">60000</span><span class="muted">SCB/เงินเดือน</span><span class="muted r">100%</span></div>
+          <div class="chips hl" style="margin:6px 12px 10px;padding:6px 8px;border-radius:10px"><span class="chip">+ รายได้เสริม</span><span class="chip">+ ค่าเช่า</span><span class="chip">+ ดอกเบี้ย / ปันผล</span><span class="chip">+ เพิ่มเอง</span></div></div>
+        <div class="sc"><div class="sc-h"><b>ออม / ลงทุน</b><span class="muted">–</span></div>
+          <div class="chips hl" style="margin:0 12px 10px;padding:6px 8px;border-radius:10px"><span class="chip">+ เงินสำรองฉุกเฉิน</span><span class="chip">+ PVD</span><span class="chip">+ RMF</span><span class="chip">+ ThaiESG</span><span class="chip">+ กองทุนหุ้น</span><span class="chip">+ เพิ่มเอง</span></div></div>
+        <div class="sc"><div class="sc-h"><b>รายจ่าย</b><span class="muted">–</span></div>
+          <div class="chips hl" style="margin:0 12px 10px;padding:6px 8px;border-radius:10px"><span class="chip">+ ค่าเช่า / ผ่อนบ้าน</span><span class="chip">+ อาหาร</span><span class="chip">+ เดินทาง</span><span class="chip">+ ค่าน้ำไฟ / โทรศัพท์</span><span class="chip">+ ประกัน</span><span class="chip">+ ผ่อนของ / บัตรเครดิต</span><span class="chip">+ ช้อปปิ้ง</span><span class="chip">+ ท่องเที่ยว</span><span class="chip">+ เพิ่มเอง</span></div></div>
+      </div>
+      <div style="grid-column:span 4;display:flex;flex-direction:column;gap:10px">
+        <div class="c"><b>รายจ่ายตามหมวด</b><div class="muted" style="margin-top:6px">ยังไม่มีรายจ่าย</div></div>
+        <div class="c"><b>ภาระผ่อนต่อรายได้ · DSR</b><div class="muted" style="margin-top:6px">ขึ้นเมื่อมีรายการผ่อนบ้าน / ผ่อนของ</div></div>
+        <div class="c"><b>เทียบทุกชุดงบ</b><table class="cmp" style="margin-top:6px"><tr><th></th><th>ปัจจุบัน</th><th>Proj.</th><th>ตกงาน</th></tr><tr><td>รายรับ</td><td class="num">60,000</td><td class="muted">–</td><td class="muted">–</td></tr><tr><td>ออม/ลงทุน</td><td class="muted">0</td><td class="muted">–</td><td class="muted">–</td></tr></table></div>
+      </div>
+    </div>
+    <div class="muted">ชิปกดแล้วเปิดฟอร์มในการ์ดนั้น (ชื่อ · ยอด พิมพ์สูตรได้ · หมวด · บัญชี ไม่บังคับ) แบบเดียวกับ Balance</div>
+  </div>
+</div>
+
+<!-- 2: empty job-loss scenario -->
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.chin.workers.dev/planning?s=em</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab on">Planning</span><span class="tab">Balance</span></div><span class="av">someone@gmail.com <b>S</b></span></div>
+  <div class="main">
+    <div class="ph"><div><div class="muted">Planning · แผนการเงินรายเดือน</div><h5>แผนการใช้เงินต่อเดือน</h5></div>
+      <span class="segs"><span>ปัจจุบัน</span><span>Projection</span><span class="on">ตกงาน</span></span></div>
+    <div class="c empty hl">
+      <h6>ถ้าไม่มีรายได้ ต้องจ่ายเดือนละเท่าไหร่? <span class="tag">ใหม่</span></h6>
+      <div class="muted" style="max-width:520px;margin:0 auto 12px">ใช้คำนวณเป้าเงินสำรองฉุกเฉิน (6 เดือน × รายจ่ายชุดนี้) และดูว่าเงินสำรองที่มีอยู่ได้กี่เดือน</div>
+      <span class="btn">คัดลอกรายจ่ายจาก ปัจจุบัน</span> <span class="btn ghost">เริ่มจากว่าง</span>
+      <div class="muted" style="margin-top:10px">คัดลอกเฉพาะรายจ่าย (ไม่เอารายรับ / ออม / ลงทุน) แล้วลบหรือลดรายการที่ไม่จำเป็นตอนตกงาน · รายรับที่ยังได้อยู่ เช่น ค่าเช่า เพิ่มเองได้</div>
+    </div>
+    <div class="c" style="margin-top:12px;display:flex;gap:30px">
+      <div><b>Projection</b> ตอนว่างจะมีปุ่ม <span class="btn ghost" style="padding:2px 8px">คัดลอกทั้งหมดจาก ปัจจุบัน</span></div>
+      <div class="muted">เอาไว้วางแผนอนาคต เช่น หลังขึ้นเงินเดือน แต่งงาน ย้ายบ้าน</div>
+    </div>
+  </div>
+</div>
+
+<h3>ตอนกดคัดลอกใน "ตกงาน" จะเอาอะไรมา?</h3>
+<div class="options">
+  <div class="option" data-choice="expense-only" onclick="toggleSelect(this)"><div class="letter">A</div><div class="content"><h3>เฉพาะรายจ่าย (แนะนำ)</h3><p>ไม่เอารายรับ/ออม/ลงทุน · ตัดรายจ่ายที่ไม่จำเป็นออก · รายรับที่ยังได้ (ค่าเช่า) เพิ่มเอง</p></div></div>
+  <div class="option" data-choice="all" onclick="toggleSelect(this)"><div class="letter">B</div><div class="content"><h3>คัดลอกทั้งหมด</h3><p>เหมือน Projection · user ต้องลบรายรับ/ออม/ลงทุนเอง</p></div></div>
+</div>
