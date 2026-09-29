@@ -203,13 +203,13 @@ export function BalancePage() {
                   const chips = unusedChips(defs.find((d) => d.category === cat)?.chips ?? [], g?.rows.map((r) => r.item) ?? [])
                   return g
                     ? (
-                      <CategoryCard key={cat} group={g} chips={chips} draft={draft} prevMonth={data.prevMonth} target={data.targets[cat] ?? null}
+                      <CategoryCard key={`${month}:${cat}`} group={g} chips={chips} draft={draft} prevMonth={data.prevMonth} target={data.targets[cat] ?? null}
                         onSet={setEntry} onConfirm={confirm}
                         onRemove={(r) => mutate(api.removeEntry(month, r.id), `ซ่อน ${r.item} แล้ว`)}
                         onClassify={(r, c) => mutate(api.classifyItem(month, r.id, c), `จัดกลุ่ม ${r.item} แล้ว`)}
                         onAdd={add} />
                     )
-                    : <EmptyCategory key={cat} side={side} category={cat} chips={chips} expanded={!data.hasClosed} rows={data.rows} onAdd={add} />
+                    : <EmptyCategory key={`${month}:${cat}`} side={side} category={cat} chips={chips} expanded={!data.hasClosed} rows={data.rows} onAdd={add} />
                 })}
                 <AddItem side={side} categories={order} rows={data.rows} onAdd={add} />
               </section>
