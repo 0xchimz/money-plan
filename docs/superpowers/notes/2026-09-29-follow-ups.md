@@ -4,8 +4,8 @@ Built task by task from `docs/superpowers/plans/2026-09-29-money-plan.md`; every
 
 ## Still to do before v1 is live
 
-1. **GitHub** — Chin creates an empty private repo `0xchimz/money-plan`; then push `main` and register the submodule in ChinOS (plan Task 11 Steps 4–5; AGENT.md gets the `apps/money-plan/` line).
-2. **First deploy with Chin** — plan Task 12 / README "First deploy": `wrangler login`, `wrangler d1 create money-plan` (paste the id into `wrangler.jsonc`), `wrangler secret put ALLOWED_EMAILS`, `pnpm run deploy`, Google OAuth Web client (origins: the workers.dev URL + `http://localhost:5173`), put the Client ID in `vars.GOOGLE_CLIENT_ID`, redeploy.
+1. ~~**GitHub**~~ — done 29 Sep: `0xchimz/money-plan` (private), ChinOS submodule + AGENT.md line.
+2. ~~**First deploy**~~ — done 29 Sep: live at https://money-plan.c-soonue.workers.dev (D1 `money-plan` in APAC, Google OAuth client set, ALLOWED_EMAILS secret set, Chin logged in). CI/CD: GitHub Actions deploys on every push to `main` after typecheck/test/build (first CI deploy 09:37 UTC).
 3. **Acceptance walkthrough in the browser** (subagents could only curl the API, so every visual check is here):
    - every page against the mockups (`docs/superpowers/specs/2026-09-29-money-plan-mockups/`), light + dark;
    - login with an allowlisted email; another email gets the red box;
