@@ -5,6 +5,7 @@ import { HttpError, jsonOnly, body, idParam, monthParam } from './http'
 import { getMe } from './users'
 import { addLine, copyScenario, deleteLine, getPlanning, updateLine } from './planning'
 import { addItem, classifyItem, closeMonth, confirmRows, discardDraft, getBalance, removeEntry, restoreEntry, setEntry, setTransfer, startMonth } from './balance'
+import { getOverview, setTierTargets } from './overview'
 
 const app = new Hono<AppEnv>()
 
@@ -98,6 +99,13 @@ app.post('/api/balance/:month/transfers/:bank', async (c) => {
   const { done } = await body<{ done?: unknown }>(c)
   await setTransfer(c.env.DB, c.var.uid, m, c.req.param('bank'), done)
   return c.json(await balanceOf(c, m))
+})
+
+// ---- Overview ----
+app.get('/api/overview', async (c) => c.json(await getOverview(c.env.DB, c.var.uid)))
+app.put('/api/tier-targets', async (c) => {
+  await setTierTargets(c.env.DB, c.var.uid, await body(c))
+  return c.json(await getOverview(c.env.DB, c.var.uid))
 })
 
 export default app
