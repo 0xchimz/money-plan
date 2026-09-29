@@ -1,11 +1,12 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "money-plan",
+  "account_id": "7a8f05a804a0c65ae680b7d0c383f4f9",
   "main": "./worker/index.ts",
   "compatibility_date": "2026-09-01",
   "assets": { "not_found_handling": "single-page-application", "run_worker_first": ["/api/*"] },
   "d1_databases": [
-    { "binding": "DB", "database_name": "money-plan", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+    { "binding": "DB", "database_name": "money-plan", "database_id": "fd69b1b9-5065-4ff8-a748-19b14d26f9d6", "migrations_dir": "migrations" }
   ],
   "vars": { "GOOGLE_CLIENT_ID": "" },
   "observability": { "enabled": true }
