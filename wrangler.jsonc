@@ -8,6 +8,6 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "money-plan", "database_id": "fd69b1b9-5065-4ff8-a748-19b14d26f9d6", "migrations_dir": "migrations" }
   ],
-  "vars": { "GOOGLE_CLIENT_ID": "" },
+  "vars": { "GOOGLE_CLIENT_ID": "977618739528-hphpdg4ml5mu7qd8us0v2q2u2fait205.apps.googleusercontent.com" },
   "observability": { "enabled": true }
 }
