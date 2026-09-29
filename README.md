@@ -62,6 +62,17 @@ pnpm exec wrangler secret put ALLOWED_EMAILS
 
 Removing an email locks that person out on their next request, even with a live session.
 
+## Import from Excel
+
+`scripts/import-nitcha-excel.py` turns Nitcha's personal-finance workbook into SQL (Planning ปัจจุบัน + ตกงาน, every
+balance-sheet month as closed). What it maps and what it refuses to overwrite is in the script's docstring.
+
+```bash
+uv run --no-project --with openpyxl python scripts/import-nitcha-excel.py "<xlsx>" /tmp/import.sql
+pnpm exec wrangler d1 execute money-plan --local --file /tmp/import.sql            # try it first
+pnpm exec wrangler d1 execute money-plan --remote --yes --file /tmp/import.sql
+```
+
 ## How it fits
 
 - `shared/` — pure logic used by both sides (plan totals, EF, transfers, overview aggregation, Sankey, categories). Unit-tested.
