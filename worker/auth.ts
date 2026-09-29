@@ -16,16 +16,32 @@ let remoteKeys: JWTVerifyGetKey | null = null
 const googleKeys = (env: Bindings): JWTVerifyGetKey =>
   env.GOOGLE_JWKS_JSON ? createLocalJWKSet(JSON.parse(env.GOOGLE_JWKS_JSON)) : (remoteKeys ??= createRemoteJWKSet(new URL(GOOGLE_JWKS)))
 
+/** Test-only: createRemoteJWKSet caches its key set (and a fetch-failure cooldown) in the module-level `remoteKeys`
+ *  singleton above; tests that stub `fetch` to exercise the remote-JWKS error path need a fresh instance each time. */
+export const __resetGoogleKeysForTests = () => { remoteKeys = null }
+
 export const allowed = (env: Bindings, email: string) =>
   env.ALLOWED_EMAILS.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase())
 
 /** Check a Google ID token: signature (Google's keys), issuer, audience = our client id, expiry, verified email */
 export async function verifyGoogleToken(env: Bindings, credential: string): Promise<GoogleProfile> {
+  // jose only checks `aud` when `audience` is not undefined — an unset/empty client id must fail closed, not accept any audience
+  if (!env.GOOGLE_CLIENT_ID) throw new HttpError(503, 'ยังไม่ได้ตั้ง GOOGLE_CLIENT_ID')
   let payload: JWTPayload
   try {
-    ({ payload } = await jwtVerify(credential, googleKeys(env), { issuer: ISSUERS, audience: env.GOOGLE_CLIENT_ID }))
+    ({ payload } = await jwtVerify(credential, googleKeys(env), {
+      issuer: ISSUERS,
+      audience: env.GOOGLE_CLIENT_ID,
+      algorithms: ['RS256'],
+    }))
   } catch (e) {
-    if (e instanceof errors.JWKSTimeout || !(e instanceof errors.JOSEError)) throw new HttpError(503, 'ระบบ login ของ Google ไม่ตอบ ลองใหม่อีกครั้ง')
+    // Google's JWKS endpoint unreachable / bad response is our problem, not a bad token: jose surfaces that as
+    // JWKSTimeout, a plain JOSEError (code ERR_JOSE_GENERIC, e.g. non-200 or invalid JSON), or a raw fetch error
+    const jwksUnreachable = e instanceof errors.JWKSTimeout || !(e instanceof errors.JOSEError) || e.code === 'ERR_JOSE_GENERIC'
+    if (jwksUnreachable) {
+      console.error('Google JWKS fetch failed:', e instanceof Error ? e.message : e)
+      throw new HttpError(503, 'ระบบ login ของ Google ไม่ตอบ ลองใหม่อีกครั้ง')
+    }
     throw new HttpError(401, 'token ของ Google ไม่ถูกต้องหรือหมดอายุ')
   }
   const email = typeof payload.email === 'string' ? payload.email.toLowerCase() : ''
@@ -91,11 +107,12 @@ authRoutes.post('/logout', async (c) => {
   return c.json({ ok: true })
 })
 
-const PUBLIC = ['/api/auth/', '/api/health']
+const PUBLIC = ['/api/health', '/api/auth/config', '/api/auth/google', '/api/auth/logout']
 
-/** Every other /api/* route needs a live session whose email is still on the allowlist */
+/** Every other /api/* route needs a live session whose email is still on the allowlist.
+ *  PUBLIC is exact paths, not prefixes: an unknown path under /api/auth/ still needs auth (401, not a 404 leak). */
 export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
-  if (PUBLIC.some((p) => c.req.path.startsWith(p))) return next()
+  if (PUBLIC.includes(c.req.path)) return next()
   const dev = devEmail(c)
   if (dev) {
     const user = await findOrCreateUser(c.env.DB, { email: dev, name: 'Dev', picture: null })

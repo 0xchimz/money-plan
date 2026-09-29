@@ -14,12 +14,12 @@ app.onError((e, c) => {
 app.notFound((c) => c.json({ error: 'ไม่พบ' }, 404))
 
 app.use('/api/*', jsonOnly)
+app.use('/api/*', requireUser)
 app.get('/api/health', (c) => c.json({ ok: true }))
 
 // ---- routes added by later tasks go below this line ----
 
 app.route('/api/auth', authRoutes)
-app.use('/api/*', requireUser)
 app.get('/api/me', async (c) => c.json(await getMe(c.env.DB, c.var.uid)))
 
 export default app

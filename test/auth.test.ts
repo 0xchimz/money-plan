@@ -1,5 +1,6 @@
 import { generateKeyPair } from 'jose'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { __resetGoogleKeysForTests } from '../worker/auth'
 import { allow, call, disallow, googleToken, login, ok, sql, testEnv, uidOf, uniqueEmail } from './helpers'
 
 const count = async (query: string, ...p: unknown[]) => (await sql(query, ...p).first<{ n: number }>())!.n
@@ -70,6 +71,43 @@ describe('Google login', () => {
     expect(await res.json()).toEqual({ error: 'not_allowed', email })
     expect(await count('SELECT COUNT(*) AS n FROM users WHERE email = ?', email)).toBe(0)
   })
+
+  it.each([
+    ['missing', undefined as unknown as string],
+    ['empty', ''],
+  ])('fails closed (503) instead of skipping the audience check when GOOGLE_CLIENT_ID is %s', async (_, GOOGLE_CLIENT_ID) => {
+    const email = uniqueEmail()
+    allow(email)
+    const res = await call('/api/auth/google', { json: { credential: await googleToken(email) }, env: { GOOGLE_CLIENT_ID } })
+    expect(res.status).toBe(503)
+    expect(await count('SELECT COUNT(*) AS n FROM users WHERE email = ?', email)).toBe(0)
+  })
+
+  describe('Google JWKS unreachable (remote key path)', () => {
+    beforeEach(() => __resetGoogleKeysForTests())
+    afterEach(() => {
+      vi.restoreAllMocks()
+      __resetGoogleKeysForTests()
+    })
+
+    it('answers 503, not 401, when fetching the JWKS rejects', async () => {
+      const email = uniqueEmail()
+      allow(email)
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('network down'))
+      const res = await call('/api/auth/google', { json: { credential: await googleToken(email) }, env: { GOOGLE_JWKS_JSON: undefined } })
+      expect(res.status).toBe(503)
+      expect(await count('SELECT COUNT(*) AS n FROM users WHERE email = ?', email)).toBe(0)
+    })
+
+    it('answers 503, not 401, when the JWKS endpoint answers non-200', async () => {
+      const email = uniqueEmail()
+      allow(email)
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('boom', { status: 500 }))
+      const res = await call('/api/auth/google', { json: { credential: await googleToken(email) }, env: { GOOGLE_JWKS_JSON: undefined } })
+      expect(res.status).toBe(503)
+      expect(await count('SELECT COUNT(*) AS n FROM users WHERE email = ?', email)).toBe(0)
+    })
+  })
 })
 
 describe('session', () => {
@@ -109,6 +147,11 @@ describe('session', () => {
     const res = await call('/api/nope', { cookie })
     expect(res.status).toBe(404)
     expect(await res.json()).toEqual({ error: 'ไม่พบ' })
+  })
+
+  it('needs auth (401, not a 404 leak) for an unknown path under /api/auth/', async () => {
+    const res = await call('/api/auth/nope')
+    expect(res.status).toBe(401)
   })
 })
 
