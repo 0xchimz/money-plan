@@ -64,11 +64,14 @@ Removing an email locks that person out on their next request, even with a live 
 
 ## Import from Excel
 
-`scripts/import-nitcha-excel.py` turns Nitcha's personal-finance workbook into SQL (Planning ปัจจุบัน + ตกงาน, every
-balance-sheet month as closed). What it maps and what it refuses to overwrite is in the script's docstring.
+Two one-person importers write SQL; what each maps and what it refuses to overwrite is in its docstring.
+
+- `scripts/import-nitcha-excel.py` — Nitcha's personal-finance workbook (Planning ปัจจุบัน + ตกงาน, every balance-sheet month as closed).
+- `scripts/import-portfolio-db.py` — Chin's `apps/portfolio` database (all three plans, tier targets, every closed balance month).
 
 ```bash
 uv run --no-project --with openpyxl python scripts/import-nitcha-excel.py "<xlsx>" /tmp/import.sql
+uv run --no-project python scripts/import-portfolio-db.py ../portfolio/data/portfolio.db /tmp/import.sql
 pnpm exec wrangler d1 execute money-plan --local --file /tmp/import.sql            # try it first
 pnpm exec wrangler d1 execute money-plan --remote --yes --file /tmp/import.sql
 ```
