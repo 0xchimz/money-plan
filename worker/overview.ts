@@ -1,16 +1,16 @@
-import { buildOverview, type OverviewEntry } from '../shared/overview'
+import { HISTORY, buildOverview, type OverviewEntry } from '../shared/overview'
 import { TIERS, type Overview, type Tier } from '../shared/types'
 import { all, one, stmt, type Db } from './db'
 import { bad } from './http'
 
 export async function getOverview(db: Db, uid: number): Promise<Overview> {
   const [closed, entries, targets, planned, started] = await Promise.all([
-    all<{ month: string }>(db, "SELECT month FROM balance_months WHERE user_id = ? AND status = 'closed'", uid),
+    all<{ month: string }>(db, "SELECT month FROM balance_months WHERE user_id = ? AND status = 'closed' ORDER BY month DESC LIMIT ?", uid, HISTORY),
     all<OverviewEntry>(db, `
       SELECT e.month, i.side, i.category, i.item, i.tier, i.type, i.country, e.thb FROM balance_entries e
       JOIN balance_items i ON i.user_id = e.user_id AND i.id = e.item_id
       JOIN balance_months m ON m.user_id = e.user_id AND m.month = e.month
-      WHERE e.user_id = ? AND m.status = 'closed'`, uid),
+      WHERE e.user_id = ? AND e.month IN (SELECT month FROM balance_months WHERE user_id = ? AND status = 'closed' ORDER BY month DESC LIMIT ?)`, uid, uid, HISTORY),
     all<{ tier: Tier; target: number }>(db, 'SELECT tier, target FROM tier_targets WHERE user_id = ?', uid),
     one<{ n: number }>(db, "SELECT COUNT(*) AS n FROM budget_lines WHERE user_id = ? AND scenario = 'main'", uid),
     one<{ n: number }>(db, 'SELECT COUNT(*) AS n FROM balance_months WHERE user_id = ?', uid),

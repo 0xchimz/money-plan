@@ -18,7 +18,7 @@ export interface OverviewInput {
   checklist: { planning: boolean; balanceStarted: boolean }
 }
 
-const HISTORY = 24
+export const HISTORY = 24
 const sum = (xs: { thb: number }[]) => xs.reduce((s, x) => s + x.thb, 0)
 
 function groups(rows: OverviewEntry[], side: BalanceSide): BalanceGroup[] {
@@ -53,7 +53,15 @@ export function buildOverview(input: OverviewInput): Overview {
     return { checklist, month: null, netWorth: 0, totalAssets: 0, totalLiabilities: 0, prev: null, netHistory: [], balance: { assets: [], liabilities: [] },
       categoryHistory: [], contributions: [], investTotal: 0, tiers: [], investments: [], ef: 0 }
   }
-  const byMonth = new Map(months.map((m) => [m, input.entries.filter((e) => e.month === m)]))
+  // Build byMonth in a single pass over entries, keeping only months in the shown list
+  const monthSet = new Set(months)
+  const byMonth = new Map<string, OverviewEntry[]>()
+  for (const e of input.entries) {
+    if (monthSet.has(e.month)) {
+      if (!byMonth.has(e.month)) byMonth.set(e.month, [])
+      byMonth.get(e.month)!.push(e)
+    }
+  }
   const latest = months[0]
   const rows = byMonth.get(latest)!
   const assets = groups(rows, 'asset')
