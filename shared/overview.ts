@@ -63,21 +63,21 @@ export function buildOverview(input: OverviewInput): Overview {
     }
   }
   const latest = months[0]
-  const rows = byMonth.get(latest)!
+  const rows = byMonth.get(latest) ?? []
   const assets = groups(rows, 'asset')
   const liabilities = groups(rows, 'liability')
   const totalAssets = sum(assets)
   const totalLiabilities = sum(liabilities)
 
   const netHistory = months.map((m) => {
-    const r = byMonth.get(m)!
+    const r = byMonth.get(m) ?? []
     const a = sum(r.filter((x) => x.side === 'asset'))
     const l = sum(r.filter((x) => x.side === 'liability'))
     return { month: m, label: monthLabel(m), assets: a, liabilities: l, net: a - l, live: false }
   })
   const categoryHistory = months.map((m) => {
     const values: Record<string, number> = {}
-    for (const r of byMonth.get(m)!.filter((x) => x.side === 'asset')) values[r.category] = (values[r.category] ?? 0) + r.thb
+    for (const r of (byMonth.get(m) ?? []).filter((x) => x.side === 'asset')) values[r.category] = (values[r.category] ?? 0) + r.thb
     return { month: m, label: monthLabel(m), live: false, values }
   })
   const prevMonth = months[1] ?? null
@@ -102,7 +102,7 @@ export function buildOverview(input: OverviewInput): Overview {
     netHistory,
     balance: { assets, liabilities },
     categoryHistory,
-    contributions: prevMonth ? contributionsOf(rows, byMonth.get(prevMonth)!) : [],
+    contributions: prevMonth ? contributionsOf(rows, byMonth.get(prevMonth) ?? []) : [],
     investTotal,
     tiers,
     investments,

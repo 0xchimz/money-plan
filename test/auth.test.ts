@@ -64,6 +64,14 @@ describe('Google login', () => {
     expect((await call('/api/auth/google', { json: {} })).status).toBe(400)
   })
 
+  it('fails closed (403 not_allowed) instead of 500 when ALLOWED_EMAILS is missing (F4)', async () => {
+    const email = uniqueEmail()
+    const res = await call('/api/auth/google', { json: { credential: await googleToken(email) }, env: { ALLOWED_EMAILS: undefined } })
+    expect(res.status).toBe(403)
+    expect(await res.json()).toEqual({ error: 'not_allowed', email })
+    expect(await count('SELECT COUNT(*) AS n FROM users WHERE email = ?', email)).toBe(0)
+  })
+
   it('refuses emails outside the allowlist without creating a user', async () => {
     const email = uniqueEmail('stranger')
     const res = await call('/api/auth/google', { json: { credential: await googleToken(email) } })

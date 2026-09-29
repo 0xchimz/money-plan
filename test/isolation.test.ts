@@ -89,6 +89,9 @@ describe("user B cannot touch user A's data", () => {
     // B: set tier targets (PUT /api/tier-targets)
     await ok(call('/api/tier-targets', { method: 'PUT', cookie: B.cookie, json: { Foundation: 0.25, Core: 0.25, Growth: 0.25, 'High Risk': 0.25 } }))
 
+    // B: add a balance item so cur isn't empty — F1 rejects closing an empty month
+    await ok(call(`/api/balance/${cur}/items`, { cookie: B.cookie, json: { side: 'asset', category: 'Cash', item: 'B-cash', tier: null, type: null, country: null, thb: 500 } }))
+
     // B: close cur (POST /api/balance/{cur}/close)
     await ok(call(`/api/balance/${cur}/close`, { cookie: B.cookie, json: {} }))
 
@@ -97,6 +100,9 @@ describe("user B cannot touch user A's data", () => {
 
     // A's data is untouched
     expect(await snapshot()).toBe(before)
+
+    // F1: closing B's month must not break B's own overview either
+    expect((await call('/api/overview', { cookie: B.cookie })).status).toBe(200)
 
     // B's planning actually has the lines (to prove the calls did something)
     const bPlanning = await ok<Planning>(call('/api/planning', { cookie: B.cookie }))

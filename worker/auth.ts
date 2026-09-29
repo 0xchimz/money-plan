@@ -21,7 +21,7 @@ const googleKeys = (env: Bindings): JWTVerifyGetKey =>
 export const __resetGoogleKeysForTests = () => { remoteKeys = null }
 
 export const allowed = (env: Bindings, email: string) =>
-  env.ALLOWED_EMAILS.split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase())
+  (env.ALLOWED_EMAILS ?? '').split(',').map((e) => e.trim().toLowerCase()).filter(Boolean).includes(email.toLowerCase())
 
 /** Check a Google ID token: signature (Google's keys), issuer, audience = our client id, expiry, verified email */
 export async function verifyGoogleToken(env: Bindings, credential: string): Promise<GoogleProfile> {

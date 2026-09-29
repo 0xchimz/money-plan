@@ -53,4 +53,26 @@ describe('buildOverview', () => {
     expect(o.balance.assets[0]).toEqual({ category: 'Real Estate', thb: 2_000_000, items: [{ item: 'บ้าน', thb: 2_000_000 }] })
     expect(o.categoryHistory[0].values).toEqual({ Cash: 90000, PVD: 310000, Equity: 100000, 'Emergency Funds': 50000, 'Real Estate': 2_000_000 })
   })
+
+  it('treats a closed month with no entries at all as net zero, without throwing (F1)', () => {
+    // the latest closed month has no entries — a bug here used to throw on `byMonth.get(latest)!`
+    const noLatest = () => buildOverview({ closedMonths: ['2026-08', '2026-09'], entries: [E('2026-08', 'asset', 'Cash', 'SCB', 1000)], targets, checklist })
+    expect(noLatest).not.toThrow()
+    const o1 = noLatest()
+    expect(o1.month).toBe('2026-09')
+    expect(o1.totalAssets).toBe(0)
+    expect(o1.netWorth).toBe(0)
+    expect(o1.prev).toEqual({ month: '2026-08', netWorth: 1000 })
+    expect(o1.netHistory.map((h) => [h.month, h.net])).toEqual([['2026-09', 0], ['2026-08', 1000]])
+
+    // an earlier closed month (not the latest) has no entries
+    const noEarlier = () => buildOverview({ closedMonths: ['2026-08', '2026-09'], entries: [E('2026-09', 'asset', 'Cash', 'SCB', 1000)], targets, checklist })
+    expect(noEarlier).not.toThrow()
+    const o2 = noEarlier()
+    expect(o2.month).toBe('2026-09')
+    expect(o2.totalAssets).toBe(1000)
+    expect(o2.prev).toEqual({ month: '2026-08', netWorth: 0 })
+    expect(o2.netHistory.map((h) => [h.month, h.net])).toEqual([['2026-09', 1000], ['2026-08', 0]])
+    expect(o2.contributions).toEqual([{ label: 'Cash', value: 1000 }])
+  })
 })

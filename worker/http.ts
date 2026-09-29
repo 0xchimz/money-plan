@@ -26,11 +26,14 @@ export const jsonOnly: MiddlewareHandler = async (c, next) => {
 }
 
 export async function body<T = Record<string, unknown>>(c: Context): Promise<T> {
+  let v: unknown
   try {
-    return await c.req.json<T>()
+    v = await c.req.json()
   } catch {
     throw bad('ข้อมูลที่ส่งมาไม่ใช่ JSON ที่ถูกต้อง')
   }
+  // a JSON body of `null`, an array, or any other non-object must not reach the handlers as a truthy value
+  return (v != null && typeof v === 'object' && !Array.isArray(v) ? v : {}) as T
 }
 
 export function monthParam(c: Context): string {

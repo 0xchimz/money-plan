@@ -367,6 +367,7 @@ function DraftBar({ month, total, unconfirmed, transfers, busy, onClose, onDisca
   const done = total - unconfirmed
   const untransferred = transfers ? transfers.total - transfers.done : 0
   const ready = unconfirmed === 0 && untransferred === 0
+  const empty = total === 0
   const pending = [
     unconfirmed && `${unconfirmed} รายการที่ยังใช้ยอดเดือนก่อน`,
     untransferred && `ยังไม่ได้ติ๊กโอนเงิน ${untransferred} บัญชี`,
@@ -385,7 +386,8 @@ function DraftBar({ month, total, unconfirmed, transfers, busy, onClose, onDisca
           <span className="text-xs text-muted-foreground">Enter = บันทึกแล้วไปช่องถัดไป · พิมพ์สูตรได้ เช่น 120000+5000</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" onClick={() => (ready ? onClose() : setAsking(true))} disabled={!!busy}>
+          {empty && <span className="text-xs text-muted-foreground">เพิ่มอย่างน้อย 1 รายการก่อนปิดเดือน</span>}
+          <Button size="sm" onClick={() => (ready ? onClose() : setAsking(true))} disabled={!!busy || empty}>
             <Lock /> ปิดเดือน
           </Button>
           <DropdownMenu>

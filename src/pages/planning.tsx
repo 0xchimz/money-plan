@@ -82,10 +82,12 @@ export function PlanningPage() {
   )
 
   if (sc.id !== 'main' && !sc.lines.length && !blank.includes(sc.id)) {
+    const mainLines = data.scenarios.find((s) => s.id === 'main')?.lines ?? []
+    const canCopy = sc.id === 'em' ? mainLines.some((l) => l.type === 'Expense') : mainLines.length > 0
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <EmptyScenario scenario={sc}
+        <EmptyScenario scenario={sc} canCopy={canCopy}
           onCopy={() => mutate(api.copyScenario(sc.id), sc.id === 'em' ? 'คัดลอกรายจ่ายจาก ปัจจุบัน แล้ว' : 'คัดลอกแผนจาก ปัจจุบัน แล้ว')}
           onBlank={() => setBlank((b) => [...b, sc.id])} />
       </div>
@@ -490,7 +492,7 @@ function AddLineForm({ type, categories, initial, onAdd, onCancel }: {
 }
 
 /** ตกงาน / Projection with no lines yet: start from ปัจจุบัน instead of retyping (mockup 4-planning.html) */
-function EmptyScenario({ scenario, onCopy, onBlank }: { scenario: Scenario; onCopy: () => void; onBlank: () => void }) {
+function EmptyScenario({ scenario, canCopy, onCopy, onBlank }: { scenario: Scenario; canCopy: boolean; onCopy: () => void; onBlank: () => void }) {
   const em = scenario.id === 'em'
   return (
     <Card className="mx-auto w-full max-w-2xl">
@@ -502,10 +504,11 @@ function EmptyScenario({ scenario, onCopy, onBlank }: { scenario: Scenario; onCo
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-3">
         <div className="flex gap-2">
-          <Button onClick={onCopy}><Copy /> {em ? 'คัดลอกรายจ่ายจาก ปัจจุบัน' : 'คัดลอกทั้งหมดจาก ปัจจุบัน'}</Button>
+          <Button onClick={onCopy} disabled={!canCopy}><Copy /> {em ? 'คัดลอกรายจ่ายจาก ปัจจุบัน' : 'คัดลอกทั้งหมดจาก ปัจจุบัน'}</Button>
           <Button variant="outline" onClick={onBlank}>เริ่มจากว่าง</Button>
         </div>
-        {em && <p className="text-center text-xs text-muted-foreground">คัดลอกเฉพาะรายจ่าย แล้วลบหรือลดรายการที่ไม่จำเป็นตอนตกงาน · รายรับที่ยังได้อยู่ เช่น ค่าเช่า เพิ่มเองได้</p>}
+        {!canCopy && <p className="text-center text-xs text-muted-foreground">ชุด ปัจจุบัน ยังไม่มี{em ? 'รายจ่าย' : 'รายการ'}ให้คัดลอก — เพิ่มในชุด ปัจจุบัน ก่อน หรือเริ่มจากว่าง</p>}
+        {em && canCopy && <p className="text-center text-xs text-muted-foreground">คัดลอกเฉพาะรายจ่าย แล้วลบหรือลดรายการที่ไม่จำเป็นตอนตกงาน · รายรับที่ยังได้อยู่ เช่น ค่าเช่า เพิ่มเองได้</p>}
       </CardContent>
     </Card>
   )

@@ -26,6 +26,9 @@ export class ApiError extends Error {
 // App sets this so any 401 (session gone mid-use) sends the user back to the login page
 let onUnauthorized: () => void = () => {}
 export const setUnauthorizedHandler = (fn: () => void) => { onUnauthorized = fn }
+// App sets this so an allowlist removal mid-session (403 not_allowed) sends the user back to the login page too
+let onForbidden: (email: string) => void = () => {}
+export const setForbiddenHandler = (fn: (email: string) => void) => { onForbidden = fn }
 
 async function request<T>(method: string, url: string, body?: unknown): Promise<T> {
   const init: RequestInit = { method, credentials: 'same-origin' }
@@ -39,6 +42,7 @@ async function request<T>(method: string, url: string, body?: unknown): Promise<
   let data: Record<string, unknown> = {}
   try { data = await r.json() } catch { /* not JSON */ }
   if (r.status === 401) onUnauthorized()
+  if (r.status === 403 && data.error === 'not_allowed') onForbidden(String(data.email ?? ''))
   throw new ApiError(r.status, typeof data.error === 'string' ? data.error : `HTTP ${r.status}`, data)
 }
 const get = <T>(url: string) => request<T>('GET', url)

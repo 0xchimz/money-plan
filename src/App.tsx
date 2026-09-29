@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Route, Routes } from 'react-router'
 import { Layout, PageState } from '@/components/layout'
-import { api, ApiError, setUnauthorizedHandler, type Me } from '@/lib/api'
+import { api, ApiError, setForbiddenHandler, setUnauthorizedHandler, type Me } from '@/lib/api'
 import { BalancePage } from '@/pages/balance'
 import { LoginPage } from '@/pages/login'
 import { OverviewPage } from '@/pages/overview'
@@ -15,6 +15,7 @@ export function App() {
 
   useEffect(() => {
     setUnauthorizedHandler(() => setMe('anon'))
+    setForbiddenHandler((email) => { setDenied(email); setMe('anon') })
     api.me().then(setMe, (e: unknown) => {
       if (e instanceof ApiError && e.status === 403) {
         setDenied(String(e.body.email ?? ''))

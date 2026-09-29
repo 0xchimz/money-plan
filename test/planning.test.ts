@@ -41,6 +41,13 @@ describe('planning', () => {
     expect(((await res.json()) as { error: string }).error).toEqual(expect.any(String))
   })
 
+  it('rejects a JSON body of null with a validation 400, not a 500 (F5)', async () => {
+    const { cookie } = await login()
+    const res = await call('/api/planning/main/lines', { cookie, json: null })
+    expect(res.status).toBe(400)
+    expect(((await res.json()) as { error: string }).error).toEqual(expect.any(String))
+  })
+
   it('404s an unknown scenario and an unknown line', async () => {
     const { cookie } = await login()
     expect((await add(cookie, 'other', line())).status).toBe(404)
@@ -63,6 +70,20 @@ describe('planning', () => {
     const { cookie } = await login()
     expect((await call('/api/planning/main/copy', { cookie, json: { from: 'main' } })).status).toBe(400)
     expect((await call('/api/planning/em/copy', { cookie, json: { from: 'proj' } })).status).toBe(400)
+  })
+
+  it('409s copying into em or proj when main has nothing copyable (F6)', async () => {
+    const { cookie } = await login()
+    let res = await call('/api/planning/em/copy', { cookie, json: { from: 'main' } })
+    expect(res.status).toBe(409)
+    expect((await res.json()) as { error: string }).toEqual({ error: 'ชุด ปัจจุบัน ยังไม่มีรายจ่ายให้คัดลอก' })
+    res = await call('/api/planning/proj/copy', { cookie, json: { from: 'main' } })
+    expect(res.status).toBe(409)
+    expect((await res.json()) as { error: string }).toEqual({ error: 'ชุด ปัจจุบัน ยังไม่มีรายการให้คัดลอก' })
+    // main has income/saving but no expense: em (expense-only) still has nothing to copy
+    await add(cookie, 'main', line({ type: 'Income', category: 'Salary', item: 'เงินเดือน', thb: 60000 }))
+    res = await call('/api/planning/em/copy', { cookie, json: { from: 'main' } })
+    expect(res.status).toBe(409)
   })
 
   it('reports the latest Emergency Funds balance, draft included', async () => {

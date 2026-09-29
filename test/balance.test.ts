@@ -145,9 +145,32 @@ describe('balance', () => {
     expect(b.history.map((h) => [h.month, h.net, h.draft])).toEqual([[next, 100, true], [cur, 100, false]])
   })
 
+  it('starts a month carrying 60 active rows in one batch, all unconfirmed with their previous values (F3)', async () => {
+    const { cookie } = await login()
+    await start(cookie, cur)
+    for (let i = 0; i < 60; i++) await addItem(cookie, cur, { category: 'Cash', item: `acc-${i}`, thb: i + 1 })
+    await ok<Balance>(call(`/api/balance/${cur}/close`, { cookie, json: {} }))
+    const next = addMonth(cur, 1)
+    const b = await ok<Balance>(start(cookie, next))
+    expect(b.rows).toHaveLength(60)
+    expect(b.rows.every((r) => r.confirmed === false)).toBe(true)
+    expect(b.rows.every((r) => r.thb === r.prev)).toBe(true) // values are carried over, not reset
+    expect(b.rows.map((r) => r.prev).sort((x, y) => (x ?? 0) - (y ?? 0))).toEqual(Array.from({ length: 60 }, (_, i) => i + 1))
+  })
+
+  it('refuses to close an empty draft, so GET /api/overview never 500s (F1)', async () => {
+    const { cookie } = await login()
+    await start(cookie, cur)
+    const res = await call(`/api/balance/${cur}/close`, { cookie, json: {} })
+    expect(res.status).toBe(409)
+    expect((await res.json()) as { error: string }).toEqual({ error: 'ยังไม่มีรายการในเดือนนี้ เพิ่มอย่างน้อย 1 รายการก่อนปิดเดือน' })
+    expect((await call('/api/overview', { cookie })).status).toBe(200)
+  })
+
   it('discards a draft but never a closed month', async () => {
     const { cookie } = await login()
     await start(cookie, cur)
+    await addItem(cookie, cur, { thb: 100 }) // F1: closing an empty month is now rejected
     await call(`/api/balance/${cur}/close`, { cookie, json: {} })
     await start(cookie, addMonth(cur, 1))
     const b = await ok<Balance>(call(`/api/balance/${addMonth(cur, 1)}`, { method: 'DELETE', cookie, json: {} }))

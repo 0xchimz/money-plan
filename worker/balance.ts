@@ -112,15 +112,17 @@ export async function startMonth(db: Db, uid: number, month: string) {
     const next = addMonth(months[0].month, 1)
     if (month !== next) throw conflict(`เดือนถัดไปที่เริ่มได้คือ ${next}`)
   }
-  const [prev, list] = await Promise.all([months[0] ? monthCells(db, uid, months[0]) : Promise.resolve(new Map<number, Cell>()), items(db, uid)])
+  const prevMonth = months[0]?.month ?? null
   try {
+    // Exactly two statements regardless of sheet size (Workers Free D1: 50 queries/invocation) — the carry-over
+    // (active rows, or inactive rows the previous month still had) is one INSERT ... SELECT, not one row per item.
     await db.batch([
       stmt(db, 'INSERT INTO balance_months (user_id, month, status, updated_at) VALUES (?, ?, ?, ?)', uid, month, 'draft', now()),
-      ...list.filter((i) => i.active || prev.has(i.id)).map((i) => {
-        const c = prev.get(i.id)
-        return stmt(db, 'INSERT INTO balance_entries (user_id, month, item_id, thb, expr, updated_at) VALUES (?, ?, ?, ?, ?, NULL)',
-          uid, month, i.id, c?.thb ?? 0, c?.expr ?? null)
-      }),
+      stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, expr, updated_at)
+        SELECT ?, ?, i.id, COALESCE(p.thb, 0), p.expr, NULL FROM balance_items i
+        LEFT JOIN balance_entries p ON p.user_id = i.user_id AND p.month = ? AND p.item_id = i.id
+        WHERE i.user_id = ? AND (i.active = 1 OR p.item_id IS NOT NULL)`,
+        uid, month, prevMonth, uid),
     ])
   } catch (e) {
     if (isConstraint(e)) throw conflict('เดือนนี้เริ่มไปแล้ว')
@@ -146,7 +148,9 @@ export async function confirmRows(db: Db, uid: number, month: string, ids: unkno
   if (!Array.isArray(ids) || !ids.every((x) => Number.isInteger(x))) throw bad('ids ต้องเป็นรายการตัวเลข')
   const t = now()
   await db.batch([
-    ...ids.map((id) => stmt(db, 'UPDATE balance_entries SET updated_at = ? WHERE user_id = ? AND month = ? AND item_id = ? AND updated_at IS NULL', t, uid, month, id)),
+    // one UPDATE for every id (Workers Free D1: 50 queries/invocation), not one per row
+    stmt(db, `UPDATE balance_entries SET updated_at = ? WHERE user_id = ? AND month = ? AND updated_at IS NULL
+      AND item_id IN (SELECT value FROM json_each(?))`, t, uid, month, JSON.stringify(ids)),
     touch(db, uid, month),
   ])
 }
@@ -211,6 +215,8 @@ export async function restoreEntry(db: Db, uid: number, month: string, id: numbe
 
 export async function closeMonth(db: Db, uid: number, month: string) {
   if ((await requireMonth(db, uid, month)) !== 'draft') throw conflict(`${month} ไม่ได้เป็นร่าง`)
+  const count = await one<{ n: number }>(db, 'SELECT COUNT(*) AS n FROM balance_entries WHERE user_id = ? AND month = ?', uid, month)
+  if (!count?.n) throw conflict('ยังไม่มีรายการในเดือนนี้ เพิ่มอย่างน้อย 1 รายการก่อนปิดเดือน')
   const t = now()
   await db.batch([
     stmt(db, "UPDATE balance_months SET status = 'closed', closed_at = ?, updated_at = ? WHERE user_id = ? AND month = ?", t, t, uid, month),

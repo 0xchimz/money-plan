@@ -85,6 +85,9 @@ export async function copyScenario(db: Db, uid: number, to: string, from: unknow
     throw conflict('ชุดนี้มีรายการแล้ว ลบให้ว่างก่อนถ้าจะคัดลอกใหม่')
   }
   const types = to === 'em' ? "('Expense')" : "('Income', 'Saving', 'Expense')"
+  if (!(await one(db, `SELECT 1 AS ok FROM budget_lines WHERE user_id = ? AND scenario = 'main' AND type IN ${types} LIMIT 1`, uid))) {
+    throw conflict(to === 'em' ? 'ชุด ปัจจุบัน ยังไม่มีรายจ่ายให้คัดลอก' : 'ชุด ปัจจุบัน ยังไม่มีรายการให้คัดลอก')
+  }
   // NOT EXISTS keeps two simultaneous copies from both inserting
   await run(db, `INSERT INTO budget_lines (user_id, scenario, type, category, item, thb, expr, account, sort)
     SELECT user_id, ?, type, category, item, thb, expr, account, sort FROM budget_lines

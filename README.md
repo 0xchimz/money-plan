@@ -30,6 +30,18 @@ pnpm build
 pnpm run deploy  # build → D1 migrations (remote) → wrangler deploy
 ```
 
+### First deploy
+
+```bash
+pnpm exec wrangler login                       # once per machine
+pnpm exec wrangler d1 create money-plan         # paste the returned database_id into wrangler.jsonc
+pnpm exec wrangler secret put ALLOWED_EMAILS    # comma-separated allowlist, before the first deploy
+pnpm run deploy
+```
+
+Then create the Google OAuth Web client: JavaScript origins = the `workers.dev` URL from the deploy output and
+`http://localhost:5173`, no redirect URI needed. Put its Client ID into `wrangler.jsonc` → `vars.GOOGLE_CLIENT_ID`, then redeploy.
+
 ## People
 
 Who may log in is the `ALLOWED_EMAILS` secret (comma-separated, the whole list every time):
