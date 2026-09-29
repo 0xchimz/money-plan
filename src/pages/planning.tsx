@@ -163,7 +163,7 @@ export function PlanningPage() {
       <div className="grid grid-cols-12 items-start gap-6">
         <div className="col-span-8 flex min-w-0 flex-col gap-6">
           {SECTIONS.map((s) => (
-            <SectionCard key={s.type} section={s} lines={sc.lines.filter((l) => l.type === s.type)} income={t.income}
+            <SectionCard key={`${sc.id}:${s.type}`} section={s} lines={sc.lines.filter((l) => l.type === s.type)} income={t.income}
               onPatch={patch} onRemove={remove}
               onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)} />
           ))}
