@@ -72,4 +72,34 @@ describe("user B cannot touch user A's data", () => {
     const b = await uidOf(B.email)
     await expect(sql('INSERT INTO balance_entries (user_id, month, item_id, thb) VALUES (?, ?, ?, 1)', b, cur, itemId).run()).rejects.toThrow(/FOREIGN KEY/i)
   })
+
+  it('keeps A untouched when B writes its own data through every self-scoped endpoint', async () => {
+    const before = await snapshot()
+
+    // B: add expense line to main (POST /api/planning/main/lines)
+    const mainRes = await ok<Planning>(call('/api/planning/main/lines', { cookie: B.cookie, json: { type: 'Expense', category: 'Utilities', item: 'B-electricity', thb: 2000, expr: null, account: 'B-bank' } }))
+    expect(mainRes.scenarios[0].lines.length).toBeGreaterThan(0)
+
+    // B: copy from main to em (POST /api/planning/em/copy)
+    await ok(call('/api/planning/em/copy', { cookie: B.cookie, json: { from: 'main' } }))
+
+    // B: copy from main to proj (POST /api/planning/proj/copy)
+    await ok(call('/api/planning/proj/copy', { cookie: B.cookie, json: { from: 'main' } }))
+
+    // B: set tier targets (PUT /api/tier-targets)
+    await ok(call('/api/tier-targets', { method: 'PUT', cookie: B.cookie, json: { Foundation: 0.25, Core: 0.25, Growth: 0.25, 'High Risk': 0.25 } }))
+
+    // B: close cur (POST /api/balance/{cur}/close)
+    await ok(call(`/api/balance/${cur}/close`, { cookie: B.cookie, json: {} }))
+
+    // B: start next (POST /api/balance/{next}/start)
+    await ok(call(`/api/balance/${next}/start`, { cookie: B.cookie, json: {} }))
+
+    // A's data is untouched
+    expect(await snapshot()).toBe(before)
+
+    // B's planning actually has the lines (to prove the calls did something)
+    const bPlanning = await ok<Planning>(call('/api/planning', { cookie: B.cookie }))
+    expect(bPlanning.scenarios.every((s) => s.lines.length > 0)).toBe(true)
+  })
 })
