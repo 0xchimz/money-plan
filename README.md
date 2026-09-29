@@ -42,6 +42,16 @@ pnpm run deploy
 Then create the Google OAuth Web client: JavaScript origins = the `workers.dev` URL from the deploy output and
 `http://localhost:5173`, no redirect URI needed. Put its Client ID into `wrangler.jsonc` → `vars.GOOGLE_CLIENT_ID`, then redeploy.
 
+Live: https://money-plan.c-soonue.workers.dev
+
+### CI/CD (GitHub Actions, `.github/workflows/ci.yml`)
+
+- Every PR and push: `pnpm typecheck`, `pnpm test`, `pnpm build`.
+- Push to `main`, once those pass: `pnpm run deploy` (migrations included). One deploy at a time.
+- Needs the repo secret `CLOUDFLARE_API_TOKEN`: Cloudflare → My Profile → API Tokens → template "Edit Cloudflare Workers",
+  add permission Account · D1 · Edit, limit it to this account. The account id is in `wrangler.jsonc`.
+- `ALLOWED_EMAILS` stays a Worker secret set with `wrangler secret put`; CI never touches it.
+
 ## People
 
 Who may log in is the `ALLOWED_EMAILS` secret (comma-separated, the whole list every time):
