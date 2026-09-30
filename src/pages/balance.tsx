@@ -884,7 +884,12 @@ function AddItemForm({ side, category: fixed, initialItem = '', rows, onAdd, onC
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
           ยอด ({cur})
           <div className="flex items-center gap-1">
-            <CurrencyToggle value={cur} label="ยอด" onChange={(c) => (c === 'USD' && rate == null ? askRate() : setCur(c))} />
+            <CurrencyToggle value={cur} label="ยอด" onChange={(c) => {
+              if (c === 'USD' && rate == null) return askRate()
+              // a typed amount keeps its value: converted at the month's rate, not reread in the other currency
+              if (amount && rate != null) setAmount({ v: round2(c === 'USD' ? amount.v / rate : amount.v * rate), expr: null })
+              setCur(c)
+            }} />
             <MoneyInput value={amount?.v ?? null} expr={amount?.expr} label={`ยอด (${cur})`} className="w-40 rounded-lg border border-input" onCommit={(v, expr) => setAmount({ v, expr })} />
           </div>
           {cur === 'USD' && amount && rate != null && <span className="tabular">≈ {money(round2(amount.v * rate))} THB</span>}

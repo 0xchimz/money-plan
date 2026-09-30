@@ -3,6 +3,8 @@
 // write reads what it needs first and then applies every statement in one atomic batch.
 // A row can be typed in USD: the entry keeps that amount in `usd` and its THB value in `thb`, always
 // ROUND(usd × the month's usd_thb, 2) computed by SQLite, so changing the month's rate re-prices its USD rows in one UPDATE.
+// Every write that prices a USD row reads the rate inside its own statement (RATE), never a value read earlier in JS:
+// a rate saved a moment before (Enter on the rate, then straight into a row) can't be missed.
 import { addMonth, firstMonthOptions } from '../shared/month'
 import { efStatus, totals } from '../shared/planning'
 import { transfers } from '../shared/transfers'
@@ -45,15 +47,17 @@ function amount(v: unknown): number {
   if (typeof v !== 'number' || !Number.isFinite(v)) throw bad('ยอดต้องเป็นตัวเลข')
   return Math.round(v * 100) / 100
 }
-function rateOf(m: Month): number {
+/** The month's rate as a subquery; binds: user_id, month */
+const RATE = '(SELECT usd_thb FROM balance_months WHERE user_id = ? AND month = ?)'
+function needRate(m: Month) {
   if (m.usd_thb == null) throw conflict(`ใส่เรท USD/THB ของเดือน ${m.month} ก่อน`)
-  return m.usd_thb
 }
-/** An amount typed in THB ({ thb }) or in USD ({ usd }, needs the month's rate); SQL prices it as ROUND(value × rate, 2) */
-function typed(m: Month, p: Record<string, unknown>) {
-  if (p.usd === undefined) return { value: amount(p.thb), rate: 1, usd: null }
+/** An amount typed in THB ({ thb }) or in USD ({ usd }, needs the month's rate): SQL for its THB value with its binds, and the usd column */
+function typed(m: Month, uid: number, p: Record<string, unknown>): { thb: string; binds: unknown[]; usd: number | null } {
+  if (p.usd === undefined) return { thb: '?', binds: [amount(p.thb)], usd: null }
   const usd = amount(p.usd)
-  return { value: usd, rate: rateOf(m), usd }
+  needRate(m)
+  return { thb: `ROUND(? * ${RATE}, 2)`, binds: [usd, uid, m.month], usd }
 }
 
 export async function getBalance(db: Db, uid: number, requested?: string | null): Promise<Balance> {
@@ -133,7 +137,7 @@ export async function startMonth(db: Db, uid: number, month: string) {
     // Exactly two statements regardless of sheet size (Workers Free D1: 50 queries/invocation) — the carry-over
     // (active rows, or inactive rows the previous month still had) is one INSERT ... SELECT, not one row per item.
     await db.batch([
-      stmt(db, 'INSERT INTO balance_months (user_id, month, status, updated_at, usd_thb) VALUES (?, ?, ?, ?, ?)', uid, month, 'draft', now(), months[0]?.usd_thb ?? null),
+      stmt(db, `INSERT INTO balance_months (user_id, month, status, updated_at, usd_thb) VALUES (?, ?, ?, ?, ${RATE})`, uid, month, 'draft', now(), uid, prevMonth),
       stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at)
         SELECT ?, ?, i.id, COALESCE(p.thb, 0), p.usd, p.expr, NULL FROM balance_items i
         LEFT JOIN balance_entries p ON p.user_id = i.user_id AND p.month = ? AND p.item_id = i.id
@@ -148,12 +152,12 @@ export async function startMonth(db: Db, uid: number, month: string) {
 
 /** { thb, expr } makes it a THB row, { usd, expr } a USD row priced at the month's rate */
 export async function setEntry(db: Db, uid: number, month: string, id: number, p: Record<string, unknown>) {
-  const t = typed(await requireMonth(db, uid, month), p)
+  const t = typed(await requireMonth(db, uid, month), uid, p)
   await requireItem(db, uid, id)
   await db.batch([
-    stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) VALUES (?, ?, ?, ROUND(? * ?, 2), ?, ?, ?)
+    stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) VALUES (?, ?, ?, ${t.thb}, ?, ?, ?)
       ON CONFLICT (user_id, month, item_id) DO UPDATE SET thb = excluded.thb, usd = excluded.usd, expr = excluded.expr, updated_at = excluded.updated_at`,
-      uid, month, id, t.value, t.rate, t.usd, text(p.expr), now()),
+      uid, month, id, ...t.binds, t.usd, text(p.expr), now()),
     touch(db, uid, month),
   ])
 }
@@ -165,14 +169,15 @@ export async function setEntry(db: Db, uid: number, month: string, id: number, p
 export async function setCurrency(db: Db, uid: number, month: string, id: number, currency: unknown) {
   const m = await requireMonth(db, uid, month)
   if (currency !== 'THB' && currency !== 'USD') throw bad('สกุลเงินต้องเป็น THB หรือ USD')
-  const rate = currency === 'USD' ? rateOf(m) : null
+  if (currency === 'USD') needRate(m)
   const e = await one<{ usd: number | null }>(db, 'SELECT usd FROM balance_entries WHERE user_id = ? AND month = ? AND item_id = ?', uid, month, id)
   if (!e) throw notFound('ไม่พบรายการนี้')
   if ((e.usd != null) === (currency === 'USD')) return
   const where = 'WHERE user_id = ? AND month = ? AND item_id = ?'
   await db.batch([
-    rate != null
-      ? stmt(db, `UPDATE balance_entries SET usd = ROUND(thb / ?, 6), thb = ROUND(ROUND(thb / ?, 6) * ?, 2), expr = NULL ${where}`, rate, rate, rate, uid, month, id)
+    currency === 'USD'
+      ? stmt(db, `UPDATE balance_entries SET usd = ROUND(thb / ${RATE}, 6), thb = ROUND(ROUND(thb / ${RATE}, 6) * ${RATE}, 2), expr = NULL ${where}`,
+          uid, month, uid, month, uid, month, uid, month, id)
       : stmt(db, `UPDATE balance_entries SET usd = NULL, expr = NULL ${where}`, uid, month, id),
     touch(db, uid, month),
   ])
@@ -211,7 +216,7 @@ export async function addItem(db: Db, uid: number, month: string, p: Record<stri
   const tier = side === 'asset' ? tierOf(p.tier) : null
   const type = tier ? text(p.type) : null
   const country = tier ? text(p.country) : null
-  const t = p.thb === undefined && p.usd === undefined ? null : typed(m, p)
+  const t = p.thb === undefined && p.usd === undefined ? null : typed(m, uid, p)
   // new rows go last in their category (or last overall for a new category)
   const sort = ((await one<{ s: number | null }>(db, 'SELECT MAX(sort) AS s FROM balance_items WHERE user_id = ? AND side = ? AND category = ?', uid, side, category))?.s
     ?? (await one<{ s: number | null }>(db, 'SELECT MAX(sort) AS s FROM balance_items WHERE user_id = ?', uid))?.s ?? 0) + 0.01
@@ -220,9 +225,9 @@ export async function addItem(db: Db, uid: number, month: string, p: Record<stri
     stmt(db, `INSERT INTO balance_items (user_id, side, category, item, tier, type, country, active, sort) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)
       ON CONFLICT (user_id, side, category, item) DO UPDATE SET active = 1`, uid, side, category, name, tier, type, country, sort),
     t != null
-      ? stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) SELECT ?, ?, id, ROUND(? * ?, 2), ?, ?, ? ${pick}
+      ? stmt(db, `INSERT INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) SELECT ?, ?, id, ${t.thb}, ?, ?, ? ${pick}
           ON CONFLICT (user_id, month, item_id) DO UPDATE SET thb = excluded.thb, usd = excluded.usd, expr = excluded.expr, updated_at = excluded.updated_at`,
-          uid, month, t.value, t.rate, t.usd, text(p.expr), now(), uid, side, category, name)
+          uid, month, ...t.binds, t.usd, text(p.expr), now(), uid, side, category, name)
       : stmt(db, `INSERT OR IGNORE INTO balance_entries (user_id, month, item_id, thb, expr, updated_at) SELECT ?, ?, id, 0, NULL, NULL ${pick}`,
           uid, month, uid, side, category, name),
     touch(db, uid, month),
@@ -255,11 +260,11 @@ export async function restoreEntry(db: Db, uid: number, month: string, id: numbe
   const prev = await one<Month>(db, 'SELECT month, status, usd_thb, usd_thb_at FROM balance_months WHERE user_id = ? AND month < ? ORDER BY month DESC LIMIT 1', uid, month)
   const c = prev ? (await monthCells(db, uid, prev)).get(id) : undefined
   const t = c?.usd != null && m.usd_thb != null
-    ? { value: c.usd, rate: m.usd_thb, usd: c.usd, expr: c.expr }
-    : { value: c?.thb ?? 0, rate: 1, usd: null, expr: c?.usd != null ? null : c?.expr ?? null } // a USD formula means nothing in THB
+    ? { thb: `ROUND(? * ${RATE}, 2)`, binds: [c.usd, uid, month], usd: c.usd, expr: c.expr }
+    : { thb: '?', binds: [c?.thb ?? 0], usd: null, expr: c?.usd != null ? null : c?.expr ?? null } // a USD formula means nothing in THB
   await db.batch([
-    stmt(db, 'INSERT OR IGNORE INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) VALUES (?, ?, ?, ROUND(? * ?, 2), ?, ?, NULL)',
-      uid, month, id, t.value, t.rate, t.usd, t.expr),
+    stmt(db, `INSERT OR IGNORE INTO balance_entries (user_id, month, item_id, thb, usd, expr, updated_at) VALUES (?, ?, ?, ${t.thb}, ?, ?, NULL)`,
+      uid, month, id, ...t.binds, t.usd, t.expr),
     stmt(db, 'UPDATE balance_items SET active = 1 WHERE user_id = ? AND id = ?', uid, id),
     touch(db, uid, month),
   ])
