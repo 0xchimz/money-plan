@@ -4,7 +4,8 @@ import type { AppEnv } from './env'
 import { HttpError, jsonOnly, body, idParam, monthParam } from './http'
 import { getMe } from './users'
 import { addLine, copyScenario, deleteLine, getPlanning, updateLine } from './planning'
-import { addItem, classifyItem, closeMonth, confirmRows, discardDraft, getBalance, removeEntry, restoreEntry, setEntry, setTransfer, startMonth } from './balance'
+import { addItem, classifyItem, closeMonth, confirmRows, discardDraft, getBalance, removeEntry, restoreEntry, setCurrency, setEntry, setRate, setTransfer, startMonth } from './balance'
+import { ecbUsdThb } from './fx'
 import { getOverview, setTierTargets } from './overview'
 
 const app = new Hono<AppEnv>()
@@ -64,10 +65,22 @@ app.delete('/api/balance/:month', async (c) => {
 })
 app.put('/api/balance/:month/entries/:id', async (c) => {
   const m = monthParam(c)
-  const { thb, expr } = await body<{ thb?: unknown; expr?: unknown }>(c)
-  await setEntry(c.env.DB, c.var.uid, m, idParam(c), thb, expr)
+  await setEntry(c.env.DB, c.var.uid, m, idParam(c), await body(c))
   return c.json(await balanceOf(c, m))
 })
+app.post('/api/balance/:month/entries/:id/currency', async (c) => {
+  const m = monthParam(c)
+  const { currency } = await body<{ currency?: unknown }>(c)
+  await setCurrency(c.env.DB, c.var.uid, m, idParam(c), currency)
+  return c.json(await balanceOf(c, m))
+})
+app.put('/api/balance/:month/fx', async (c) => {
+  const m = monthParam(c)
+  const { usdThb } = await body<{ usdThb?: unknown }>(c)
+  await setRate(c.env.DB, c.var.uid, m, usdThb)
+  return c.json(await balanceOf(c, m))
+})
+app.get('/api/balance/:month/fx/ecb', async (c) => c.json(await ecbUsdThb(monthParam(c))))
 app.delete('/api/balance/:month/entries/:id', async (c) => {
   const m = monthParam(c)
   await removeEntry(c.env.DB, c.var.uid, m, idParam(c))

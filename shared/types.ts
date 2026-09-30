@@ -32,6 +32,7 @@ export interface Planning {
 // ---- Balance (month-end balance sheet) ----
 export type BalanceSide = 'asset' | 'liability'
 export type MonthStatus = 'draft' | 'closed'
+export type Currency = 'THB' | 'USD'
 export interface BalanceRow {
   id: number
   side: BalanceSide
@@ -40,10 +41,12 @@ export interface BalanceRow {
   tier: Tier | null
   type: string | null
   country: string | null
-  thb: number
-  expr: string | null
+  thb: number                                                // THB value; for a USD row = usd × the month's rate
+  usd: number | null                                         // amount typed in USD; null = a THB row
+  expr: string | null                                        // what was typed, in the row's currency
   confirmed: boolean
   prev: number | null
+  prevUsd: number | null                                     // last month's USD amount when that row was in USD
 }
 export interface BalanceTransfers {
   banks: { bank: string; thb: number; doneAt: string | null; subs: { sub: string | null; thb: number; items: string[]; notes: string[] }[] }[]
@@ -57,6 +60,7 @@ export interface Balance {
   month: string | null
   status: MonthStatus | null
   prevMonth: string | null
+  fx: { usdThb: number | null; confirmed: boolean; prev: number | null }  // THB per 1 USD this month; confirmed = typed or checked this month
   rows: BalanceRow[]
   hidden: { id: number; side: BalanceSide; category: string; item: string; prev: number | null }[]
   history: { month: string; assets: number; liabilities: number; net: number; draft: boolean }[]  // newest first
@@ -72,9 +76,13 @@ export interface NewBalanceItem {
   type: string | null
   country: string | null
   thb?: number
+  usd?: number                                               // instead of thb: a USD row (the month needs a rate)
   expr?: string | null
 }
 export type Classification = Pick<NewBalanceItem, 'tier' | 'type' | 'country'>
+
+/** Reference rate offered next to the month's own rate (ECB via frankfurter.dev) */
+export interface FxQuote { rate: number; date: string; source: 'ECB' }
 
 // ---- Overview (closed months only) ----
 export interface BalanceGroup { category: string; thb: number; items: { item: string; thb: number }[] }

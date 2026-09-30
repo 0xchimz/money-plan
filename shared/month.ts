@@ -18,3 +18,12 @@ export function monthLabel(ym: string) {
   const [y, m] = ym.split('-').map(Number)
   return `${TH_MON[m - 1]} '${String(y).slice(2)}`
 }
+
+/** 2026-09 → 2026-09-30 */
+export function lastDay(ym: string) {
+  const [y, m] = ym.split('-').map(Number)
+  return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10)
+}
+
+/** Today's date in Thailand, YYYY-MM-DD */
+export const bangkokDate = (at = new Date()) => new Date(at.getTime() + 7 * 3_600_000).toISOString().slice(0, 10)
