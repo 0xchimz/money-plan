@@ -1,5 +1,5 @@
-/** Arithmetic typed into a money field, like an Excel cell: 251550.08+54791.65, 4956*2, (59.34*55). No eval. */
-export function evaluate(input: string): number | null {
+/** Arithmetic typed into a money field, like an Excel cell: 251550.08+54791.65, 4956*2, (59.34*55). No eval. Rounded to `digits` decimals. */
+export function evaluate(input: string, digits = 2): number | null {
   const src = input.replace(/[,\s฿]/g, '')
   if (!src) return null
   let i = 0
@@ -30,7 +30,7 @@ export function evaluate(input: string): number | null {
   }
   try {
     const v = sum()
-    return i === src.length && Number.isFinite(v) ? Math.round(v * 100) / 100 : null
+    return i === src.length && Number.isFinite(v) ? Math.round(v * 10 ** digits) / 10 ** digits : null
   } catch {
     return null
   }

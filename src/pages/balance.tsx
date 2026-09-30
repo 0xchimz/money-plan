@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ArrowDownRight, ArrowUpRight, ChevronLeft, ChevronRight, Circle, CircleCheck, Ellipsis, EyeOff, Lock, Plus, Tags, Trash, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -13,9 +13,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
-import { api, TIERS, type Balance, type BalanceRow, type BalanceSide, type BalanceTransfers, type MonthStatus, type NewBalanceItem, type Tier } from '@/lib/api'
+import { api, TIERS, type Balance, type BalanceRow, type BalanceSide, type BalanceTransfers, type Currency, type FxQuote, type MonthStatus, type NewBalanceItem, type Tier } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
-import { money, pct, thb, thbCompact, thMonth } from '@/lib/format'
+import { decimal, money, pct, thb, thbCompact, thDay, thMonth } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { BALANCE_CATEGORIES, COUNTRIES, INVEST_TYPES, TIER_INFO, unusedChips } from '@shared/categories'
 
@@ -24,17 +24,37 @@ const SIDE_TH: Record<BalanceSide, string> = { asset: 'สินทรัพย�
 
 type Group = { side: BalanceSide; category: string; rows: BalanceRow[] }
 
+const round2 = (v: number) => Math.round(v * 100) / 100
+/** The month's USD/THB rate, for rows and add forms (null = not set, no USD rows possible) */
+const FxRateContext = createContext<number | null>(null)
+/** USD was picked before the month has a rate: say so and put the cursor in the rate field */
+function askRate() {
+  toast.error('ใส่เรท USD/THB ของเดือนนี้ก่อน', { description: 'ช่อง "เรทเดือนนี้" ด้านบน' })
+  document.getElementById('fx-rate')?.focus()
+}
+
 export function BalancePage() {
   const [params, setParams] = useSearchParams()
   const [data, setData] = useState<Balance | null>(null)
   const [error, setError] = useState<unknown>()
   const [busy, setBusy] = useState<string | null>(null)
+  const [ecb, setEcb] = useState<{ month: string; quote: FxQuote | null } | null>(null)
   const seq = useRef(0)
   const wanted = params.get('month')
 
   useEffect(() => {
     api.balance(wanted).then(setData, setError)
   }, [wanted])
+
+  // ECB reference rate for the draft on screen, offered next to the month's own rate
+  const shownMonth = data?.month ?? null, shownDraft = data?.status === 'draft'
+  useEffect(() => {
+    if (!shownMonth || !shownDraft) return
+    let live = true
+    api.ecbRate(shownMonth).then((quote) => live && setEcb({ month: shownMonth, quote }), () => {})
+    return () => { live = false }
+  }, [shownMonth, shownDraft])
+  const quote = ecb?.month === shownMonth ? ecb.quote : null
 
   /** Every write answers with the fresh month; an answer that arrives after a newer write is dropped */
   async function mutate(call: Promise<Balance>, done?: string) {
@@ -84,6 +104,8 @@ export function BalancePage() {
   const ef = data.rows.filter((r) => r.category === 'Emergency Funds').reduce((s, r) => s + r.thb, 0)
   const efTarget = data.targets['Emergency Funds'] ?? null
   const unconfirmed = data.rows.filter((r) => !r.confirmed)
+  const usdRows = data.rows.filter((r) => r.usd != null).length
+  const fxStale = draft && !data.fx.confirmed && data.fx.usdThb != null && usdRows > 0
   const idx = data.months.findIndex((m) => m.month === month)
   const newer = data.months[idx - 1]?.month, older = data.months[idx + 1]?.month
   const canStartNext = data.next && idx === 0
@@ -94,9 +116,26 @@ export function BalancePage() {
     return { label: g.category, value: g.side === 'asset' ? d : -d, sub: CATEGORY_TH[g.category] }
   }).filter((c) => Math.abs(c.value) >= 1).sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
 
+  // a row keeps its currency when its amount is typed; the ฿/$ toggle is what switches it
   const setEntry = (r: BalanceRow, v: number, expr: string | null) => {
-    setData((d) => d && { ...d, rows: d.rows.map((x) => (x.id === r.id ? { ...x, thb: v, expr, confirmed: true } : x)) })
-    return mutate(api.setEntry(month, r.id, v, expr))
+    const usd = r.usd != null
+    setData((d) => d && { ...d, rows: d.rows.map((x) => (x.id === r.id ? { ...x, ...(usd ? { usd: v, thb: round2(v * (d.fx.usdThb ?? 0)) } : { thb: v }), expr, confirmed: true } : x)) })
+    return mutate(api.setEntry(month, r.id, usd ? { usd: v } : { thb: v }, expr))
+  }
+  const setCurrency = (r: BalanceRow, c: Currency) => {
+    const rate = data.fx.usdThb
+    if (c === 'USD' && rate == null) return askRate()
+    setData((d) => d && { ...d, rows: d.rows.map((x) => {
+      if (x.id !== r.id) return x
+      if (c === 'THB') return { ...x, usd: null, expr: null }
+      const usd = Math.round((x.thb / rate!) * 1e6) / 1e6 // 6 decimals, like the server: ฿→$→฿ keeps the satang
+      return { ...x, usd, thb: round2(usd * rate!), expr: null }
+    }) })
+    return mutate(api.setCurrency(month, r.id, c))
+  }
+  const setRate = (v: number) => {
+    setData((d) => d && { ...d, fx: { ...d.fx, usdThb: v, confirmed: true }, rows: d.rows.map((x) => (x.usd != null ? { ...x, thb: round2(x.usd * v) } : x)) })
+    return mutate(api.setRate(month, v))
   }
   const confirm = (ids: number[]) => {
     setData((d) => d && { ...d, rows: d.rows.map((x) => (ids.includes(x.id) ? { ...x, confirmed: true } : x)) })
@@ -106,6 +145,7 @@ export function BalancePage() {
   const hist = data.history.map((h) => ({ month: h.month, label: thMonth(h.month).replace(/ 20(\d\d)$/, " '$1"), assets: h.assets, liabilities: h.liabilities, net: h.net, live: h.draft }))
 
   return (
+    <FxRateContext value={data.fx.usdThb}>
     <div className="flex flex-col gap-6">
       {/* Month header */}
       <section className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -118,7 +158,8 @@ export function BalancePage() {
             <StatusBadge status={data.status!} />
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <FxRate fx={data.fx} draft={draft} stale={fxStale} prevMonth={data.prevMonth} quote={quote} usdRows={usdRows} onSet={setRate} />
           {canStartNext && (
             <Button onClick={() => step('start', () => mutate(api.startMonth(data.next!), `เริ่มร่าง ${thMonth(data.next!)} แล้ว`).then((ok) => ok && go(data.next!)))} disabled={!!busy}>
               <Plus /> เริ่มปิดบัญชี {thMonth(data.next!)}
@@ -135,6 +176,7 @@ export function BalancePage() {
           month={month}
           total={data.rows.length}
           unconfirmed={unconfirmed.length}
+          fxStale={fxStale}
           transfers={data.transfers ? { done: data.transfers.banks.filter((b) => b.doneAt).length, total: data.transfers.banks.length } : null}
           busy={busy}
           onClose={() => step('close', () => mutate(api.closeMonth(month), `ปิดเดือน ${thMonth(month)} แล้ว — Overview ใช้ตัวเลขเดือนนี้`))}
@@ -204,7 +246,7 @@ export function BalancePage() {
                   return g
                     ? (
                       <CategoryCard key={`${month}:${cat}`} group={g} chips={chips} draft={draft} prevMonth={data.prevMonth} target={data.targets[cat] ?? null}
-                        onSet={setEntry} onConfirm={confirm}
+                        onSet={setEntry} onCurrency={setCurrency} onConfirm={confirm}
                         onRemove={(r) => mutate(api.removeEntry(month, r.id), `ซ่อน ${r.item} แล้ว`)}
                         onClassify={(r, c) => mutate(api.classifyItem(month, r.id, c), `จัดกลุ่ม ${r.item} แล้ว`)}
                         onAdd={add} />
@@ -266,6 +308,7 @@ export function BalancePage() {
         </aside>
       </div>
     </div>
+    </FxRateContext>
   )
 }
 
@@ -282,6 +325,62 @@ function Change({ value, compact }: { value: number; compact?: boolean }) {
     <span className={cn('tabular inline-flex items-center gap-0.5 font-medium', up ? 'text-good' : 'text-critical')}>
       <Icon className="size-4" aria-hidden />{up ? '+' : '−'}{compact ? thbCompact(Math.abs(value)) : thb(Math.abs(value))}
     </span>
+  )
+}
+
+/** The month's USD/THB rate: every USD row is priced with it. A new month starts with last month's rate, flagged until it is typed or confirmed (Enter). */
+function FxRate({ fx, draft, stale, prevMonth, quote, usdRows, onSet }: {
+  fx: Balance['fx']
+  draft: boolean
+  stale: boolean
+  prevMonth: string | null
+  quote: FxQuote | null
+  usdRows: number
+  onSet: (v: number) => void
+}) {
+  const offer = draft && quote && (fx.usdThb == null || Math.abs(quote.rate - fx.usdThb) >= 0.00005) ? quote : null
+  return (
+    <div className="flex flex-col items-start gap-1 lg:items-end">
+      <div className="flex items-center gap-2 text-sm">
+        <label htmlFor="fx-rate" className="text-muted-foreground">เรทเดือนนี้</label>
+        <div className={cn('flex h-9 items-center rounded-lg border bg-card pl-2.5', stale && 'border-warning')}
+          title={usdRows ? `ใช้คิดเป็นบาทกับ ${usdRows} รายการที่เป็น USD` : 'ยังไม่มีรายการที่เป็น USD'}>
+          <span className="shrink-0 text-muted-foreground">1 USD =</span>
+          <MoneyInput id="fx-rate" digits={4} min={0.0001} value={fx.usdThb} label="เรท USD/THB ของเดือนนี้" placeholder="ใส่เรท" className="w-24"
+            onCommit={(v) => onSet(v)} onConfirm={() => stale && onSet(fx.usdThb!)} />
+          <span className="shrink-0 pr-2.5 text-muted-foreground">THB</span>
+        </div>
+      </div>
+      {(stale || offer) && (
+        <div className="flex flex-wrap items-center gap-x-3 text-xs text-muted-foreground">
+          {stale && (
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-warning" aria-hidden />ยังใช้เรท {prevMonth ? thMonth(prevMonth) : 'เดือนก่อน'} — แก้ หรือกด Enter ยืนยัน
+            </span>
+          )}
+          {offer && (
+            <button type="button" onClick={() => onSet(offer.rate)} title="อัตราอ้างอิง ECB (ค่ากลาง) — เรทธนาคาร / exchange อาจต่างเล็กน้อย"
+              className="rounded underline decoration-dotted underline-offset-2 hover:text-foreground">
+              ECB {thDay(offer.date)}: {decimal(offer.rate, 4)} · ใช้เรทนี้
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** ฿ / $ switch in front of a money field */
+function CurrencyToggle({ value, label, onChange }: { value: Currency; label: string; onChange: (c: Currency) => void }) {
+  return (
+    <div role="radiogroup" aria-label={`สกุลเงิน ${label}`} className="inline-flex shrink-0 overflow-hidden rounded-md border text-xs leading-none font-semibold">
+      {(['THB', 'USD'] as const).map((c) => (
+        <button key={c} type="button" role="radio" aria-checked={c === value} title={c} onClick={() => c !== value && onChange(c)}
+          className={cn('px-1.5 py-1', c === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground')}>
+          {c === 'THB' ? '฿' : '$'}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -354,10 +453,11 @@ function StartCard({ months, busy, onStart }: { months: string[]; busy: boolean;
 }
 
 /** Sticky checklist bar while a month is a draft: progress, close */
-function DraftBar({ month, total, unconfirmed, transfers, busy, onClose, onDiscard }: {
+function DraftBar({ month, total, unconfirmed, fxStale, transfers, busy, onClose, onDiscard }: {
   month: string
   total: number
   unconfirmed: number
+  fxStale: boolean
   transfers: { done: number; total: number } | null
   busy: string | null
   onClose: () => void
@@ -366,9 +466,10 @@ function DraftBar({ month, total, unconfirmed, transfers, busy, onClose, onDisca
   const [asking, setAsking] = useState(false)
   const done = total - unconfirmed
   const untransferred = transfers ? transfers.total - transfers.done : 0
-  const ready = unconfirmed === 0 && untransferred === 0
+  const ready = unconfirmed === 0 && untransferred === 0 && !fxStale
   const empty = total === 0
   const pending = [
+    fxStale && 'เรท USD/THB ยังเป็นของเดือนก่อน',
     unconfirmed && `${unconfirmed} รายการที่ยังใช้ยอดเดือนก่อน`,
     untransferred && `ยังไม่ได้ติ๊กโอนเงิน ${untransferred} บัญชี`,
   ].filter(Boolean)
@@ -493,13 +594,14 @@ function TransferCard({ t, onToggle, className }: { t: BalanceTransfers; onToggl
   )
 }
 
-function CategoryCard({ group, chips, draft, prevMonth, target, onSet, onConfirm, onRemove, onClassify, onAdd }: {
+function CategoryCard({ group, chips, draft, prevMonth, target, onSet, onCurrency, onConfirm, onRemove, onClassify, onAdd }: {
   group: Group
   chips: string[]
   draft: boolean
   prevMonth: string | null
   target: number | null
   onSet: (r: BalanceRow, v: number, expr: string | null) => void
+  onCurrency: (r: BalanceRow, c: Currency) => void
   onConfirm: (ids: number[]) => void
   onRemove: (r: BalanceRow) => void
   onClassify: (r: BalanceRow, c: Pick<NewBalanceItem, 'tier' | 'type' | 'country'>) => void
@@ -533,7 +635,7 @@ function CategoryCard({ group, chips, draft, prevMonth, target, onSet, onConfirm
       <ul className="flex flex-col py-1">
         {group.rows.map((r) => (
           <RowItem key={r.id} row={r} draft={draft} prevMonth={prevMonth} siblingsInvested={invested}
-            onSet={onSet} onConfirm={onConfirm} onRemove={onRemove} onClassify={onClassify} />
+            onSet={onSet} onCurrency={onCurrency} onConfirm={onConfirm} onRemove={onRemove} onClassify={onClassify} />
         ))}
       </ul>
       <div className="border-t px-2 py-1.5">
@@ -595,21 +697,27 @@ function TargetBar({ value, target }: { value: number; target: number }) {
   )
 }
 
-const ROW_GRID = 'grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(8rem,10rem)_1.75rem] items-center gap-x-2 md:grid-cols-[1.75rem_minmax(0,1fr)_7.5rem_minmax(9rem,10.5rem)_7rem_1.75rem]'
+const ROW_GRID = 'grid grid-cols-[1.75rem_minmax(0,1fr)_minmax(9rem,10.5rem)_1.75rem] items-center gap-x-2 md:grid-cols-[1.75rem_minmax(0,1fr)_7.5rem_minmax(11rem,12.5rem)_7rem_1.75rem]'
 
-function RowItem({ row: r, draft, prevMonth, siblingsInvested, onSet, onConfirm, onRemove, onClassify }: {
+function RowItem({ row: r, draft, prevMonth, siblingsInvested, onSet, onCurrency, onConfirm, onRemove, onClassify }: {
   row: BalanceRow
   draft: boolean
   prevMonth: string | null
   siblingsInvested: boolean
   onSet: (r: BalanceRow, v: number, expr: string | null) => void
+  onCurrency: (r: BalanceRow, c: Currency) => void
   onConfirm: (ids: number[]) => void
   onRemove: (r: BalanceRow) => void
   onClassify: (r: BalanceRow, c: Pick<NewBalanceItem, 'tier' | 'type' | 'country'>) => void
 }) {
   const [classifying, setClassifying] = useState(false)
-  const diff = r.prev != null ? r.thb - r.prev : null
+  // a USD row that was USD last month too is compared in USD (what is really held); otherwise in THB
+  const inUsd = r.usd != null && r.prevUsd != null
+  const diff = inUsd ? r.usd! - r.prevUsd! : r.prev != null ? r.thb - r.prev : null
   const good = diff != null && (r.side === 'asset' ? diff > 0 : diff < 0)
+  // a USD row compared in THB says ฿, so its numbers never pass for dollars
+  const signed = (v: number) => (inUsd || r.usd != null ? `${v >= 0 ? '+' : '−'}${inUsd ? '$' : '฿'}${money(Math.abs(v))}` : signedMoney(v))
+  const prevText = r.prev == null ? '—' : inUsd ? `$${money(r.prevUsd!)}` : r.usd != null ? `฿${money(r.prev)}` : money(r.prev)
   const flagged = r.side === 'asset' && !r.tier && siblingsInvested
   return (
     <li className="group/row px-2">
@@ -627,20 +735,26 @@ function RowItem({ row: r, draft, prevMonth, siblingsInvested, onSet, onConfirm,
           <span className="truncate text-sm font-medium" title={r.item}>{r.item}</span>
           <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
             {r.tier && <span>{r.tier}{r.type ? ` · ${r.type}` : ''}</span>}
+            {r.usd != null && <span className="tabular">≈ {money(r.thb)} THB</span>}
             {flagged && (
               <button type="button" className="inline-flex items-center gap-1 text-foreground underline decoration-dotted underline-offset-2" onClick={() => setClassifying(true)}>
                 <span className="size-1.5 rounded-full bg-warning" aria-hidden />ไม่ได้นับในพอร์ต — จัดกลุ่ม
               </button>
             )}
-            {diff != null && Math.abs(diff) >= 0.005 && <span className={cn('md:hidden', good ? 'text-good' : 'text-critical')}>{signedMoney(diff)}</span>}
+            {diff != null && Math.abs(diff) >= 0.005 && <span className={cn('md:hidden', good ? 'text-good' : 'text-critical')}>{signed(diff)}</span>}
           </span>
         </div>
-        <span className="tabular hidden text-right text-xs text-muted-foreground md:block" title={prevMonth ? `ยอด ${thMonth(prevMonth)}` : undefined}>
-          {r.prev != null ? money(r.prev) : '—'}
+        <span className="tabular hidden text-right text-xs text-muted-foreground md:block"
+          title={prevMonth ? `ยอด ${thMonth(prevMonth)}${inUsd ? ` = ${money(r.prev!)} THB` : ''}` : undefined}>
+          {prevText}
         </span>
-        <MoneyInput value={r.thb} expr={r.expr} label={`ยอด ${r.item}`} onCommit={(v, e) => onSet(r, v, e)} onConfirm={() => !r.confirmed && onConfirm([r.id])} />
+        <div className="flex min-w-0 items-center gap-1">
+          <CurrencyToggle value={r.usd != null ? 'USD' : 'THB'} label={r.item} onChange={(c) => onCurrency(r, c)} />
+          <MoneyInput value={r.usd ?? r.thb} expr={r.expr} label={`ยอด ${r.item}${r.usd != null ? ' (USD)' : ''}`} className="min-w-0 flex-1"
+            onCommit={(v, e) => onSet(r, v, e)} onConfirm={() => !r.confirmed && onConfirm([r.id])} />
+        </div>
         <span className={cn('tabular hidden text-right text-xs md:block', diff == null || Math.abs(diff) < 0.005 ? 'text-muted-foreground' : good ? 'text-good' : 'text-critical')}>
-          {diff == null ? 'ใหม่' : Math.abs(diff) < 0.005 ? '—' : signedMoney(diff)}
+          {diff == null ? 'ใหม่' : Math.abs(diff) < 0.005 ? '—' : signed(diff)}
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" size="icon-xs" className="opacity-60 group-hover/row:opacity-100 focus-visible:opacity-100" aria-label={`ตัวเลือก ${r.item}`} />}>
@@ -726,6 +840,11 @@ function guess(rows: BalanceRow[], category: string) {
   }
   return { tier: top('tier') as Tier | null, type: top('type') ?? 'Equity', country: top('country') ?? 'Thailand' }
 }
+/** USD when most of the category already is (and the month has a rate) */
+function guessCurrency(rows: BalanceRow[], category: string, rate: number | null): Currency {
+  const sib = rows.filter((r) => r.category === category)
+  return rate != null && sib.filter((r) => r.usd != null).length * 2 > sib.length ? 'USD' : 'THB'
+}
 
 function AddItemForm({ side, category: fixed, initialItem = '', rows, onAdd, onCancel }: {
   side: BalanceSide
@@ -737,7 +856,9 @@ function AddItemForm({ side, category: fixed, initialItem = '', rows, onAdd, onC
 }) {
   const [category, setCategory] = useState(fixed ?? '')
   const [item, setItem] = useState(initialItem)
-  const [amount, setAmount] = useState<{ thb: number; expr: string | null } | null>(null)
+  const rate = useContext(FxRateContext)
+  const [amount, setAmount] = useState<{ v: number; expr: string | null } | null>(null)
+  const [cur, setCur] = useState<Currency>(() => guessCurrency(rows, fixed ?? '', rate))
   const [cls, setCls] = useState(() => guess(rows, fixed ?? ''))
   const ok = item.trim() && category.trim()
   const submit = () => ok && onAdd({
@@ -745,7 +866,7 @@ function AddItemForm({ side, category: fixed, initialItem = '', rows, onAdd, onC
     category: category.trim(),
     item: item.trim(),
     ...(side === 'asset' ? cls : { tier: null, type: null, country: null }),
-    ...(amount ? { thb: amount.thb, expr: amount.expr } : {}),
+    ...(amount ? (cur === 'USD' ? { usd: amount.v, expr: amount.expr } : { thb: amount.v, expr: amount.expr }) : {}),
   })
   return (
     <form className="flex flex-col gap-3 p-2" onSubmit={(e) => { e.preventDefault(); submit() }}>
@@ -761,8 +882,12 @@ function AddItemForm({ side, category: fixed, initialItem = '', rows, onAdd, onC
           <Input autoFocus={!!fixed && !initialItem} value={item} onChange={(e) => setItem(e.target.value)} placeholder="เช่น บัญชีออมทรัพย์ SCB" className="w-56" />
         </label>
         <div className="flex flex-col gap-1 text-xs text-muted-foreground">
-          ยอด (THB)
-          <MoneyInput value={amount?.thb ?? null} expr={amount?.expr} label="ยอด" className="w-40 rounded-lg border border-input" onCommit={(thb, expr) => setAmount({ thb, expr })} />
+          ยอด ({cur})
+          <div className="flex items-center gap-1">
+            <CurrencyToggle value={cur} label="ยอด" onChange={(c) => (c === 'USD' && rate == null ? askRate() : setCur(c))} />
+            <MoneyInput value={amount?.v ?? null} expr={amount?.expr} label={`ยอด (${cur})`} className="w-40 rounded-lg border border-input" onCommit={(v, expr) => setAmount({ v, expr })} />
+          </div>
+          {cur === 'USD' && amount && rate != null && <span className="tabular">≈ {money(round2(amount.v * rate))} THB</span>}
         </div>
       </div>
       {side === 'asset' && <InvestFields tier={cls.tier} type={cls.type} country={cls.country} onChange={(p) => setCls((x) => ({ ...x, ...p }))} />}

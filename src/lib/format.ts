@@ -33,6 +33,8 @@ export const dateTime = (iso: string) =>
 
 /** Full amount, 2 decimals, commas — for anything typed or acted on */
 export const money = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+/** Full amount with up to `digits` decimals (at least 2) — exchange rates */
+export const decimal = (v: number, digits: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: digits })
 
 const TH_MON = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.']
 const TH_MON_LONG = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
@@ -42,6 +44,9 @@ export const thMonth = (ym: string, long = false) => {
   const [y, m] = ym.split('-').map(Number)
   return `${(long ? TH_MON_LONG : TH_MON)[m - 1]} ${y}`
 }
+
+/** 2026-08-28 → 28 ส.ค. */
+export const thDay = (ymd: string) => `${Number(ymd.slice(8, 10))} ${TH_MON[Number(ymd.slice(5, 7)) - 1]}`
 
 /** ISO time → 27 ก.ย. 16:37 */
 export const thDateTime = (iso: string) => {

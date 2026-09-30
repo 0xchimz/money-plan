@@ -1,4 +1,4 @@
-import type { AuthConfig, Balance, BudgetLineInput, Classification, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tier, TierTargets } from '@shared/types'
+import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tier, TierTargets } from '@shared/types'
 
 export * from '@shared/types'
 
@@ -66,7 +66,12 @@ export const api = {
   startMonth: (month: string) => request<Balance>('POST', `/api/balance/${month}/start`),
   closeMonth: (month: string) => request<Balance>('POST', `/api/balance/${month}/close`),
   discardDraft: (month: string) => request<Balance>('DELETE', `/api/balance/${month}`),
-  setEntry: (month: string, id: number, thb: number, expr: string | null) => request<Balance>('PUT', `/api/balance/${month}/entries/${id}`, { thb, expr }),
+  /** { thb } keeps/makes it a THB row, { usd } a USD row priced at the month's rate */
+  setEntry: (month: string, id: number, amount: { thb: number } | { usd: number }, expr: string | null) =>
+    request<Balance>('PUT', `/api/balance/${month}/entries/${id}`, { ...amount, expr }),
+  setCurrency: (month: string, id: number, currency: Currency) => request<Balance>('POST', `/api/balance/${month}/entries/${id}/currency`, { currency }),
+  setRate: (month: string, usdThb: number) => request<Balance>('PUT', `/api/balance/${month}/fx`, { usdThb }),
+  ecbRate: (month: string) => get<FxQuote | null>(`/api/balance/${month}/fx/ecb`),
   removeEntry: (month: string, id: number) => request<Balance>('DELETE', `/api/balance/${month}/entries/${id}`),
   restoreEntry: (month: string, id: number) => request<Balance>('POST', `/api/balance/${month}/entries/${id}/restore`),
   confirmRows: (month: string, ids: number[]) => request<Balance>('POST', `/api/balance/${month}/confirm`, { ids }),

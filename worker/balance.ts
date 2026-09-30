@@ -158,7 +158,10 @@ export async function setEntry(db: Db, uid: number, month: string, id: number, p
   ])
 }
 
-/** Switch a row between THB and USD at the month's rate; its THB value stays (to the satang), the typed formula goes, checked-or-not stays */
+/**
+ * Switch a row between THB and USD at the month's rate; the typed formula goes, checked-or-not stays.
+ * The USD amount keeps 6 decimals so ROUND(usd × rate, 2) gives back the same THB value — flipping ฿→$→฿ never loses a satang.
+ */
 export async function setCurrency(db: Db, uid: number, month: string, id: number, currency: unknown) {
   const m = await requireMonth(db, uid, month)
   if (currency !== 'THB' && currency !== 'USD') throw bad('สกุลเงินต้องเป็น THB หรือ USD')
@@ -169,7 +172,7 @@ export async function setCurrency(db: Db, uid: number, month: string, id: number
   const where = 'WHERE user_id = ? AND month = ? AND item_id = ?'
   await db.batch([
     rate != null
-      ? stmt(db, `UPDATE balance_entries SET usd = ROUND(thb / ?, 2), thb = ROUND(ROUND(thb / ?, 2) * ?, 2), expr = NULL ${where}`, rate, rate, rate, uid, month, id)
+      ? stmt(db, `UPDATE balance_entries SET usd = ROUND(thb / ?, 6), thb = ROUND(ROUND(thb / ?, 6) * ?, 2), expr = NULL ${where}`, rate, rate, rate, uid, month, id)
       : stmt(db, `UPDATE balance_entries SET usd = NULL, expr = NULL ${where}`, uid, month, id),
     touch(db, uid, month),
   ])

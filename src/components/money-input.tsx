@@ -1,21 +1,24 @@
 import { useRef, useState, type KeyboardEvent } from 'react'
 import { Sigma } from 'lucide-react'
 import { evaluate, isFormula } from '@/lib/expr'
-import { money } from '@/lib/format'
+import { decimal, money } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 /**
  * Money field that works like an Excel cell: type 251550.08+54791.65 and it keeps the breakdown.
  * Enter saves and jumps to the next money field (Shift+Enter: previous), Esc cancels.
  * Enter on an unchanged value calls onConfirm — "checked, still the same".
+ * `digits` = decimals kept and shown (2 for money, 4 for an exchange rate).
  */
-export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, className, placeholder = '0.00' }: {
+export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, digits = 2, id, className, placeholder = '0.00' }: {
   value: number | null
   expr?: string | null
   onCommit: (thb: number, expr: string | null) => void
   onConfirm?: () => void
   label: string
   min?: number
+  digits?: number
+  id?: string
   className?: string
   placeholder?: string
 }) {
@@ -24,7 +27,8 @@ export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, class
   const handled = useRef(false)
   const [text, setText] = useState<string | null>(null) // null = not editing
   const editing = text != null
-  const parsed = editing ? (text.trim() === '' ? 0 : evaluate(text)) : value
+  const parsed = editing ? (text.trim() === '' ? 0 : evaluate(text, digits)) : value
+  const show = (v: number) => (digits === 2 ? money(v) : decimal(v, digits))
   const invalid = editing && (parsed == null || (min != null && parsed < min))
   const preview = editing && parsed != null && isFormula(text)
 
@@ -41,7 +45,7 @@ export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, class
     const t = text.trim()
     const nextExpr = t && isFormula(t) ? t.replace(/[\s,฿]/g, '') : null
     setText(null)
-    const changed = value == null || Math.abs(parsed - value) >= 0.005 || nextExpr !== (expr ?? null)
+    const changed = value == null || Math.abs(parsed - value) >= 0.5 / 10 ** digits || nextExpr !== (expr ?? null)
     if (changed) onCommit(parsed, nextExpr)
     return changed
   }
@@ -75,14 +79,15 @@ export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, class
       )}
       <input
         ref={ref}
+        id={id}
         data-money-input
         inputMode="decimal"
         autoComplete="off"
         aria-label={label}
         aria-invalid={invalid || undefined}
-        title={expr && !editing ? `${expr} = ${value != null ? money(value) : ''}` : undefined}
+        title={expr && !editing ? `${expr} = ${value != null ? show(value) : ''}` : undefined}
         placeholder={placeholder}
-        value={editing ? text : value == null ? '' : money(value)}
+        value={editing ? text : value == null ? '' : show(value)}
         onFocus={begin}
         onChange={(e) => { handled.current = false; setText(e.target.value) }}
         onBlur={() => {
@@ -100,7 +105,7 @@ export function MoneyInput({ value, expr, onCommit, onConfirm, label, min, class
       />
       {preview && (
         <span className="tabular pointer-events-none absolute top-full right-1 z-10 mt-1 rounded-md bg-foreground px-2 py-0.5 text-xs text-background shadow-sm">
-          = {money(parsed!)}
+          = {show(parsed!)}
         </span>
       )}
     </div>

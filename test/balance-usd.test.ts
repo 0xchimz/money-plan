@@ -72,6 +72,13 @@ describe('balance in USD', () => {
     expect(row(b, 'SCHD')).toMatchObject({ usd: 1000, thb: 34000 })
     b = await ok<Balance>(currency(cookie, next, id, 'THB'))
     expect(row(b, 'SCHD')).toMatchObject({ usd: null, thb: 34000, expr: null, confirmed: false })
+    // an amount that doesn't divide evenly still comes back to the satang
+    await put(cookie, next, id, { thb: 310000, expr: null })
+    await rate(cookie, next, 33.565)
+    b = await ok<Balance>(currency(cookie, next, id, 'USD'))
+    expect(row(b, 'SCHD')).toMatchObject({ usd: 9235.811113, thb: 310000 })
+    b = await ok<Balance>(currency(cookie, next, id, 'THB'))
+    expect(row(b, 'SCHD')).toMatchObject({ usd: null, thb: 310000 })
     expect((await currency(cookie, next, id, 'EUR')).status).toBe(400)
     expect((await currency(cookie, next, 999999, 'THB')).status).toBe(404)
   })
