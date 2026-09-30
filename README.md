@@ -82,5 +82,8 @@ pnpm exec wrangler d1 execute money-plan --remote --yes --file /tmp/import.sql
 - `worker/` — Hono API. Login = Google ID token (checked with `jose`) → allowlist → a random session token in an HttpOnly cookie, only its SHA-256 stored in D1.
   Every query filters on the session's `user_id`; writes by id use `WHERE id = ? AND user_id = ?` and answer 404 otherwise. Writes must be JSON (CSRF).
   D1 has no interactive transactions: read first, then one `db.batch()`.
+- USD rows (Balance): each month has a USD/THB rate (`balance_months.usd_thb`, carried into the next month unconfirmed). A row typed in USD keeps
+  `balance_entries.usd`, and its `thb` is always SQLite `ROUND(usd × rate, 2)` — re-priced when the rate changes — so Overview, history and the
+  importers only ever read `thb`. `worker/fx.ts` offers the ECB rate (frankfurter.dev) as a suggestion.
 - `src/` — React SPA (UI kit copied from `apps/portfolio`). Desktop only.
 - Design and plan: `docs/superpowers/specs/2026-09-29-money-plan-design.md`, `docs/superpowers/plans/2026-09-29-money-plan.md`.

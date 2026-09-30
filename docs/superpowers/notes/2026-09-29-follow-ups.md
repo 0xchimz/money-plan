@@ -36,3 +36,14 @@ From the per-task reviews:
 - a11y: tier radiogroup and Segmented tabs lack roving tabindex / arrow keys.
 - Overview `AssetMixCard` seeds its active series once per mount; MoneyFlowCard legend totals include thb ≤ 0 lines (the API rejects negatives).
 - `layout.tsx` uses the `window.google` declaration from `src/lib/google.ts` without importing it.
+
+## USD rows on the Balance page (30 Sep 2026)
+
+Chin asked for a USD/THB rate per month and a THB/USD choice per row; picked direction A from the mockups (rate in the month header, ฿/$ toggle on every row) plus an ECB suggestion. Commits `f80eca4` (API + migration `0002_usd.sql`) and `980270c` (page).
+
+- Rate: `PUT /api/balance/:month/fx { usdThb }` (4 decimals). A new month copies the previous rate unconfirmed; the header flags it only when the month has USD rows, and closing asks first. Same rate typed again = confirmed.
+- Rows: `PUT …/entries/:id { usd, expr }` makes a USD row (409 without a rate), `{ thb, expr }` a THB row. `POST …/entries/:id/currency { currency }` converts at the month rate and keeps 6 USD decimals so ฿→$→฿ is exact. USD rows compare with last month in USD when last month was USD too, else in ฿.
+- ECB: `GET /api/balance/:month/fx/ecb` → last business day of a finished month, `latest` for the running one; `null` when frankfurter fails (the page then shows nothing).
+- Old months (imported, all THB) keep `usd_thb = NULL`; nothing to backfill.
+- To check on prod after the deploy: set October's rate, switch the US stocks / crypto rows to $, type broker amounts, close — Overview should match the ≈ THB values.
+- Not done: Planning lines are THB only; Overview has no "USD exposure" figure; on phones the ฿/$ toggle squeezes the item name (desktop-first app).
