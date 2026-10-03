@@ -36,8 +36,8 @@ export function LoginPage({ onLogin, denied }: { onLogin: (me: Me) => void; deni
   }, [config, onLogin])
 
   return (
-    <div className="grid min-h-svh place-items-center bg-[radial-gradient(ellipse_at_top,var(--hero-from),var(--background)_60%)] px-6">
-      <div className="w-[380px] rounded-2xl border bg-card p-7 text-center shadow-[var(--card-shadow)]">
+    <div className="grid min-h-svh place-items-center bg-[radial-gradient(ellipse_at_top,var(--hero-from),var(--background)_60%)] px-4">
+      <div className="w-full max-w-[380px] rounded-2xl border bg-card p-7 text-center shadow-[var(--card-shadow)]">
         <div className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">฿</div>
         <h1 className="text-xl font-semibold tracking-tight">money-plan</h1>
         <p className="mt-1 text-sm text-muted-foreground">วางแผนเงินรายเดือน · งบดุลส่วนตัว · สรุปการเงินของคุณ</p>
