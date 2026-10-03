@@ -232,4 +232,6 @@
 /* iOS zooms into any field under 16px; phones (the app's < 1024px layout) never go below it */
 @media (max-width: 1023.98px) {
   input, select, textarea { font-size: max(16px, 1em); }
+  /* no iOS rubber-band: the fixed header and tab bar never bounce (pull to refresh is the app's own) */
+  html, body { overscroll-behavior-y: none; }
 }

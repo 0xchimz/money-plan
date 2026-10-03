@@ -1,8 +1,9 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router'
-import { ClipboardList, LayoutDashboard, LogOut, Scale } from 'lucide-react'
+import { ArrowDown, ClipboardList, LayoutDashboard, Loader2, LogOut, Scale } from 'lucide-react'
 import { Avatar } from '@/components/avatar'
+import { PULL_THRESHOLD, usePullToRefresh } from '@/components/mobile/pull-to-refresh'
 import { Sheet } from '@/components/mobile/sheet'
 import { Button } from '@/components/ui/button'
 import type { Me } from '@/lib/api'
@@ -34,10 +35,23 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
   const [account, setAccount] = useState(false)
   const { pathname } = useLocation()
   const page = MOBILE_PAGES.find((p) => p.to === pathname) ?? MOBILE_PAGES[0]
+  // the header is fixed (it never moves with the scroll or the iOS bounce); its height changes with the page's second row
+  const header = useRef<HTMLElement>(null)
+  const [headerH, setHeaderH] = useState(0)
+  useEffect(() => {
+    const el = header.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setHeaderH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+  // pull to refresh remounts the page, so it fetches its data again (URL state like ?month= stays)
+  const [round, setRound] = useState(0)
+  const { pull, refreshing } = usePullToRefresh(() => setRound((n) => n + 1))
   return (
     <SlotContext value={{ inline, below }}>
       <div className="min-h-svh bg-background">
-        <header className="sticky top-0 z-20 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+        <header ref={header} className="fixed inset-x-0 top-0 z-20 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
           <div className="mx-auto flex h-13 max-w-[640px] items-center gap-2 pl-4 pr-1.5">
             <h1 className="shrink-0 text-base font-semibold tracking-tight">{page.label}</h1>
             <div ref={setInline} className="flex min-w-0 flex-1 items-center justify-end gap-1" />
@@ -47,7 +61,18 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
           </div>
           <div ref={setBelow} className="mx-auto max-w-[640px] px-3 pb-2 empty:hidden" />
         </header>
-        <main className="mx-auto max-w-[640px] px-3 pt-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">{children}</main>
+        <div aria-hidden={!refreshing} className="pointer-events-none fixed inset-x-0 z-10 flex items-end justify-center overflow-hidden text-xs text-muted-foreground"
+          style={{ top: headerH, height: pull }}>
+          <span className="flex items-center gap-1.5 pb-2">
+            {refreshing
+              ? <><Loader2 className="size-4 animate-spin" />กำลังโหลดใหม่</>
+              : <><ArrowDown className={cn('size-4 transition-transform', pull >= PULL_THRESHOLD && 'rotate-180')} />{pull >= PULL_THRESHOLD ? 'ปล่อยเพื่อโหลดใหม่' : 'ดึงเพื่อโหลดใหม่'}</>}
+          </span>
+        </div>
+        <main className={cn('mx-auto max-w-[640px] px-3 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]', pull === 0 && 'transition-transform duration-200')}
+          style={{ ...(headerH ? { paddingTop: headerH + 12 } : {}), transform: pull ? `translateY(${pull}px)` : undefined }}>
+          <Fragment key={round}>{children}</Fragment>
+        </main>
         <nav aria-label="เมนูหลัก" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
           <div className="mx-auto grid h-16 max-w-[640px] grid-cols-3">
             {MOBILE_PAGES.map(({ to, label, icon: Icon }) => (
