@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { evaluate, isFormula } from '@/lib/expr'
 import { decimal, money } from '@/lib/format'
 import { cn } from '@/lib/utils'
@@ -17,7 +17,7 @@ const OPS = [{ op: '+', label: '+' }, { op: '-', label: '−' }, { op: '*', labe
  * Big money field for phone sheets. The iPhone number pad has no + − × ÷, so they sit under the field; pressing one
  * keeps focus (and the keyboard). Shows "= result" while a formula is typed. The parent owns the text.
  */
-export function AmountField({ text, onText, unit, digits = 2, min, label, hint, onEnter, autoFocus }: {
+export function AmountField({ text, onText, unit, digits = 2, min, label, hint, onEnter, autoFocus, selectKey }: {
   text: string
   onText: (t: string) => void
   unit: string
@@ -27,8 +27,16 @@ export function AmountField({ text, onText, unit, digits = 2, min, label, hint, 
   hint?: ReactNode
   onEnter?: () => void
   autoFocus?: boolean
+  /** When this changes while the field is focused (e.g. stepping to the next row), the new text is selected so typing replaces it */
+  selectKey?: string | number
 }) {
   const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || selectKey === undefined || document.activeElement !== el) return
+    const id = requestAnimationFrame(() => el.select())
+    return () => cancelAnimationFrame(id)
+  }, [selectKey])
   const { value, ok } = readAmount(text, digits, min)
   const show = (v: number) => (digits === 2 ? money(v) : decimal(v, digits))
   const insert = (op: string) => {

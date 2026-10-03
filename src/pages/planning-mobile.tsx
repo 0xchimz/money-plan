@@ -34,7 +34,7 @@ export function MobileLineRow({ line: l, income, onOpen }: { line: BudgetLineRow
 const keyOf = (s: LineSheetState) => (!s ? '' : s.mode === 'edit' ? `e${s.line.id}` : `a${s.type}:${s.category}:${s.item}`)
 
 /** Edit or add one plan line on a phone: name, account, category (chips + own), amount with + − × ÷ */
-export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemove }: {
+export function LineSheet({ state: current, income, lines, onClose, onSave, onAdd, onRemove }: {
   state: LineSheetState
   income: number
   lines: BudgetLineRow[]
@@ -43,6 +43,10 @@ export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemo
   onAdd: (l: BudgetLineInput) => Promise<boolean>
   onRemove: (l: BudgetLineRow) => void
 }) {
+  // the sheet stays mounted so it can slide out; while closing it keeps showing the last line
+  const [last, setLast] = useState(current)
+  if (current && current !== last) setLast(current)
+  const state = current ?? last
   const fresh = (s: LineSheetState) => s?.mode === 'edit'
     ? { key: keyOf(s), item: s.line.item, account: s.line.account ?? '', category: s.line.category, text: s.line.expr ?? String(s.line.thb), own: false }
     : { key: keyOf(s), item: s?.item ?? '', account: '', category: s?.category ?? '', text: '', own: false }
@@ -79,7 +83,7 @@ export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemo
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && close()}
+    <Sheet open={current != null} onOpenChange={(o) => !o && close()}
       title={state.mode === 'edit' ? 'แก้รายการ' : 'เพิ่มรายการ'}
       actions={state.mode === 'edit' ? <Button variant="ghost" className="h-11 text-critical" onClick={() => { onRemove(state.line); close() }}>ลบ</Button> : undefined}
       footer={<div className="grid grid-cols-[1fr_1.6fr] gap-2"><Button variant="outline" className="h-12" onClick={close}>ยกเลิก</Button><Button className="h-12" disabled={!ready} onClick={submit}>{state.mode === 'edit' ? 'บันทึก' : 'เพิ่ม'}</Button></div>}>

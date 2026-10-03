@@ -26,7 +26,7 @@ export function ChartCard({ title, description, chart, table, legend, className 
                   role="tab"
                   aria-selected={view === v}
                   onClick={() => setView(v)}
-                  className={cn('rounded-md px-2.5 py-1 capitalize transition-colors', view === v ? 'bg-muted font-medium' : 'text-muted-foreground hover:text-foreground')}
+                  className={cn('rounded-md px-2.5 py-1 capitalize transition-colors max-lg:min-h-11 max-lg:px-3.5', view === v ? 'bg-muted font-medium' : 'text-muted-foreground hover:text-foreground')}
                 >
                   {v}
                 </button>
@@ -90,7 +90,7 @@ export function ToggleLegend({ items, active, onChange }: {
               onClick={() => toggle(i.label)}
               onDoubleClick={() => onChange([i.label])}
               title="Click to toggle · double-click to show only this"
-              className={cn('flex items-center gap-1.5 rounded-md border px-2 py-0.5 transition-colors', on ? 'bg-muted/60' : 'border-dashed text-muted-foreground/60 hover:text-muted-foreground')}
+              className={cn('flex items-center gap-1.5 rounded-md border px-2 py-0.5 transition-colors max-lg:min-h-11 max-lg:px-3', on ? 'bg-muted/60' : 'border-dashed text-muted-foreground/60 hover:text-muted-foreground')}
             >
               <span aria-hidden className="size-2.5 rounded-[3px]" style={{ background: on ? i.color : 'var(--muted-foreground)', opacity: on ? 1 : 0.35 }} />
               <span className={on ? 'text-foreground' : 'line-through'}>{i.label}</span>

@@ -202,7 +202,7 @@ export function TransferList({ t, onToggle }: { t: BalanceTransfers; onToggle: (
                   {b.doneAt ? <CircleCheck className="size-5 text-good" /> : <Circle className="size-5" />}
                 </button>
                 <span className={cn('flex-1 font-medium', b.doneAt && 'text-muted-foreground line-through decoration-muted-foreground/50')}>{b.bank}</span>
-                <button type="button" onClick={() => copy(b.thb)} title="คัดลอกยอด" className="tabular rounded-md px-1 font-semibold hover:bg-muted">
+                <button type="button" onClick={() => copy(b.thb)} title="คัดลอกยอด" className="tabular rounded-md px-1 font-semibold hover:bg-muted max-lg:min-h-11 max-lg:px-3">
                   {money(b.thb)} <span className="text-xs font-normal text-muted-foreground">THB</span>
                 </button>
               </div>
@@ -213,7 +213,7 @@ export function TransferList({ t, onToggle }: { t: BalanceTransfers; onToggle: (
                     {b.subs.map((s) => (
                       <li key={s.sub ?? '-'} className="flex justify-between gap-3" title={[s.items.join(', '), ...s.notes].join(' · ')}>
                         <span className="truncate">{s.sub ?? 'บัญชีหลัก'}{s.notes.length ? <span className="text-muted-foreground/70"> · {s.notes.join(', ')}</span> : null}</span>
-                        <button type="button" onClick={() => copy(s.thb)} className="tabular shrink-0 rounded px-0.5 hover:bg-muted hover:text-foreground">{money(s.thb)}</button>
+                        <button type="button" onClick={() => copy(s.thb)} className="tabular shrink-0 rounded px-0.5 hover:bg-muted hover:text-foreground max-lg:min-h-11 max-lg:px-3">{money(s.thb)}</button>
                       </li>
                     ))}
                   </ul>
@@ -291,7 +291,7 @@ export function InvestFields({ tier, type, country, onChange }: {
             <div className="inline-flex overflow-hidden rounded-lg border" role="radiogroup" aria-label="กลุ่มพอร์ต">
               {TIERS.map((t) => (
                 <button key={t} type="button" role="radio" aria-checked={t === tier} onClick={() => onChange({ tier: t })}
-                  className={cn('border-r px-2.5 py-1 text-xs last:border-r-0', t === tier ? 'bg-primary font-medium text-primary-foreground' : 'text-foreground hover:bg-muted')}>
+                  className={cn('border-r px-2.5 py-1 text-xs last:border-r-0 max-lg:min-h-11', t === tier ? 'bg-primary font-medium text-primary-foreground' : 'text-foreground hover:bg-muted')}>
                   {t}
                 </button>
               ))}
@@ -408,7 +408,7 @@ export function HiddenCard({ hidden, onRestore }: { hidden: Balance['hidden']; o
           {hidden.map((h) => (
             <li key={h.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
               <span className="min-w-0 truncate">{h.item} <span className="text-muted-foreground">· {h.category}</span></span>
-              <Button variant="ghost" size="xs" onClick={() => onRestore(h)}><Undo2 /> เอากลับ</Button>
+              <Button variant="ghost" size="xs" className="max-lg:h-11" onClick={() => onRestore(h)}><Undo2 /> เอากลับ</Button>
             </li>
           ))}
         </ul>

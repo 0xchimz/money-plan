@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-const CHIP = 'rounded-full border border-dashed border-input px-3 py-1 text-sm text-muted-foreground transition-colors hover:border-ring hover:text-foreground'
+const CHIP = 'rounded-full border border-dashed border-input px-3 py-1 text-sm text-muted-foreground max-lg:min-h-11 max-lg:px-3.5 transition-colors hover:border-ring hover:text-foreground'
 
 /** Quick-add buttons for common items; the last one ("เพิ่มเอง") opens an empty form */
 export function Chips({ chips, onPick, className }: { chips: string[]; onPick: (label: string) => void; className?: string }) {

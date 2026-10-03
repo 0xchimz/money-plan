@@ -78,9 +78,9 @@ export function BalanceMobile(p: BalanceMobileProps) {
   return (
     <div className="flex flex-col gap-4">
       <TopBarSlot below={showRate ? <RateChip fx={data.fx} stale={p.fxStale} prevMonth={data.prevMonth} onOpen={() => setRateOpen(true)} /> : undefined}>
-        <Button variant="ghost" size="icon" className="size-9" aria-label="เดือนก่อน" disabled={!p.nav.older} onClick={() => p.nav.older && actions.go(p.nav.older)}><ChevronLeft /></Button>
+        <Button variant="ghost" size="icon" className="size-11" aria-label="เดือนก่อน" disabled={!p.nav.older} onClick={() => p.nav.older && actions.go(p.nav.older)}><ChevronLeft /></Button>
         <span className="truncate text-sm font-semibold">{thMonth(month)}</span>
-        <Button variant="ghost" size="icon" className="size-9" aria-label="เดือนถัดไป" disabled={!p.nav.newer} onClick={() => p.nav.newer && actions.go(p.nav.newer)}><ChevronRight /></Button>
+        <Button variant="ghost" size="icon" className="size-11" aria-label="เดือนถัดไป" disabled={!p.nav.newer} onClick={() => p.nav.newer && actions.go(p.nav.newer)}><ChevronRight /></Button>
         <StatusBadge status={data.status!} />
       </TopBarSlot>
 
@@ -127,13 +127,13 @@ export function BalanceMobile(p: BalanceMobileProps) {
 
 function RateChip({ fx, stale, prevMonth, onOpen }: { fx: Balance['fx']; stale: boolean; prevMonth: string | null; onOpen: () => void }) {
   return (
-    <button type="button" onClick={onOpen} className={cn('flex min-h-9 w-full items-center gap-2 rounded-xl border bg-card px-3 text-sm', stale && 'border-warning')}>
+    <button type="button" onClick={onOpen} className={cn('flex min-h-11 w-full items-center gap-2 rounded-xl border bg-card px-3 text-sm', stale && 'border-warning')}>
       <span className="text-muted-foreground">เรทเดือนนี้</span>
       <span className="tabular font-medium">{fx.usdThb != null ? `1 USD = ${decimal(fx.usdThb, 4)} THB` : 'ยังไม่ได้ใส่'}</span>
       <span className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
         {stale
           ? <><span className="size-1.5 rounded-full bg-warning" aria-hidden />ยังใช้เรท {prevMonth ? thMonth(prevMonth) : 'เดือนก่อน'}</>
-          : fx.usdThb != null ? <><CircleCheck className="size-3.5 text-good" aria-hidden />ยืนยันแล้ว</> : null}
+          : fx.confirmed ? <><CircleCheck className="size-3.5 text-good" aria-hidden />ยืนยันแล้ว</> : null}
       </span>
     </button>
   )
@@ -161,7 +161,7 @@ function CategoryCard({ group, chips, draft, prevMonth, target, onOpen, onConfir
         </div>
         {target != null && <TargetBar value={total} target={target} />}
         {draft && open.length > 1 && (
-          <Button variant="outline" className="h-10 w-full" onClick={() => onConfirm(open.map((r) => r.id))}>
+          <Button variant="outline" className="h-11 w-full" onClick={() => onConfirm(open.map((r) => r.id))}>
             <CircleCheck /> ยอดไม่เปลี่ยนทั้งหมวด ({open.length})
           </Button>
         )}
@@ -188,7 +188,7 @@ function Row({ row: r, draft, prevMonth, flagged, onOpen, onConfirm }: {
   row: BalanceRow; draft: boolean; prevMonth: string | null; flagged: boolean; onOpen: (id: number) => void; onConfirm: (ids: number[]) => void
 }) {
   const { inUsd, diff, unit, good } = rowDiff(r)
-  const prevText = r.prev == null ? null : inUsd ? `$${money(r.prevUsd!)}` : money(r.prev)
+  const prevText = r.prev == null ? null : inUsd ? `$${money(r.prevUsd!)}` : r.usd != null ? `฿${money(r.prev)}` : money(r.prev)
   const sub = [
     r.usd != null ? `≈ ${money(r.thb)} THB` : null,
     r.tier ? `${r.tier}${r.type ? ` · ${r.type}` : ''}` : null,
@@ -239,14 +239,18 @@ function EmptyCategory({ category, chips, expanded, onAdd }: { category: string;
 
 const textOf = (r: BalanceRow) => r.expr ?? String(r.usd ?? r.thb)
 
-function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNeedRate, actions }: {
+function RowSheet({ row: shown, rows, draft, prevMonth, rate, onClose, onAdvance, onNeedRate, actions }: {
   row: BalanceRow | null; rows: BalanceRow[]; draft: boolean; prevMonth: string | null; rate: number | null
   onClose: () => void; onAdvance: (fromId: number) => void; onNeedRate: () => void; actions: BalanceMobileProps['actions']
 }) {
+  // the sheet stays mounted so it can slide out; while closing it keeps showing the last row
+  const [last, setLast] = useState(shown)
+  if (shown && shown !== last) setLast(shown)
+  const r = shown ?? last
   // the text belongs to one row in one currency; switching rows or ฿/$ starts from that row's value again
-  const key = row ? `${row.id}:${row.usd != null}` : ''
-  const [state, setState] = useState({ key, text: row ? textOf(row) : '' })
-  const text = state.key === key ? state.text : row ? textOf(row) : ''
+  const key = r ? `${r.id}:${r.usd != null}` : ''
+  const [state, setState] = useState({ key, text: r ? textOf(r) : '' })
+  const text = state.key === key ? state.text : r ? textOf(r) : ''
   const setText = (t: string) => setState({ key, text: t })
   // the classify form also belongs to one row: stepping to the next row closes it
   const [cls, setCls] = useState<{ key: string; v: Classify } | null>(null)
@@ -258,7 +262,8 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
   const reset = () => { setState({ key: '', text: '' }); setCls(null) }
   const leave = () => { reset(); onClose() }
   const advance = (id: number) => { reset(); onAdvance(id) }
-  if (!row) return null
+  if (!r) return null
+  const row = r
 
   const usd = row.usd != null
   const { value, expr, ok } = readAmount(text)
@@ -296,14 +301,14 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && leave()}
+    <Sheet open={shown != null} onOpenChange={(o) => !o && leave()}
       title={row.item}
       description={`${CATEGORY_TH[row.category] ?? row.category}${draft ? (k >= 0 ? ` · แถว ${k + 1} จาก ${pending.length} ที่ยังไม่เช็ก` : ` · เช็กแล้ว · เหลือ ${pending.length} แถว`) : ''}`}
       actions={
         <div role="radiogroup" aria-label="สกุลเงิน" className="inline-flex shrink-0 rounded-xl bg-muted p-1 text-sm">
           {(['THB', 'USD'] as const).map((c) => (
             <button key={c} type="button" role="radio" aria-checked={(usd ? 'USD' : 'THB') === c} onClick={() => currency(c)}
-              className={cn('min-h-9 rounded-lg px-3', (usd ? 'USD' : 'THB') === c ? 'bg-card font-medium shadow-sm' : 'text-muted-foreground')}>
+              className={cn('min-h-11 rounded-lg px-3', (usd ? 'USD' : 'THB') === c ? 'bg-card font-medium shadow-sm' : 'text-muted-foreground')}>
               {c === 'THB' ? '฿ THB' : '$ USD'}
             </button>
           ))}
@@ -313,7 +318,7 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
         draft
           ? (
             <div className="grid grid-cols-[1fr_1.3fr] gap-2">
-              <Button variant="secondary" className="h-12" disabled={saving} onPointerDown={(e) => e.preventDefault()} onClick={sameAsBefore}><CircleCheck /> ยอดไม่เปลี่ยน</Button>
+              <Button variant="secondary" className="h-12" disabled={saving || changed} onPointerDown={(e) => e.preventDefault()} onClick={sameAsBefore}><CircleCheck /> ยอดไม่เปลี่ยน</Button>
               <Button className="h-12" disabled={!ok || saving} onPointerDown={(e) => e.preventDefault()} onClick={() => save(true)}>บันทึก · ถัดไป <ChevronRight /></Button>
             </div>
           )
@@ -325,7 +330,7 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
             {thMonth(prevMonth)} {row.prevUsd != null && usd ? `$${money(row.prevUsd)}` : `${money(row.prev)} THB`}
           </span>
         )}
-        <AmountField text={text} onText={setText} unit={usd ? 'USD' : 'THB'} label={`ยอด ${row.item}${usd ? ' (USD)' : ''}`}
+        <AmountField text={text} onText={setText} selectKey={key} unit={usd ? 'USD' : 'THB'} label={`ยอด ${row.item}${usd ? ' (USD)' : ''}`}
           onEnter={() => save(draft)}
           hint={<>
             {usd && rate != null && ok && <span className="block">≈ {money(round2(value! * rate))} THB</span>}
@@ -354,19 +359,24 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
   )
 }
 
-function AddSheet({ target, rows, rate, onClose, onNeedRate, onAdd }: {
+function AddSheet({ target: current, rows, rate, onClose, onNeedRate, onAdd }: {
   target: Adding | null; rows: BalanceRow[]; rate: number | null
   onClose: () => void; onNeedRate: () => void; onAdd: (item: NewBalanceItem) => Promise<boolean>
 }) {
+  // the sheet stays mounted so it can slide out; while closing it keeps showing the last target
+  const [lastTarget, setLastTarget] = useState(current)
+  if (current && current !== lastTarget) setLastTarget(current)
+  const t = current ?? lastTarget
   const [form, setForm] = useState<{ for: Adding | null; category: string; item: string; text: string; cur: Currency; cls: ReturnType<typeof guess> } | null>(null)
   // a new target starts a fresh form (guessing the currency and classification from the category's rows)
-  const f = form?.for === target && form ? form : target ? {
-    for: target, category: target.category ?? '', item: target.item, text: '',
-    cur: guessCurrency(rows, target.category ?? '', rate), cls: guess(rows, target.category ?? ''),
+  const f = form?.for === t && form ? form : t ? {
+    for: t, category: t.category ?? '', item: t.item, text: '',
+    cur: guessCurrency(rows, t.category ?? '', rate), cls: guess(rows, t.category ?? ''),
   } : null
   const set = (p: Partial<NonNullable<typeof f>>) => setForm({ ...f!, ...p })
   const [saving, setSaving] = useState(false)
-  if (!target || !f) return null
+  if (!t || !f) return null
+  const target = t
 
   const { value, expr, ok } = readAmount(f.text)
   const blank = f.text.trim() === ''
@@ -395,7 +405,7 @@ function AddSheet({ target, rows, rate, onClose, onNeedRate, onAdd }: {
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}
+    <Sheet open={current != null} onOpenChange={(o) => !o && onClose()}
       title={target.category ? `เพิ่มใน ${CATEGORY_TH[target.category] ?? target.category}` : `เพิ่มหมวดใหม่ใน${SIDE_TH[target.side]}`}
       footer={<div className="grid grid-cols-[1fr_1.6fr] gap-2"><Button variant="outline" className="h-12" onClick={onClose}>ยกเลิก</Button><Button className="h-12" disabled={!ready} onClick={submit}>เพิ่ม</Button></div>}>
       <div className="flex flex-col gap-3">
@@ -415,7 +425,7 @@ function AddSheet({ target, rows, rate, onClose, onNeedRate, onAdd }: {
           <div role="radiogroup" aria-label="สกุลเงิน" className="inline-flex rounded-xl bg-muted p-1 text-sm">
             {(['THB', 'USD'] as const).map((c) => (
               <button key={c} type="button" role="radio" aria-checked={f.cur === c} onClick={() => switchCur(c)}
-                className={cn('min-h-9 rounded-lg px-3', f.cur === c ? 'bg-card font-medium text-foreground shadow-sm' : 'text-muted-foreground')}>{c === 'THB' ? '฿' : '$'}</button>
+                className={cn('min-h-11 rounded-lg px-3', f.cur === c ? 'bg-card font-medium text-foreground shadow-sm' : 'text-muted-foreground')}>{c === 'THB' ? '฿' : '$'}</button>
             ))}
           </div>
         </div>
@@ -500,13 +510,13 @@ function ClosePanel(p: BalanceMobileProps & { open: boolean; onOpenChange: (o: b
           <li className="flex min-h-12 items-center gap-3 py-2 text-sm">
             {p.fxStale ? <CircleAlert className="size-5 text-warning" /> : <CircleCheck className="size-5 text-good" />}
             <span className="flex-1">{data.fx.usdThb != null ? `เรท USD/THB ${decimal(data.fx.usdThb, 4)}` : 'ยังไม่ได้ใส่เรท USD/THB'}{p.fxStale ? ' · ยังเป็นของเดือนก่อน' : ' · ยืนยันแล้ว'}</span>
-            <Button variant="outline" size="sm" className="h-9" onClick={p.onRate}>แก้เรท</Button>
+            <Button variant="outline" size="sm" className="h-11" onClick={p.onRate}>แก้เรท</Button>
           </li>
         )}
         <li className="flex min-h-12 items-center gap-3 py-2 text-sm">
           {p.unconfirmed ? <Circle className="size-5 text-muted-foreground" /> : <CircleCheck className="size-5 text-good" />}
           <span className="flex-1">{p.unconfirmed ? `ยังไม่เช็ก ${p.unconfirmed} รายการ` : `เช็กครบ ${data.rows.length} รายการแล้ว`}</span>
-          {p.unconfirmed > 0 && <Button variant="secondary" size="sm" className="h-9" onClick={p.onCheckNext}>ไล่เช็กต่อ <ChevronRight /></Button>}
+          {p.unconfirmed > 0 && <Button variant="secondary" size="sm" className="h-11" onClick={p.onCheckNext}>ไล่เช็กต่อ <ChevronRight /></Button>}
         </li>
         {t && t.banks.length > 0 && (
           <li className="flex flex-col gap-2 py-3">

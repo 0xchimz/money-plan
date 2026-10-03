@@ -101,7 +101,7 @@ function Onboarding({ checklist }: { checklist: Overview['checklist'] }) {
               <h1 className="text-2xl font-semibold tracking-tight">ยินดีต้อนรับ</h1>
               <p className="text-sm text-muted-foreground">เริ่มใช้ 3 ขั้น แล้วหน้านี้จะสรุปการเงินของคุณให้</p>
             </div>
-            <ol className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <ol className="grid grid-cols-1 gap-3 lg:grid-cols-3">
               {steps.map((s, i) => (
                 <li key={s.title} className={cn('flex flex-col gap-1 rounded-xl border bg-card p-3', !s.done && i !== next && 'opacity-60')}>
                   <span className="flex items-center gap-2 font-medium">
@@ -129,7 +129,7 @@ function Onboarding({ checklist }: { checklist: Overview['checklist'] }) {
           </CardContent>
         </Card>
       </section>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <GhostChart label="Net worth ตามเวลา" />
         <GhostChart label="สัดส่วนสินทรัพย์" />
       </div>
@@ -252,7 +252,7 @@ function Segmented<T extends string>({ value, onChange, options, label, classNam
     <div className={cn('inline-flex rounded-lg border p-0.5 text-xs', className)} role="tablist" aria-label={label}>
       {options.map((o) => (
         <button key={o.value} type="button" role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}
-          className={cn('rounded-md px-2.5 py-1 transition-colors', o.value === value ? 'bg-primary font-medium text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
+          className={cn('rounded-md px-2.5 py-1 transition-colors max-lg:min-h-11', o.value === value ? 'bg-primary font-medium text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
           {o.label}
         </button>
       ))}
@@ -275,7 +275,7 @@ function MoneyFlowCard({ planning }: { planning: Planning }) {
           <CardDescription>{flow ? `รายรับ ${thb(flow.income)} / เดือน · แตะกลุ่มเพื่อดูรายการ` : `ยังไม่มีรายรับในชุด ${sc.name}`}</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <Segmented value={sc.id} onChange={setId} label="ชุดงบ" className="w-full *:min-h-9 *:flex-1" options={planning.scenarios.map((s) => ({ value: s.id, label: s.name }))} />
+          <Segmented value={sc.id} onChange={setId} label="ชุดงบ" className="w-full *:min-h-11 *:flex-1" options={planning.scenarios.map((s) => ({ value: s.id, label: s.name }))} />
           {flow ? <FlowBars flow={flow} /> : <span className="py-4 text-center text-sm text-muted-foreground">ใส่รายรับในชุด "{sc.name}" แล้วภาพนี้จะขึ้น</span>}
           {t.left < -0.5 && <p className="flex items-center gap-2 text-sm text-critical"><CircleAlert className="size-4" aria-hidden />จัดสรรเกินรายรับ {thb(-t.left)} / เดือน</p>}
           <Link to="/planning" className={cn(buttonVariants({ variant: 'outline' }), 'h-11')}>แก้ใน Planning →</Link>
@@ -428,7 +428,7 @@ function PortfolioSection({ o, onChange }: { o: Overview; onChange: (o: Overview
       <div className="flex flex-wrap items-baseline gap-3 px-1 lg:flex-nowrap">
         <h2 className="text-xl font-semibold tracking-tight">พอร์ตลงทุน</h2>
         <span className="text-sm text-muted-foreground">{thb(o.investTotal)} · ใส่กลุ่มพอร์ตแล้ว {o.investments.length} รายการ</span>
-        <Button variant="outline" size="sm" className="ml-auto" onClick={() => setEditing((x) => !x)}><Pencil /> แก้เป้า</Button>
+        <Button variant="outline" size="sm" className="ml-auto max-lg:h-11" onClick={() => setEditing((x) => !x)}><Pencil /> แก้เป้า</Button>
       </div>
       {editing && !mobile && <TargetsEditor tiers={o.tiers} onCancel={() => setEditing(false)} onSaved={(next) => { onChange(next); setEditing(false) }} />}
       {mobile && (
@@ -499,8 +499,8 @@ function TargetsEditor({ tiers, onCancel, onSaved }: { tiers: Overview['tiers'];
         ))}
         <span className={cn('tabular pb-2 text-sm', valid ? 'text-muted-foreground' : 'text-critical')}>รวม {sum.toFixed(1)}%{valid ? '' : ' — ต้องได้ 100%'}</span>
         <div className="ml-auto flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onCancel}>ยกเลิก</Button>
-          <Button size="sm" disabled={!valid || busy} onClick={save}>บันทึก</Button>
+          <Button variant="ghost" size="sm" className="max-lg:h-11" onClick={onCancel}>ยกเลิก</Button>
+          <Button size="sm" className="max-lg:h-11" disabled={!valid || busy} onClick={save}>บันทึก</Button>
         </div>
       </CardContent>
     </Card>
