@@ -2,14 +2,19 @@
 
 Shipped to prod 3 Oct 2026 (`main` 6840027). Spec: `../specs/2026-10-03-mobile-design.md` · plan: `../plans/2026-10-03-mobile.md`.
 
-## Still to check on a real iPhone (cannot be emulated)
+## Checked on a real iPhone (Chin, 3 Oct — "ผ่านหมด")
 
-- [ ] Sheet buttons (บันทึก · ถัดไป, ยอดไม่เปลี่ยน, เพิ่ม, บันทึก) stay above the keyboard while typing — uses Base UI's `--drawer-keyboard-inset` on the Drawer Viewport
-- [ ] + − × ÷ buttons keep the keyboard open; `54791.65+5000` saves as 59,791.65 with the formula kept
-- [ ] After "บันทึก · ถัดไป" the next row's amount is selected, so typing replaces it
-- [ ] Notch and home bar never cover the header, tabs or a sheet's buttons
-- [ ] Full month close: start month → step through rows → add an item with a chip → tick transfers → close
+- [x] Sheet buttons (บันทึก · ถัดไป, ยอดไม่เปลี่ยน, เพิ่ม, บันทึก) stay above the keyboard while typing — uses Base UI's `--drawer-keyboard-inset` on the Drawer Viewport
+- [x] + − × ÷ buttons keep the keyboard open; `54791.65+5000` saves as 59,791.65 with the formula kept
+- [x] After "บันทึก · ถัดไป" the next row's amount is selected, so typing replaces it
+- [x] Notch and home bar never cover the header, tabs or a sheet's buttons
+- [x] Full month close: start month → step through rows → add an item with a chip → tick transfers → close
 - [x] Add to Home Screen + Google popup login in the home-screen app (Chin, 3 Oct) — redirect login (plan Task 7) not needed
+
+## Added after feedback (3 Oct)
+
+- [x] Header fixed + no iOS rubber-band on phones (`overscroll-behavior-y: none`)
+- [x] Pull to refresh: pages register a reload (`usePageRefresh`) that runs in place — no flash to กำลังโหลด…
 
 ## Known, left on purpose (fix on the next touch of these files)
 
