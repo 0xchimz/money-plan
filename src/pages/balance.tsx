@@ -61,9 +61,9 @@ export function BalancePage() {
     }
   }
 
-  async function step(label: string, fn: () => Promise<unknown>) {
+  async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
     setBusy(label)
-    try { await fn() } finally { setBusy(null) }
+    try { return await fn() } finally { setBusy(null) }
   }
 
   const groups = useMemo(() => {
@@ -142,7 +142,7 @@ export function BalancePage() {
   }
   const startNext = () => step('start', () => mutate(api.startMonth(data.next!), `เริ่มร่าง ${thMonth(data.next!)} แล้ว`).then((ok) => ok && go(data.next!)))
   const closeMonth = () => step('close', () => mutate(api.closeMonth(month), `ปิดเดือน ${thMonth(month)} แล้ว — Overview ใช้ตัวเลขเดือนนี้`))
-  const discard = () => step('discard', () => mutate(api.discardDraft(month), `ลบร่าง ${thMonth(month)} แล้ว`).then((ok) => ok && go('')))
+  const discard = () => step('discard', () => mutate(api.discardDraft(month), `ลบร่าง ${thMonth(month)} แล้ว`).then((ok) => { if (ok) go(''); return ok }))
 
   const hist = data.history.map((h) => ({ month: h.month, label: thMonth(h.month).replace(/ 20(\d\d)$/, " '$1"), assets: h.assets, liabilities: h.liabilities, net: h.net, live: h.draft }))
 

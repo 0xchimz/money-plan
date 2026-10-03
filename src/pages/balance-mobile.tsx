@@ -48,8 +48,8 @@ export interface BalanceMobileProps {
     add: (item: NewBalanceItem) => Promise<boolean>
     toggleTransfer: (bank: string, done: boolean) => void
     startNext: () => void
-    closeMonth: () => Promise<void>
-    discard: () => Promise<void>
+    closeMonth: () => Promise<boolean>
+    discard: () => Promise<boolean>
   }
 }
 
@@ -254,6 +254,10 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
   const setClassifying = (v: Classify | null | ((x: Classify | null) => Classify | null)) =>
     setCls((c) => { const next = typeof v === 'function' ? v(c?.key === key ? c.v : null) : v; return next ? { key, v: next } : null })
   const [saving, setSaving] = useState(false)
+  // anything typed for this row is dropped whenever the row is left, so reopening it shows its real value
+  const reset = () => { setState({ key: '', text: '' }); setCls(null) }
+  const leave = () => { reset(); onClose() }
+  const advance = (id: number) => { reset(); onAdvance(id) }
   if (!row) return null
 
   const usd = row.usd != null
@@ -271,20 +275,28 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
     setSaving(true)
     try {
       if (changed && !(await actions.setEntry(row, value!, expr))) return // failed: toast shown, sheet stays with the text
-      if (!changed && draft && !row.confirmed) await actions.confirm([row.id])
-      if (next && draft) onAdvance(row.id)
-      else onClose()
+      if (!changed && draft && !row.confirmed && !(await actions.confirm([row.id]))) return // failed: toast shown, sheet stays
+      if (next && draft) advance(row.id)
+      else leave()
     } finally { setSaving(false) }
   }
-  const sameAsBefore = async () => { await actions.confirm([row.id]); onAdvance(row.id) }
+  const sameAsBefore = async () => {
+    if (saving) return
+    setSaving(true)
+    try {
+      if (!(await actions.confirm([row.id]))) return // failed: toast shown, sheet stays on this row
+      advance(row.id)
+    } finally { setSaving(false) }
+  }
   const currency = (c: Currency) => {
     if ((row.usd != null ? 'USD' : 'THB') === c) return
     if (c === 'USD' && rate == null) return onNeedRate()
+    reset()
     actions.setCurrency(row, c)
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}
+    <Sheet open onOpenChange={(o) => !o && leave()}
       title={row.item}
       description={`${CATEGORY_TH[row.category] ?? row.category}${draft ? (k >= 0 ? ` · แถว ${k + 1} จาก ${pending.length} ที่ยังไม่เช็ก` : ` · เช็กแล้ว · เหลือ ${pending.length} แถว`) : ''}`}
       actions={
@@ -334,7 +346,7 @@ function RowSheet({ row, rows, draft, prevMonth, rate, onClose, onAdvance, onNee
               {row.side === 'asset' && (
                 <Button variant="ghost" className="h-11" onClick={() => setClassifying({ tier: row.tier, type: row.type ?? 'Equity', country: row.country ?? 'Thailand' })}>จัดกลุ่มการลงทุน</Button>
               )}
-              <Button variant="ghost" className="h-11 text-critical" onClick={async () => { if (await actions.remove(row)) onClose() }}>ซ่อนรายการนี้</Button>
+              <Button variant="ghost" className="h-11 text-critical" onClick={async () => { if (await actions.remove(row)) leave() }}>ซ่อนรายการนี้</Button>
             </div>
           )}
       </div>
@@ -447,6 +459,9 @@ function FloatingBar(p: BalanceMobileProps & { unconfirmed: number; onOpenPanel:
 function ClosePanel(p: BalanceMobileProps & { open: boolean; onOpenChange: (o: boolean) => void; unconfirmed: number; onRate: () => void; onCheckNext: () => void }) {
   const { data, month, actions, busy } = p
   const [asking, setAsking] = useState<'close' | 'discard' | null>(null)
+  // the ask belongs to one opening of the panel (it is also opened and closed from outside)
+  const [wasOpen, setWasOpen] = useState(p.open)
+  if (wasOpen !== p.open) { setWasOpen(p.open); setAsking(null) }
   const t = data.transfers
   const untransferred = t ? t.banks.filter((b) => !b.doneAt).length : 0
   const empty = data.rows.length === 0
@@ -455,8 +470,8 @@ function ClosePanel(p: BalanceMobileProps & { open: boolean; onOpenChange: (o: b
     p.unconfirmed && `${p.unconfirmed} รายการที่ยังใช้ยอดเดือนก่อน`,
     untransferred && `ยังไม่ได้ติ๊กโอนเงิน ${untransferred} บัญชี`,
   ].filter(Boolean) as string[]
-  const close = async () => { setAsking(null); await actions.closeMonth(); p.onOpenChange(false) }
-  const discard = async () => { setAsking(null); await actions.discard(); p.onOpenChange(false) }
+  const close = async () => { setAsking(null); if (await actions.closeMonth()) p.onOpenChange(false) }
+  const discard = async () => { setAsking(null); if (await actions.discard()) p.onOpenChange(false) }
   return (
     <Sheet open={p.open} onOpenChange={(o) => { setAsking(null); p.onOpenChange(o) }}
       title={`ก่อนปิดเดือน ${thMonth(month)}`}
