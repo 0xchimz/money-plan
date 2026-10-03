@@ -1,0 +1,262 @@
+<style>
+  .ph-wrap { display:flex; flex-wrap:wrap; gap:18px; margin:12px 0 6px; }
+  .ph { width:360px; height:700px; flex:none; border-radius:34px; border:9px solid #2b2520; background:#f6f2ea; overflow:hidden; position:relative;
+        font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; color:#2b2520; font-size:13px; text-align:left; line-height:1.35;
+        box-shadow:0 18px 40px -18px rgb(74 52 30 / .45); }
+  .ph * { box-sizing:border-box; }
+  .cap { font-size:12px; color:var(--text-secondary); margin:6px 0 0 4px; max-width:360px; }
+  .cap b { color:var(--text-primary); }
+  .sb { height:30px; display:flex; justify-content:space-between; align-items:center; padding:0 22px; font-size:11.5px; font-weight:600; }
+  .top { display:flex; align-items:center; gap:8px; padding:6px 14px 8px; border-bottom:1px solid #e7dfd2; background:#fbf7f0; }
+  .top b { font-weight:700; }
+  .av { margin-left:auto; width:26px; height:26px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700; flex:none; }
+  .body { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
+  .c { background:#fffdf8; border:1px solid #e7dfd2; border-radius:16px; padding:12px 14px; box-shadow:0 1px 2px rgb(74 52 30 / .05); }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea 70%); border-color:#ead9bd; }
+  .mut { color:#7b6f62; } .xs { font-size:11px; } .sm { font-size:12px; }
+  .num { font-variant-numeric:tabular-nums; }
+  .big { font-size:28px; font-weight:650; letter-spacing:-.02em; }
+  .mid { font-size:18px; font-weight:650; letter-spacing:-.01em; }
+  .up { color:#2f7d5b; font-weight:600; } .dn { color:#c0453a; font-weight:600; }
+  .bar { height:7px; border-radius:7px; background:#efe8dc; overflow:hidden; margin-top:6px; display:flex; }
+  .bar i { display:block; height:100%; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .h { font-weight:650; font-size:13.5px; }
+  .row { display:flex; align-items:center; gap:10px; padding:9px 0; }
+  .row + .row { border-top:1px solid #f1ebe1; }
+  .ok { width:18px; height:18px; border-radius:50%; background:#3f8f5a; flex:none; display:grid; place-items:center; color:#fff; font-size:11px; }
+  .todo { width:18px; height:18px; border-radius:50%; border:1.8px solid #bdb2a3; flex:none; }
+  .grow { flex:1; min-width:0; }
+  .trunc { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .amt { text-align:right; font-weight:600; }
+  .cath { display:flex; align-items:center; gap:10px; padding-bottom:8px; border-bottom:1px solid #f1ebe1; }
+  .ico { width:32px; height:32px; border-radius:11px; background:#efe8dc; display:grid; place-items:center; font-size:14px; flex:none; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:9px 14px; border-radius:11px; background:#2f2822; color:#fbf7f0; font-weight:600; font-size:12.5px; white-space:nowrap; }
+  .btn.ghost { background:#efe8dc; color:#2f2822; }
+  .btn.line { background:transparent; border:1px solid #ddd3c4; color:#2f2822; }
+  .prog { height:5px; border-radius:6px; background:#efe8dc; overflow:hidden; margin-top:6px; } .prog i { display:block; height:100%; background:#3f8f5a; }
+  .kb { position:absolute; left:0; right:0; bottom:0; height:200px; background:#d4d0ca; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:8px 6px 26px; z-index:7; }
+  .kb span { background:#fdfcfa; border-radius:7px; display:grid; place-items:center; font-size:20px; box-shadow:0 1px 0 #a9a39b; }
+  .kb span.k2 { background:transparent; box-shadow:none; font-size:14px; color:#4b4540; }
+  .tabbar { position:absolute; left:0; right:0; bottom:0; height:72px; background:rgb(251 247 240 / .97); border-top:1px solid #e7dfd2; display:grid; grid-template-columns:repeat(3,1fr); padding:7px 0 20px; z-index:2; }
+  .tabbar span { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; color:#9a8e80; }
+  .tabbar span i { font-style:normal; font-size:18px; line-height:1; }
+  .tabbar span.on { color:#2b2520; font-weight:600; }
+  .scrim { position:absolute; inset:0; background:rgb(30 22 15 / .35); z-index:5; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; z-index:6; background:#fffdf8; border-radius:22px 22px 0 0; padding:8px 16px 0; box-shadow:0 -10px 30px -10px rgb(0 0 0 / .3); }
+  .grab { width:38px; height:5px; border-radius:5px; background:#ddd3c4; margin:0 auto 10px; }
+  .seg { display:inline-flex; background:#efe8dc; border-radius:10px; padding:3px; font-size:12px; }
+  .seg span { padding:4px 12px; border-radius:8px; color:#7b6f62; } .seg span.on { background:#fffdf8; color:#2b2520; font-weight:600; box-shadow:0 1px 2px rgb(0 0 0 / .08); }
+  .seg.full { display:flex; } .seg.full span { flex:1; text-align:center; }
+  .bigin { border:1.5px solid #b9a88f; border-radius:14px; background:#fff; padding:10px 12px; font-size:22px; font-weight:650; text-align:right; box-shadow:0 0 0 4px rgb(185 168 143 / .25); }
+  .fld { border:1px solid #ddd3c4; border-radius:11px; background:#fff; padding:8px 11px; font-size:13.5px; }
+  .lbl { font-size:11px; color:#7b6f62; margin:9px 0 4px; }
+  .chipl { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:11.5px; padding:5px 10px; border-radius:99px; background:#efe8dc; color:#4b4038; }
+  .chip.on { background:#2f2822; color:#fbf7f0; }
+  .pill { font-size:10.5px; padding:2px 8px; border-radius:99px; background:#f3e6cf; color:#8a5a1f; font-weight:600; }
+  .hsc { display:flex; gap:10px; overflow:hidden; margin-right:-12px; }
+  .hsc .c { flex:none; width:150px; padding:10px 12px; }
+  .tiers { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+  .tiers span { border:1px solid #ddd3c4; border-radius:10px; padding:6px 4px; text-align:center; font-size:11px; }
+  .tiers span.on { background:#2f2822; color:#fbf7f0; border-color:#2f2822; }
+  .tiers small { display:block; font-size:9px; opacity:.7; }
+  .toggle { width:38px; height:22px; border-radius:22px; background:#3f8f5a; position:relative; flex:none; }
+  .toggle::after { content:""; position:absolute; right:3px; top:3px; width:16px; height:16px; border-radius:50%; background:#fff; }
+  .acc { display:flex; align-items:center; gap:8px; padding:9px 0; }
+  .acc + .acc { border-top:1px solid #f1ebe1; }
+  .chev { color:#a99c8c; flex:none; width:12px; }
+  .sub { padding:0 0 6px 20px; }
+  .sub .row { padding:5px 0; border:0; }
+  .tgt { position:relative; height:10px; border-radius:5px; background:#efe8dc; margin-top:4px; }
+  .tgt i { position:absolute; left:0; top:0; bottom:0; border-radius:5px; }
+  .tgt b { position:absolute; top:-3px; bottom:-3px; width:2px; background:#2b2520; border-radius:2px; }
+  .dv { display:grid; grid-template-columns:86px 1fr 1fr; align-items:center; gap:4px; font-size:11.5px; margin:5px 0; }
+  .dv .l { display:flex; justify-content:flex-end; } .dv .r { display:flex; }
+  .group-title { font-size:15px; font-weight:650; margin:22px 0 2px; }
+  .group-title:first-of-type { margin-top:8px; }
+</style>
+
+<h2>แบบ B: หน้าจอที่เหลือ</h2>
+<p class="subtitle">ต่อจากรอบแรก (Overview, ลิสต์ Balance, แผ่นแก้ยอด) · ดูแล้วติหรือแก้ได้ทีละจอ อ้างเลขจอได้เลย เช่น "จอ 3 อยากให้…"</p>
+
+<!-- ===================== PLANNING ===================== -->
+<div class="group-title">แผนเงิน (Planning)</div>
+<div class="ph-wrap">
+  <!-- 1 planning list -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="top"><b>แผนเงิน</b><span class="av">C</span></div>
+    <div style="padding:8px 12px;background:#fbf7f0;border-bottom:1px solid #e7dfd2"><span class="seg full"><span class="on">ปัจจุบัน</span><span>Projection</span><span>ตกงาน</span></span></div>
+    <div class="body">
+      <div class="c hero">
+        <div class="mut sm">ออมและลงทุนต่อเดือน</div>
+        <div class="big num">฿55,800.00</div>
+        <div class="mut xs num">28% ของรายรับ ฿199,000.00</div>
+        <div class="bar" style="height:12px;border-radius:5px;margin-top:8px"><i style="width:63%;background:#eb6834"></i><i style="width:21%;background:#2a78d6"></i><i style="width:7%;background:#1baf7a"></i><i style="width:9%;background:#e1d8c9"></i></div>
+        <div class="xs mut" style="margin-top:4px">รายจ่าย 63% · ลงทุน 21% · ออม 7% · ยังไม่จัดสรร 9%</div>
+      </div>
+      <div class="hsc">
+        <div class="c"><div class="mut xs">ภาระผ่อน · DSR</div><div class="h num" style="font-size:16px">18.5%</div><div class="bar"><i style="width:46%;background:#2a78d6"></i></div><div class="mut xs">เส้น 40%</div></div>
+        <div class="c"><div class="mut xs">ตกงานอยู่ได้</div><div class="h num" style="font-size:16px">6.0 เดือน</div><div class="bar"><i style="width:100%;background:#2a78d6"></i></div><div class="mut xs">เป้า 6 เดือน</div></div>
+        <div class="c"><div class="mut xs">รายจ่ายตามหมวด</div><div class="h" style="font-size:16px">7 หมวด ›</div></div>
+      </div>
+      <div class="c">
+        <div class="cath"><span class="ico">↓</span><div class="grow"><div class="h">รายรับ</div><div class="mut xs">2 รายการ</div></div><div class="amt num">199,000.00</div></div>
+        <div class="row"><div class="grow"><div class="sm">เงินเดือน</div><div class="xs mut">Kbank</div></div><div class="amt num sm">177,000.00</div><span class="chev">›</span></div>
+        <div class="row"><div class="grow"><div class="sm">ค่าเช่า TLW</div><div class="xs mut">SCB</div></div><div class="amt num sm">22,000.00</div><span class="chev">›</span></div>
+        <div class="chipl" style="margin-top:6px"><span class="chip">+ รายได้เสริม</span><span class="chip">+ ดอกเบี้ย / ปันผล</span><span class="chip">+ เพิ่มเอง</span></div>
+      </div>
+    </div>
+    <div class="tabbar"><span><i>◉</i>ภาพรวม</span><span class="on"><i>☰</i>แผนเงิน</span><span><i>⚖</i>งบดุล</span></div>
+  </div>
+  <div class="cap"><b>จอ 1</b> · ปุ่มเลือกชุดงบติดด้านบนตลอด · ตัวชี้ (DSR / ตกงานอยู่ได้ / รายจ่ายตามหมวด) ปัดซ้าย-ขวา · ตาราง "เทียบทุกชุดงบ" อยู่ล่างสุดของหน้า · แถวแตะได้ทั้งแถว</div>
+  </div>
+
+  <!-- 2 planning edit sheet -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="body" style="opacity:.5"><div class="c"><div class="cath"><span class="ico">↑</span><div class="grow"><div class="h">ออมและลงทุน</div></div></div></div></div>
+    <div class="scrim"></div>
+    <div class="sheet">
+      <div class="grab"></div>
+      <div style="display:flex;align-items:center"><div class="grow h" style="font-size:16px">แก้รายการ</div><span class="xs" style="color:#c0453a">ลบ</span></div>
+      <div class="lbl">ชื่อรายการ</div><div class="fld">RMF → TLWORLDRMF</div>
+      <div class="lbl">บัญชี / ที่มาเงิน (ไม่บังคับ)</div><div class="fld">SCB</div>
+      <div class="lbl">หมวด</div>
+      <div class="chipl"><span class="chip">Saving</span><span class="chip on">Investment</span><span class="chip">Education</span></div>
+      <div class="lbl">ยอดต่อเดือน (THB)</div>
+      <div class="bigin num">10000▏</div>
+      <div class="xs mut num" style="text-align:right;margin-top:4px">= 10,000.00 THB · 5.0% ของรายรับ</div>
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin:12px 0 14px"><span class="btn line">ยกเลิก</span><span class="btn">บันทึก</span></div>
+    </div>
+    <div class="kb"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="k2">+ − .</span><span>0</span><span class="k2">⌫</span></div>
+  </div>
+  <div class="cap"><b>จอ 2</b> · แตะแถวหรือชิป "+ RMF" → แผ่นเดียวกัน (ชิปจะกรอกชื่อ/หมวดไว้ให้) · ย้ายหมวด = แตะชิปหมวด · ลบแล้วกด "เลิกทำ" ได้เหมือนเดิม</div>
+  </div>
+</div>
+
+<!-- ===================== BALANCE ===================== -->
+<div class="group-title">งบดุล (Balance)</div>
+<div class="ph-wrap">
+  <!-- 3 close panel -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="top"><span class="mut" style="font-size:16px">‹</span><b>ต.ค. 2026</b><span class="pill">ร่าง</span><span class="mut" style="font-size:16px">›</span><span class="mut xs" style="margin-left:auto">USD 32.39 ✓</span></div>
+    <div class="scrim"></div>
+    <div class="sheet" style="top:90px">
+      <div class="grab"></div>
+      <div class="h" style="font-size:16px">ก่อนปิดเดือน ต.ค. 2026</div>
+      <div class="mut xs" style="margin-bottom:6px">Overview ยังใช้ ก.ย. จนกว่าจะปิดเดือน</div>
+      <div class="row"><span class="ok">✓</span><div class="grow sm">เรท USD/THB 32.39 ยืนยันแล้ว</div></div>
+      <div class="row"><span class="todo"></span><div class="grow sm">ยังไม่เช็ก 6 รายการ</div><span class="btn ghost" style="padding:5px 10px;font-size:11.5px">ไล่เช็กต่อ ›</span></div>
+      <div class="row" style="align-items:flex-start"><span class="todo" style="margin-top:2px"></span><div class="grow">
+        <div class="sm">โอนเงิน 2 / 4 บัญชี <span class="mut xs">· แตะยอดเพื่อคัดลอก</span></div>
+        <div style="margin-top:6px">
+          <div class="row" style="padding:6px 0"><span class="ok" style="width:16px;height:16px">✓</span><div class="grow sm" style="text-decoration:line-through;color:#9a8e80">KKP</div><span class="num sm" style="color:#9a8e80">10,000.00</span></div>
+          <div class="row" style="padding:6px 0"><span class="ok" style="width:16px;height:16px">✓</span><div class="grow sm" style="text-decoration:line-through;color:#9a8e80">Kbank</div><span class="num sm" style="color:#9a8e80">60,000.00</span></div>
+          <div class="row" style="padding:6px 0"><span class="todo" style="width:16px;height:16px"></span><div class="grow"><div class="sm">SCB</div><div class="xs mut">TLWORLD-X, RMF</div></div><span class="num sm amt">20,000.00</span></div>
+          <div class="row" style="padding:6px 0"><span class="todo" style="width:16px;height:16px"></span><div class="grow"><div class="sm">DIME</div><div class="xs mut">Core</div></div><span class="num sm amt">25,000.00</span></div>
+        </div>
+        <div class="xs mut num">เหลือโอน 45,000.00 THB จาก 115,000.00 THB</div>
+      </div></div>
+      <div style="display:grid;gap:8px;margin:12px 0 6px"><span class="btn">🔒 ปิดเดือน ต.ค. 2026</span></div>
+      <div class="xs" style="text-align:center;color:#c0453a;margin-bottom:12px">ลบร่างเดือนนี้</div>
+    </div>
+  </div>
+  <div class="cap"><b>จอ 3</b> · แตะแถบปิดเดือนด้านล่าง → แผงนี้ขึ้นมา: เรท, แถวที่ยังไม่เช็ก (กด "ไล่เช็กต่อ" เปิดแผ่นแก้ยอดแถวแรกที่ค้าง), ลิสต์โอนเงิน, ปุ่มปิดเดือน · แตะ "USD 32.39" ด้านบน = แผ่นตั้งเรท (มีปุ่มใช้เรท ECB)</div>
+  </div>
+
+  <!-- 4 add item sheet -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="body" style="opacity:.5"><div class="c"><div class="cath"><span class="ico">📈</span><div class="grow"><div class="h">หุ้น & กองทุนหุ้น</div></div></div></div></div>
+    <div class="scrim"></div>
+    <div class="sheet" style="top:70px">
+      <div class="grab"></div>
+      <div class="h" style="font-size:16px">เพิ่มใน หุ้น & กองทุนหุ้น</div>
+      <div class="lbl">ชื่อ</div><div class="fld">RMF</div>
+      <div style="display:flex;align-items:flex-end;gap:8px"><div class="grow"><div class="lbl">ยอด</div><div class="bigin num" style="font-size:18px;padding:8px 12px">412300▏</div></div><span class="seg" style="margin-bottom:4px"><span class="on">฿</span><span>$</span></span></div>
+      <div class="xs mut num" style="text-align:right;margin-top:4px">= 412,300.00 THB</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:12px"><div class="grow sm"><b>นับเป็นพอร์ตลงทุน</b><div class="xs mut">ไม่นับ: บ้าน ประกัน เงินสดใช้จ่าย</div></div><span class="toggle"></span></div>
+      <div class="lbl">Tier</div>
+      <div class="tiers"><span>Foundation<small>เงินต้นปลอดภัย</small></span><span class="on">Core<small>ลงทุนหลัก</small></span><span>Growth<small>เน้นโต</small></span><span>High Risk<small>เสี่ยงสูง</small></span></div>
+      <div class="grid2" style="margin-bottom:12px"><div><div class="lbl">ประเภท</div><div class="fld">ETF ▾</div></div><div><div class="lbl">ประเทศ</div><div class="fld">Global ▾</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px;margin-bottom:16px"><span class="btn line">ยกเลิก</span><span class="btn">เพิ่ม</span></div>
+    </div>
+  </div>
+  <div class="cap"><b>จอ 4</b> · กดชิปในหมวด (เช่น "+ RMF") → แผ่นเพิ่มรายการ ฟิลด์ชุดเดียวกับ desktop · "จัดกลุ่มการลงทุน" ของแถวที่มีอยู่แล้วใช้แผ่นนี้ส่วนล่าง</div>
+  </div>
+</div>
+
+<!-- ===================== OVERVIEW ===================== -->
+<div class="group-title">ภาพรวม (Overview) เลื่อนลงไป</div>
+<div class="ph-wrap">
+  <!-- 5 overview lower -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="top"><b>ภาพรวม</b><span class="mut xs" style="margin-left:6px">ปิดล่าสุด ก.ย. 2026</span><span class="av">C</span></div>
+    <div class="body">
+      <div class="c">
+        <div class="h">สินทรัพย์ vs หนี้</div><div class="mut xs">6 เดือนล่าสุด · ปัดดูย้อนหลัง</div>
+        <svg viewBox="0 0 300 100" width="100%" height="96" style="margin-top:6px">
+          <g fill="#2a78d6"><rect x="8" y="30" width="16" height="62"/><rect x="58" y="27" width="16" height="65"/><rect x="108" y="25" width="16" height="67"/><rect x="158" y="22" width="16" height="70"/><rect x="208" y="18" width="16" height="74"/><rect x="258" y="12" width="16" height="80"/></g>
+          <g fill="#eb6834"><rect x="26" y="74" width="16" height="18"/><rect x="76" y="75" width="16" height="17"/><rect x="126" y="75" width="16" height="17"/><rect x="176" y="76" width="16" height="16"/><rect x="226" y="76" width="16" height="16"/><rect x="276" y="77" width="16" height="15"/></g>
+          <polyline points="25,46 75,44 125,42 175,38 225,34 275,27" fill="none" stroke="#1baf7a" stroke-width="2"/>
+          <g font-size="8" fill="#7b6f62"><text x="10" y="100">เม.ย.</text><text x="60" y="100">พ.ค.</text><text x="110" y="100">มิ.ย.</text><text x="160" y="100">ก.ค.</text><text x="210" y="100">ส.ค.</text><text x="260" y="100">ก.ย.</text></g>
+        </svg>
+      </div>
+      <div class="c">
+        <div class="h">เดือนนี้เปลี่ยนเพราะอะไร</div><div class="mut xs" style="margin-bottom:6px">เทียบ ส.ค. · หนี้ลด = บวก</div>
+        <div class="dv"><span>คริปโต</span><span></span><span class="r"><i style="display:block;height:9px;width:90%;background:#1baf7a;border-radius:3px"></i></span></div>
+        <div class="dv"><span>หุ้น & กองทุน</span><span></span><span class="r"><i style="display:block;height:9px;width:38%;background:#1baf7a;border-radius:3px"></i></span></div>
+        <div class="dv"><span>สินเชื่อบ้าน</span><span></span><span class="r"><i style="display:block;height:9px;width:12%;background:#1baf7a;border-radius:3px"></i></span></div>
+        <div class="dv"><span>เงินสด</span><span class="l"><i style="display:block;height:9px;width:30%;background:#e34948;border-radius:3px"></i></span><span></span></div>
+      </div>
+      <div class="c">
+        <div style="display:flex;align-items:baseline"><div class="h grow">พอร์ตลงทุน เทียบเป้า</div><span class="xs mut">แก้เป้า</span></div>
+        <div class="sm" style="margin-top:6px;display:flex"><span class="grow">Foundation</span><span class="num mut xs">8.1% / 10%</span></div><div class="tgt"><i style="width:32%;background:#2a78d6"></i><b style="left:40%"></b></div>
+        <div class="sm" style="margin-top:6px;display:flex"><span class="grow">Core</span><span class="num mut xs">10.4% / 40%</span></div><div class="tgt"><i style="width:26%;background:#2a78d6"></i><b style="left:100%"></b></div>
+        <div class="sm" style="margin-top:6px;display:flex"><span class="grow">High Risk</span><span class="num dn xs">22.6% / 15%</span></div><div class="tgt"><i style="width:56%;background:#eb6834"></i><b style="left:37%"></b></div>
+      </div>
+    </div>
+    <div class="tabbar"><span class="on"><i>◉</i>ภาพรวม</span><span><i>☰</i>แผนเงิน</span><span><i>⚖</i>งบดุล</span></div>
+  </div>
+  <div class="cap"><b>จอ 5</b> · กราฟเดิมเรียงลงมาทีละใบ เต็มความกว้าง · กราฟรายเดือนโชว์ 6 เดือนล่าสุด ปัดดูย้อนหลัง · สัดส่วนสินทรัพย์ / ตามประเภท / ประเทศ / top holdings ต่อจากนี้</div>
+  </div>
+
+  <!-- 6 balance sheet + account -->
+  <div>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="top"><b>ภาพรวม</b><span class="mut xs" style="margin-left:6px">ปิดล่าสุด ก.ย. 2026</span><span class="av">C</span></div>
+    <div class="body">
+      <div class="c">
+        <div class="h" style="margin-bottom:4px">งบดุล · Balance sheet</div>
+        <div class="acc"><span class="chev">▾</span><div class="grow h" style="font-size:13px">สินทรัพย์</div><span class="num amt sm">12,684,330.12</span></div>
+        <div class="sub">
+          <div class="row"><div class="grow sm">คริปโต</div><span class="num sm">4,103,410.66</span></div>
+          <div class="row"><div class="grow sm">อสังหาริมทรัพย์</div><span class="num sm">3,900,000.00</span></div>
+          <div class="row"><div class="grow sm">หุ้น & กองทุนหุ้น</div><span class="num sm">2,812,940.37</span></div>
+          <div class="row"><div class="grow sm mut">อีก 6 หมวด</div><span class="mut xs">ดูทั้งหมด ›</span></div>
+        </div>
+        <div class="acc"><span class="chev">›</span><div class="grow h" style="font-size:13px">หนี้สิน</div><span class="num amt sm">2,342,211.67</span></div>
+        <div class="acc"><span class="chev"></span><div class="grow h" style="font-size:13px">ความมั่งคั่งสุทธิ</div><span class="num amt sm">10,342,118.45</span></div>
+      </div>
+    </div>
+    <div class="scrim" style="z-index:3"></div>
+    <div class="sheet" style="z-index:4">
+      <div class="grab"></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span class="av" style="margin:0;width:36px;height:36px;font-size:14px">C</span><div><div class="h">Chinnabhorn</div><div class="xs mut">c.soonue@gmail.com</div></div></div>
+      <div class="row"><div class="grow sm" style="color:#c0453a">ออกจากระบบ</div></div>
+      <div style="height:18px"></div>
+    </div>
+  </div>
+  <div class="cap"><b>จอ 6</b> · ตาราง Balance sheet 2 คอลัมน์ → ลิสต์พับได้ (สินทรัพย์ / หนี้สิน / สุทธิ) · แตะรูปโปรไฟล์มุมขวาบน → แผ่นบัญชี: ชื่อ อีเมล ออกจากระบบ (ธีมสว่าง/มืดตามเครื่องเหมือนเดิม)</div>
+  </div>
+</div>

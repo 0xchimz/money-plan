@@ -1,0 +1,347 @@
+<style>
+  .ph-wrap { display:flex; flex-wrap:wrap; gap:18px; margin:12px 0 6px; }
+  .ph { width:360px; height:700px; flex:none; border-radius:34px; border:9px solid #2b2520; background:#f6f2ea; overflow:hidden; position:relative;
+        font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; color:#2b2520; font-size:13px; text-align:left; line-height:1.35;
+        box-shadow:0 18px 40px -18px rgb(74 52 30 / .45); }
+  .ph * { box-sizing:border-box; }
+  .cap { font-size:12px; color:var(--text-secondary); margin:6px 0 0 4px; max-width:360px; }
+  .sb { height:30px; display:flex; justify-content:space-between; align-items:center; padding:0 22px; font-size:11.5px; font-weight:600; }
+  .top { display:flex; align-items:center; gap:8px; padding:6px 14px 8px; border-bottom:1px solid #e7dfd2; background:#fbf7f0; }
+  .top b { font-weight:700; }
+  .av { margin-left:auto; width:26px; height:26px; border-radius:50%; background:#c9a57a; color:#fff; display:grid; place-items:center; font-size:11px; font-weight:700; }
+  .tabs { display:flex; gap:4px; padding:8px 14px; background:#fbf7f0; border-bottom:1px solid #e7dfd2; }
+  .tabs span { padding:5px 12px; border-radius:9px; color:#7b6f62; font-size:12.5px; }
+  .tabs span.on { background:#efe8dc; color:#2b2520; font-weight:600; }
+  .body { padding:12px 12px 0; display:flex; flex-direction:column; gap:10px; }
+  .c { background:#fffdf8; border:1px solid #e7dfd2; border-radius:16px; padding:12px 14px; box-shadow:0 1px 2px rgb(74 52 30 / .05); }
+  .hero { background:linear-gradient(135deg,#f3e6cf,#fbf5ea 70%); border-color:#ead9bd; }
+  .mut { color:#7b6f62; } .xs { font-size:11px; } .sm { font-size:12px; }
+  .num { font-variant-numeric:tabular-nums; }
+  .big { font-size:28px; font-weight:650; letter-spacing:-.02em; }
+  .mid { font-size:18px; font-weight:650; letter-spacing:-.01em; }
+  .up { color:#2f7d5b; font-weight:600; } .dn { color:#c0453a; font-weight:600; }
+  .bar { height:7px; border-radius:7px; background:#efe8dc; overflow:hidden; margin-top:6px; display:flex; }
+  .bar i { display:block; height:100%; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .h { font-weight:650; font-size:13.5px; }
+  .row { display:flex; align-items:center; gap:10px; padding:9px 0; }
+  .row + .row { border-top:1px solid #f1ebe1; }
+  .ok { width:18px; height:18px; border-radius:50%; background:#3f8f5a; flex:none; display:grid; place-items:center; color:#fff; font-size:11px; }
+  .todo { width:18px; height:18px; border-radius:50%; border:1.8px solid #bdb2a3; flex:none; }
+  .grow { flex:1; min-width:0; }
+  .trunc { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .amt { text-align:right; font-weight:600; }
+  .inp { border:1px solid #ddd3c4; border-radius:9px; background:#fff; padding:6px 8px; text-align:right; font-weight:600; width:132px; flex:none; }
+  .inp.focus { border-color:#b9a88f; box-shadow:0 0 0 3px rgb(185 168 143 / .35); }
+  .cur { font-size:10.5px; border:1px solid #ddd3c4; border-radius:6px; padding:1px 5px; color:#7b6f62; flex:none; }
+  .dots { color:#a99c8c; flex:none; }
+  .cath { display:flex; align-items:center; gap:10px; padding-bottom:8px; border-bottom:1px solid #f1ebe1; }
+  .ico { width:32px; height:32px; border-radius:11px; background:#efe8dc; display:grid; place-items:center; font-size:14px; flex:none; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:8px 14px; border-radius:11px; background:#2f2822; color:#fbf7f0; font-weight:600; font-size:12.5px; white-space:nowrap; }
+  .btn.ghost { background:#efe8dc; color:#2f2822; }
+  .btn.line { background:transparent; border:1px solid #ddd3c4; color:#2f2822; }
+  .draft { position:sticky; top:0; z-index:3; background:rgb(255 253 248 / .95); border:1px solid #e7dfd2; border-radius:14px; padding:10px 12px; }
+  .prog { height:5px; border-radius:6px; background:#efe8dc; overflow:hidden; margin-top:6px; } .prog i { display:block; height:100%; background:#3f8f5a; }
+  .kb { position:absolute; left:0; right:0; bottom:0; height:230px; background:#d4d0ca; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; padding:8px 6px 26px; }
+  .kb span { background:#fdfcfa; border-radius:7px; display:grid; place-items:center; font-size:20px; box-shadow:0 1px 0 #a9a39b; }
+  .kb span.k2 { background:transparent; box-shadow:none; font-size:14px; color:#4b4540; }
+  .tabbar { position:absolute; left:0; right:0; bottom:0; height:72px; background:rgb(251 247 240 / .97); border-top:1px solid #e7dfd2; display:grid; grid-template-columns:repeat(3,1fr); padding:7px 0 20px; }
+  .tabbar span { display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; color:#9a8e80; }
+  .tabbar span i { font-style:normal; font-size:18px; line-height:1; }
+  .tabbar span.on { color:#2b2520; font-weight:600; }
+  .closebar { position:absolute; left:10px; right:10px; bottom:80px; z-index:4; background:#2f2822; color:#fbf7f0; border-radius:16px; padding:10px 12px; display:flex; align-items:center; gap:10px; box-shadow:0 10px 24px -10px rgb(0 0 0 / .5); }
+  .closebar .prog { background:#4a4038; } .closebar .prog i { background:#7fc79a; }
+  .closebar .btn { background:#fbf7f0; color:#2f2822; padding:7px 12px; }
+  .scrim { position:absolute; inset:0; background:rgb(30 22 15 / .35); z-index:5; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; z-index:6; background:#fffdf8; border-radius:22px 22px 0 0; padding:8px 16px 0; box-shadow:0 -10px 30px -10px rgb(0 0 0 / .3); }
+  .grab { width:38px; height:5px; border-radius:5px; background:#ddd3c4; margin:0 auto 10px; }
+  .seg { display:inline-flex; background:#efe8dc; border-radius:10px; padding:3px; font-size:12px; }
+  .seg span { padding:4px 12px; border-radius:8px; color:#7b6f62; } .seg span.on { background:#fffdf8; color:#2b2520; font-weight:600; box-shadow:0 1px 2px rgb(0 0 0 / .08); }
+  .bigin { border:1.5px solid #b9a88f; border-radius:14px; background:#fff; padding:10px 12px; font-size:24px; font-weight:650; text-align:right; box-shadow:0 0 0 4px rgb(185 168 143 / .25); }
+  .chipl { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { font-size:11.5px; padding:4px 10px; border-radius:99px; background:#efe8dc; color:#4b4038; }
+  .steps { display:flex; gap:6px; }
+  .steps span { flex:1; height:5px; border-radius:5px; background:#efe8dc; } .steps span.on { background:#2f2822; } .steps span.done { background:#3f8f5a; }
+  .pill { font-size:10.5px; padding:2px 8px; border-radius:99px; background:#f3e6cf; color:#8a5a1f; font-weight:600; }
+  .note { border:1px dashed #cdbfa9; border-radius:10px; padding:7px 9px; font-size:11px; color:#7b6f62; background:#fbf7f0; }
+  .opt-meta { display:grid; grid-template-columns:1fr 1fr; gap:10px 24px; margin-top:10px; font-size:13px; }
+  .opt-meta b { display:block; margin-bottom:2px; }
+  .opt-meta ul { margin:0; padding-left:18px; color:var(--text-secondary); }
+  .rec { font-size:11px; font-weight:700; color:#fff; background:#2f7d5b; border-radius:99px; padding:2px 8px; margin-left:6px; vertical-align:2px; }
+</style>
+
+<h2>money-plan บนมือถือ: เลือกทิศทาง</h2>
+<p class="subtitle">ทุกแบบใช้หน้า Overview / Planning / Balance เดิม ฟีเจอร์ครบเท่า desktop และ desktop หน้าตาเหมือนเดิม · มือถือในภาพกว้าง 360px (Android จอเล็ก) ขนาดจริง · ตัวเลขเป็นค่าตัวอย่าง</p>
+
+<div class="options">
+
+<!-- ================= A ================= -->
+<div class="option" data-choice="a" onclick="toggleSelect(this)">
+  <div class="letter">A</div>
+  <div class="content">
+    <h3>ย่อให้พอดีจอ: แท็บด้านบน แก้ยอดในแถว</h3>
+    <p>layout เดิมเรียงเป็นคอลัมน์เดียว แถบแท็บยังอยู่ด้านบน แตะช่องยอดแล้วพิมพ์ในแถวเหมือนบน desktop</p>
+
+    <div class="ph-wrap">
+      <!-- A1 overview -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><b>money-plan</b><span class="av">C</span></div>
+        <div class="tabs"><span class="on">Overview</span><span>Planning</span><span>Balance</span></div>
+        <div class="body">
+          <div class="c hero">
+            <div class="mut sm">ความมั่งคั่งสุทธิ · ก.ย. 2026</div>
+            <div class="big num">฿10,342,118.45</div>
+            <div class="sm"><span class="up">+฿562,410.20</span> <span class="mut">(+5.75%) จาก ส.ค.</span></div>
+          </div>
+          <div class="c"><div class="mut sm">ออม + ลงทุนต่อเดือน</div><div class="mid num">฿55,800.00</div><div class="bar"><i style="width:28%;background:#1baf7a"></i></div><div class="mut xs">28% ของรายรับ</div></div>
+          <div class="c"><div class="mut sm">เงินสำรองฉุกเฉิน</div><div class="mid num">6.0 เดือน</div><div class="bar"><i style="width:99%;background:#2a78d6"></i></div><div class="mut xs num">฿539,700.00 / เป้า ฿540,000.00</div></div>
+          <div class="c">
+            <div class="h">เงินเดือนไปไหน</div>
+            <div class="mut xs" style="margin-bottom:6px">Sankey เดิม ย่อลงให้พอดีจอ · ชื่อหมวดเล็กมาก</div>
+            <svg viewBox="0 0 300 120" width="100%" height="110">
+              <rect x="0" y="10" width="8" height="100" fill="#2a78d6"/><rect x="96" y="10" width="8" height="100" fill="#7b6f62"/>
+              <rect x="196" y="10" width="8" height="58" fill="#eb6834"/><rect x="196" y="72" width="8" height="20" fill="#1baf7a"/><rect x="196" y="96" width="8" height="8" fill="#eda100"/>
+              <path d="M8 10 C50 10 50 10 96 10 L96 110 C50 110 50 110 8 110Z" fill="#2a78d6" opacity=".18"/>
+              <path d="M104 10 C150 10 150 10 196 10 L196 68 C150 68 150 68 104 68Z" fill="#eb6834" opacity=".2"/>
+              <path d="M104 72 C150 72 150 72 196 72 L196 92 C150 92 150 92 104 92Z" fill="#1baf7a" opacity=".2"/>
+              <rect x="290" y="10" width="8" height="14" fill="#eb6834"/><rect x="290" y="28" width="8" height="12" fill="#eb6834"/><rect x="290" y="44" width="8" height="10" fill="#eb6834"/><rect x="290" y="58" width="8" height="10" fill="#eb6834"/>
+              <text x="210" y="20" font-size="6" fill="#7b6f62">รายจ่าย</text><text x="270" y="18" font-size="5" fill="#7b6f62">Housing</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="cap">Overview: ทุกการ์ดเรียงลงมา · Sankey ย่อทั้งก้อน ตัวหนังสือเล็กจนอ่านยาก</div>
+      </div>
+
+      <!-- A2 balance -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><b>money-plan</b><span class="av">C</span></div>
+        <div class="tabs"><span>Overview</span><span>Planning</span><span class="on">Balance</span></div>
+        <div class="body">
+          <div class="draft">
+            <div style="display:flex;align-items:center;gap:8px"><div class="grow sm"><b>ร่าง ต.ค. 2026</b> · เช็ก 18 / 24 · โอน 2 / 4</div><span class="btn" style="padding:6px 10px">ปิดเดือน</span></div>
+            <div class="prog"><i style="width:75%"></i></div>
+          </div>
+          <div class="c">
+            <div class="cath"><span class="ico">฿</span><div class="grow"><div class="h">เงินสด / ออมทรัพย์</div><div class="mut xs">Cash · 3 รายการ</div></div><div class="amt num sm">฿312,940.21</div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="trunc sm">KKP Savvy</div><div class="xs up">+฿4,210.00</div></div><span class="cur">฿</span><span class="inp num">251,550.08</span><span class="dots">⋯</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">SCB ออมทรัพย์</div></div><span class="cur">฿</span><span class="inp num">54,791.65</span><span class="dots">⋯</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">Kbank เงินเดือน</div></div><span class="cur">฿</span><span class="inp num">6,598.48</span><span class="dots">⋯</span></div>
+          </div>
+          <div class="c">
+            <div class="cath"><span class="ico">₿</span><div class="grow"><div class="h">คริปโต</div><div class="mut xs">Crypto · 2 รายการ</div></div><div class="amt num sm">฿4,103,410.66</div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">BTC</div><div class="xs mut num">≈ 3,642,140.12 THB</div></div><span class="cur">$</span><span class="inp num">112,450.32</span><span class="dots">⋯</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">ETH</div><div class="xs mut num">≈ 461,270.54 THB</div></div><span class="cur">$</span><span class="inp num">14,241.48</span><span class="dots">⋯</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="cap">Balance: แถวเดิม (วงกลมยืนยัน · ชื่อ · ฿/$ · ช่องยอด · ⋯) แคบลง ชื่อยาวถูกตัด · ยอดเดือนก่อนย้ายไปบรรทัดใต้ชื่อ</div>
+      </div>
+
+      <!-- A3 editing -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="body" style="padding-top:6px">
+          <div class="c">
+            <div class="cath"><span class="ico">฿</span><div class="grow"><div class="h">เงินสด / ออมทรัพย์</div><div class="mut xs">Cash · 3 รายการ</div></div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="trunc sm">KKP Savvy</div></div><span class="cur">฿</span><span class="inp num">251,550.08</span><span class="dots">⋯</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">SCB ออมทรัพย์</div><div class="xs mut">= 59,791.65</div></div><span class="cur">฿</span><span class="inp num focus">54791.65+5000▏</span><span class="dots">⋯</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">Kbank เงินเดือน</div></div><span class="cur">฿</span><span class="inp num">6,598.48</span><span class="dots">⋯</span></div>
+          </div>
+          <div class="note">แก้ในแถว เหมือน desktop · ปุ่ม "ถัดไป" บนคีย์บอร์ด = ไปช่องยอดแถวถัดไป · ยืนยัน "ยอดไม่เปลี่ยน" ต้องแตะวงกลมเล็ก 18px ทางซ้าย</div>
+        </div>
+        <div class="kb"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="k2">+ − .</span><span>0</span><span class="k2">⌫</span></div>
+      </div>
+      <div class="cap">แก้ยอด: แตะช่องแล้วคีย์บอร์ดขึ้น พิมพ์สูตรได้เหมือนเดิม</div>
+      </div>
+    </div>
+
+    <div class="opt-meta">
+      <div><b>ดี</b><ul><li>งานน้อยสุด แก้แค่ CSS/breakpoint กับ header</li><li>หน้าตาและการใช้งานเหมือน desktop ทุกอย่าง</li></ul></div>
+      <div><b>ไม่ดี</b><ul><li>ปุ่มเล็ก แตะพลาดง่าย (วงกลม, ฿/$, ⋯ อยู่ชิดกัน)</li><li>Sankey กับตาราง Balance sheet อ่านยากบนจอ 360px</li><li>แท็บอยู่บนสุด นิ้วโป้งเอื้อมไม่ถึง</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= B ================= -->
+<div class="option" data-choice="b" onclick="toggleSelect(this)">
+  <div class="letter">B</div>
+  <div class="content">
+    <h3>แบบ app: แถบเมนูล่าง + แผ่นแก้ยอดเลื่อนขึ้นจากล่าง <span class="rec">แนะนำ</span></h3>
+    <p>แถวแสดงยอดอย่างเดียว แตะแถว → แผ่นแก้ยอดเลื่อนขึ้นมา ปุ่มใหญ่ "ยอดไม่เปลี่ยน" / "บันทึกแล้วไปแถวถัดไป" · แถบปิดเดือนลอยอยู่ด้านล่างตลอด · Sankey บนมือถือเปลี่ยนเป็นแท่งแบ่งสัดส่วน + รายการ</p>
+
+    <div class="ph-wrap">
+      <!-- B1 overview -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><b>ภาพรวม</b><span class="mut xs" style="margin-left:6px">ปิดล่าสุด ก.ย. 2026</span><span class="av">C</span></div>
+        <div class="body">
+          <div class="c hero">
+            <div class="mut sm">ความมั่งคั่งสุทธิ</div>
+            <div class="big num">฿10,342,118.45</div>
+            <div class="sm"><span class="up">+฿562,410.20</span> <span class="mut">(+5.75%) จาก ส.ค.</span></div>
+            <svg viewBox="0 0 300 36" width="100%" height="34" style="margin-top:6px"><polyline points="0,32 40,30 80,27 120,26 160,22 200,18 240,15 300,6" fill="none" stroke="#1baf7a" stroke-width="2.2"/></svg>
+          </div>
+          <div class="grid2">
+            <div class="c" style="padding:10px 12px"><div class="mut xs">ออม + ลงทุน / เดือน</div><div class="h num" style="font-size:15px">฿55,800.00</div><div class="bar"><i style="width:28%;background:#1baf7a"></i></div><div class="mut xs">28% ของรายรับ</div></div>
+            <div class="c" style="padding:10px 12px"><div class="mut xs">เงินสำรองฉุกเฉิน</div><div class="h num" style="font-size:15px">6.0 เดือน</div><div class="bar"><i style="width:99%;background:#2a78d6"></i></div><div class="mut xs">เป้า 6 เดือน</div></div>
+          </div>
+          <div class="c">
+            <div style="display:flex;align-items:center"><div class="h grow">เงินเดือนไปไหน</div><span class="seg"><span class="on">ปัจจุบัน</span><span>ตกงาน</span></span></div>
+            <div class="mut xs num" style="margin:4px 0 2px">รายรับ ฿199,000.00 / เดือน</div>
+            <div class="bar" style="height:14px;border-radius:6px"><i style="width:63%;background:#eb6834"></i><i style="width:21%;background:#2a78d6"></i><i style="width:7%;background:#1baf7a"></i><i style="width:9%;background:#e1d8c9"></i></div>
+            <div class="row"><span style="width:10px;height:10px;border-radius:3px;background:#eb6834"></span><div class="grow sm">รายจ่าย ›</div><div class="num sm amt">฿126,100.00</div></div>
+            <div class="row"><span style="width:10px;height:10px;border-radius:3px;background:#2a78d6"></span><div class="grow sm">ลงทุน ›</div><div class="num sm amt">฿41,700.00</div></div>
+            <div class="row"><span style="width:10px;height:10px;border-radius:3px;background:#1baf7a"></span><div class="grow sm">ออม ›</div><div class="num sm amt">฿14,100.00</div></div>
+          </div>
+        </div>
+        <div class="tabbar"><span class="on"><i>◉</i>ภาพรวม</span><span><i>☰</i>แผนเงิน</span><span><i>⚖</i>งบดุล</span></div>
+      </div>
+      <div class="cap">Overview: การ์ดตัวชี้เป็น 2 คอลัมน์ · Sankey → แท่งสัดส่วน แตะ "รายจ่าย ›" เพื่อดูหมวดย่อย · กราฟ/ตาราง Balance sheet อยู่ถัดลงไป</div>
+      </div>
+
+      <!-- B2 balance -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><span class="mut" style="font-size:16px">‹</span><b>ต.ค. 2026</b><span class="pill">ร่าง</span><span class="mut" style="font-size:16px">›</span><span class="mut xs" style="margin-left:auto">USD 32.39 ✓</span></div>
+        <div class="body">
+          <div class="c">
+            <div class="cath"><span class="ico">฿</span><div class="grow"><div class="h">เงินสด / ออมทรัพย์</div><div class="mut xs">2 / 3 เช็กแล้ว</div></div><div class="amt num sm">฿312,940.21</div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="trunc sm">KKP Savvy</div><div class="xs mut num">ส.ค. 247,340.08</div></div><div><div class="amt num sm">251,550.08</div><div class="xs up num" style="text-align:right">+4,210.00</div></div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="trunc sm">SCB ออมทรัพย์</div><div class="xs mut num">ส.ค. 54,791.65</div></div><div><div class="amt num sm">54,791.65</div><div class="xs mut" style="text-align:right">—</div></div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">Kbank เงินเดือน</div><div class="xs mut num">ยกมาจาก ส.ค.</div></div><div class="amt num sm mut">6,598.48</div></div>
+          </div>
+          <div class="c">
+            <div class="cath"><span class="ico">₿</span><div class="grow"><div class="h">คริปโต</div><div class="mut xs">0 / 2 เช็กแล้ว</div></div><div class="amt num sm">฿4,103,410.66</div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">BTC</div><div class="xs mut num">≈ 3,642,140.12 THB</div></div><div class="amt num sm mut">$112,450.32</div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="trunc sm">ETH</div><div class="xs mut num">≈ 461,270.54 THB</div></div><div class="amt num sm mut">$14,241.48</div></div>
+          </div>
+        </div>
+        <div class="closebar"><div class="grow"><div class="sm"><b>เช็ก 18 / 24</b> · โอน 2 / 4</div><div class="prog"><i style="width:75%"></i></div></div><span class="btn">ปิดเดือน</span></div>
+        <div class="tabbar"><span><i>◉</i>ภาพรวม</span><span><i>☰</i>แผนเงิน</span><span class="on"><i>⚖</i>งบดุล</span></div>
+      </div>
+      <div class="cap">Balance: แถวกว้าง แตะได้ทั้งแถว · ยอดเดือนก่อน + ส่วนต่างอยู่ใต้ชื่อ/ยอด · แถบปิดเดือนลอยเหนือเมนูล่าง แตะดูว่าเหลืออะไร (ลิสต์โอนเงินอยู่ในนั้น)</div>
+      </div>
+
+      <!-- B3 sheet -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="body" style="opacity:.55">
+          <div class="c"><div class="cath"><span class="ico">฿</span><div class="grow"><div class="h">เงินสด / ออมทรัพย์</div></div></div>
+          <div class="row"><span class="ok">✓</span><div class="grow sm">KKP Savvy</div><div class="amt num sm">251,550.08</div></div></div>
+        </div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <div style="display:flex;align-items:flex-start;gap:8px">
+            <div class="grow"><div class="h" style="font-size:16px">Kbank เงินเดือน</div><div class="mut xs">เงินสด / ออมทรัพย์ · แถว 3 จาก 6 ที่ยังไม่เช็ก</div></div>
+            <span class="seg"><span class="on">฿ THB</span><span>$ USD</span></span>
+          </div>
+          <div class="mut xs num" style="margin:10px 0 4px">ส.ค. 6,598.48 THB</div>
+          <div class="bigin num">6598.48+12000▏</div>
+          <div class="xs num" style="text-align:right;margin-top:4px"><span class="mut">= </span><b>18,598.48 THB</b> <span class="up">+12,000.00</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:8px;margin-top:12px">
+            <span class="btn ghost">✓ ยอดไม่เปลี่ยน</span><span class="btn">บันทึก · ถัดไป ›</span>
+          </div>
+          <div style="display:flex;gap:14px;justify-content:center;margin:10px 0 8px" class="xs mut"><span>จัดกลุ่มการลงทุน</span><span>·</span><span>ซ่อนรายการนี้</span></div>
+        </div>
+        <div class="kb" style="z-index:7;height:200px"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span><span class="k2">+ − .</span><span>0</span><span class="k2">⌫</span></div>
+      </div>
+      <div class="cap">แตะแถว → แผ่นแก้ยอด: ช่องใหญ่พิมพ์สูตรได้ · "ยอดไม่เปลี่ยน" กับ "บันทึก · ถัดไป" พาไปแถวถัดไปที่ยังไม่เช็กเอง จึงไล่ทั้งเดือนได้โดยไม่ต้องปิดแผ่น</div>
+      </div>
+    </div>
+
+    <div class="opt-meta">
+      <div><b>ดี</b><ul><li>ปุ่มใหญ่ นิ้วโป้งเอื้อมถึง เมนูอยู่ล่าง ใช้เหมือน app ธนาคาร</li><li>ปิดเดือนได้เร็ว ไล่ทีละแถวในแผ่นเดียว (ทำนองเดียวกับ Enter ไปช่องถัดไปบน desktop)</li><li>Overview อ่านง่ายบนจอแคบ</li></ul></div>
+      <div><b>ไม่ดี</b><ul><li>ต้องสร้าง component ใหม่: แถบเมนูล่าง, bottom sheet, แท่งแทน Sankey</li><li>แก้ยอดต้องแตะ 2 ครั้ง (แตะแถว แล้วพิมพ์) แทนการพิมพ์ในแถวเลย</li></ul></div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= C ================= -->
+<div class="option" data-choice="c" onclick="toggleSelect(this)">
+  <div class="letter">C</div>
+  <div class="content">
+    <h3>ปิดเดือนเป็นขั้นตอน: เช็กยอด → โอนเงิน → ปิดเดือน</h3>
+    <p>เมนูล่างกับ Overview เหมือน B แต่ร่าง Balance บนมือถือเปลี่ยนเป็นตัวช่วยปิดเดือน 3 ขั้น ทีละหมวด ส่วนเดือนที่ปิดแล้วยังเป็นลิสต์ปกติ</p>
+
+    <div class="ph-wrap">
+      <!-- C1 step 1 -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><span class="mut">✕</span><b style="margin-left:4px">ปิดเดือน ต.ค. 2026</b><span class="mut xs" style="margin-left:auto">หมวด 2 / 7</span></div>
+        <div style="padding:10px 14px 0"><div class="steps"><span class="on"></span><span></span><span></span></div><div class="xs mut" style="margin-top:5px">ขั้น 1 เช็กยอด · 2 โอนเงิน · 3 ปิดเดือน</div></div>
+        <div class="body">
+          <div class="c">
+            <div class="cath"><span class="ico">฿</span><div class="grow"><div class="h" style="font-size:15px">เงินสด / ออมทรัพย์</div><div class="mut xs">เทียบ ส.ค. 2026</div></div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="sm">KKP Savvy</div><div class="xs mut num">ส.ค. 247,340.08</div></div><span class="inp num">251,550.08</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="sm">SCB ออมทรัพย์</div><div class="xs mut num">ส.ค. 54,791.65</div></div><span class="inp num">54,791.65</span></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="sm">Kbank เงินเดือน</div><div class="xs mut num">ส.ค. 6,598.48</div></div><span class="inp num">6,598.48</span></div>
+            <div class="chipl" style="margin-top:8px"><span class="chip">+ บัญชีออมทรัพย์</span><span class="chip">+ เงินสด</span></div>
+          </div>
+        </div>
+        <div style="position:absolute;left:12px;right:12px;bottom:26px;display:grid;grid-template-columns:1fr 1.3fr;gap:8px">
+          <span class="btn line">ที่เหลือไม่เปลี่ยน</span><span class="btn">หมวดถัดไป ›</span>
+        </div>
+      </div>
+      <div class="cap">ขั้น 1: ทีละหมวด เต็มจอ · "ที่เหลือไม่เปลี่ยน" ยืนยันแถวที่ยังไม่เช็กในหมวดนั้นทีเดียว · ปัดซ้าย/ขวาเปลี่ยนหมวด</div>
+      </div>
+
+      <!-- C2 transfers -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><span class="mut">‹</span><b style="margin-left:4px">ปิดเดือน ต.ค. 2026</b></div>
+        <div style="padding:10px 14px 0"><div class="steps"><span class="done"></span><span class="on"></span><span></span></div><div class="xs mut" style="margin-top:5px">ขั้น 2 โอนเงินตามแผน · แตะยอดเพื่อคัดลอก</div></div>
+        <div class="body">
+          <div class="c">
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="sm" style="text-decoration:line-through;color:#9a8e80">KKP</div><div class="xs mut">เงินสำรองฉุกเฉิน</div></div><div class="amt num">10,000.00</div></div>
+            <div class="row"><span class="ok">✓</span><div class="grow"><div class="sm" style="text-decoration:line-through;color:#9a8e80">Kbank</div><div class="xs mut">ค่าใช้จ่ายรายเดือน</div></div><div class="amt num">60,000.00</div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="sm">SCB</div><div class="xs mut">TLWORLD-X, RMF</div></div><div class="amt num">20,000.00</div></div>
+            <div class="row"><span class="todo"></span><div class="grow"><div class="sm">DIME</div><div class="xs mut">Core</div></div><div class="amt num">25,000.00</div></div>
+          </div>
+          <div class="c"><div style="display:flex"><span class="grow sm"><b>รวมต้องโอน</b></span><b class="num">115,000.00 THB</b></div><div class="prog"><i style="width:61%"></i></div><div class="xs mut num">โอนแล้ว 70,000.00 THB · เหลือ 45,000.00 THB</div></div>
+        </div>
+        <div style="position:absolute;left:12px;right:12px;bottom:26px;display:grid;grid-template-columns:1fr;gap:8px"><span class="btn">ถัดไป: สรุปก่อนปิด ›</span></div>
+      </div>
+      <div class="cap">ขั้น 2: ลิสต์โอนเงินรายธนาคาร (การ์ดเดิมใน Balance)</div>
+      </div>
+
+      <!-- C3 summary -->
+      <div>
+      <div class="ph">
+        <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+        <div class="top"><span class="mut">‹</span><b style="margin-left:4px">ปิดเดือน ต.ค. 2026</b></div>
+        <div style="padding:10px 14px 0"><div class="steps"><span class="done"></span><span class="done"></span><span class="on"></span></div><div class="xs mut" style="margin-top:5px">ขั้น 3 สรุปก่อนปิด</div></div>
+        <div class="body">
+          <div class="c hero"><div class="mut sm">Net worth ต.ค. 2026</div><div class="big num">฿10,498,302.17</div><div class="sm"><span class="up">+฿156,183.72</span> <span class="mut">(+1.51%) จาก ก.ย.</span></div></div>
+          <div class="c">
+            <div class="h" style="margin-bottom:4px">ยังค้างอยู่</div>
+            <div class="row"><span class="todo"></span><div class="grow sm">2 รายการยังใช้ยอดเดือนก่อน</div><span class="xs mut">ไปดู ›</span></div>
+            <div class="row"><span class="ok">✓</span><div class="grow sm">เรท USD/THB 32.39 ยืนยันแล้ว</div></div>
+            <div class="row"><span class="todo"></span><div class="grow sm">ยังไม่ติ๊กโอน 2 บัญชี</div><span class="xs mut">ไปดู ›</span></div>
+          </div>
+        </div>
+        <div style="position:absolute;left:12px;right:12px;bottom:26px;display:grid;gap:8px"><span class="btn">🔒 ปิดเดือน ต.ค. 2026</span></div>
+      </div>
+      <div class="cap">ขั้น 3: สรุป net worth + สิ่งที่ยังค้าง แล้วกดปิดเดือน</div>
+      </div>
+    </div>
+
+    <div class="opt-meta">
+      <div><b>ดี</b><ul><li>ง่ายสุดสำหรับคนที่ปิดเดือนเดือนละครั้ง (Nitcha) ไม่ต้องรู้ว่าเหลืออะไร</li><li>ปุ่มใหญ่ ไม่มีของเกินบนจอ</li></ul></div>
+      <div><b>ไม่ดี</b><ul><li>งานเยอะสุด: Balance มี 2 หน้าตา (มือถือ vs desktop) ต้องดูแล 2 ชุด</li><li>อยากแก้แถวเดียวเร็วๆ ต้องเข้าโหมดขั้นตอน</li><li>Overview/Planning ยังต้องทำเหมือน B อยู่ดี</li></ul></div>
+    </div>
+  </div>
+</div>
+
+</div>
