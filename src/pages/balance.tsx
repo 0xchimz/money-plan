@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
 import { api, type Balance, type BalanceRow, type BalanceSide, type Currency, type FxQuote, type NewBalanceItem } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { money, thb, thMonth } from '@/lib/format'
@@ -35,6 +36,8 @@ export function BalancePage() {
   useEffect(() => {
     api.balance(wanted).then(setData, setError)
   }, [wanted])
+  // reload the month on screen; an answer that arrives after a newer write is dropped, like mutate's
+  usePageRefresh(() => { const n = ++seq.current; return api.balance(data?.month ?? wanted).then((d) => { if (n === seq.current) setData(d) }) })
 
   // ECB reference rate for the draft on screen, offered next to the month's own rate
   const shownMonth = data?.month ?? null, shownDraft = data?.status === 'draft'

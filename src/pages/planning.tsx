@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
 import { api, type BudgetLineInput, type BudgetLineRow, type BudgetType, type Planning, type Scenario, type ScenarioId } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { money, pct, thb, thMonth } from '@/lib/format'
@@ -52,6 +53,8 @@ export function PlanningPage() {
   useEffect(() => {
     api.planning().then(setData, setError)
   }, [])
+  // a refresh answer that arrives after a newer write is dropped, like mutate's
+  usePageRefresh(() => { const n = ++seq.current; return api.planning().then((d) => { if (n === seq.current) setData(d) }) })
 
   async function mutate(call: Promise<Planning>, done?: string): Promise<boolean> {
     const n = ++seq.current

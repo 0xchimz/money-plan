@@ -1,9 +1,10 @@
-import { createContext, Fragment, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router'
 import { ArrowDown, ClipboardList, LayoutDashboard, Loader2, LogOut, Scale } from 'lucide-react'
 import { Avatar } from '@/components/avatar'
-import { PULL_THRESHOLD, usePullToRefresh } from '@/components/mobile/pull-to-refresh'
+import { toast } from 'sonner'
+import { PULL_THRESHOLD, RefreshContext, usePullToRefresh } from '@/components/mobile/pull-to-refresh'
 import { Sheet } from '@/components/mobile/sheet'
 import { Button } from '@/components/ui/button'
 import type { Me } from '@/lib/api'
@@ -45,10 +46,15 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-  // pull to refresh remounts the page, so it fetches its data again (URL state like ?month= stays)
-  const [round, setRound] = useState(0)
-  const { pull, refreshing } = usePullToRefresh(() => setRound((n) => n + 1))
+  // pull to refresh runs the reloads the page registered; the page keeps showing its data until the new data arrives
+  const reloads = useRef(new Set<() => Promise<unknown>>())
+  const register = useCallback((fn: () => Promise<unknown>) => { reloads.current.add(fn); return () => { reloads.current.delete(fn) } }, [])
+  const { pull, refreshing } = usePullToRefresh(async () => {
+    const results = await Promise.allSettled([...reloads.current].map((fn) => fn()))
+    if (results.some((r) => r.status === 'rejected')) toast.error('โหลดข้อมูลใหม่ไม่ได้', { description: 'ลองดึงใหม่อีกครั้ง' })
+  })
   return (
+    <RefreshContext value={register}>
     <SlotContext value={{ inline, below }}>
       <div className="min-h-svh bg-background">
         <header ref={header} className="fixed inset-x-0 top-0 z-20 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
@@ -71,7 +77,7 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
         </div>
         <main className={cn('mx-auto max-w-[640px] px-3 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]', pull === 0 && 'transition-transform duration-200')}
           style={{ ...(headerH ? { paddingTop: headerH + 12 } : {}), transform: pull ? `translateY(${pull}px)` : undefined }}>
-          <Fragment key={round}>{children}</Fragment>
+          {children}
         </main>
         <nav aria-label="เมนูหลัก" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
           <div className="mx-auto grid h-16 max-w-[640px] grid-cols-3">
@@ -95,5 +101,6 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
         </Sheet>
       </div>
     </SlotContext>
+    </RefreshContext>
   )
 }

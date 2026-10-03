@@ -13,6 +13,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
 import { api, OTHER_COLOR, SERIES, TIER_COLOR, TIERS, type Overview, type Planning, type ScenarioId, type Tier, type TierTargets } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { pct, signed, thb, thbCompact, thMonth } from '@/lib/format'
@@ -31,6 +32,7 @@ export function OverviewPage() {
   useEffect(() => {
     Promise.all([api.overview(), api.planning()]).then(([a, b]) => { setO(a); setP(b) }, setError)
   }, [])
+  usePageRefresh(() => Promise.all([api.overview(), api.planning()]).then(([a, b]) => { setO(a); setP(b) }))
   if (!o || !p) return <PageState error={error} />
   if (!o.month) return <Onboarding checklist={o.checklist} />
 
