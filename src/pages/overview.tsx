@@ -5,6 +5,9 @@ import { toast } from 'sonner'
 import { AllocationBullets, DivergingList, MultiLines, NetWorthChart, RankedBars, StackedColumns } from '@/components/charts'
 import { ChartCard, Legend, ToggleLegend } from '@/components/chart-card'
 import { PageState } from '@/components/layout'
+import { Sheet } from '@/components/mobile/sheet'
+import { ScrollX } from '@/components/mobile/scroll-x'
+import { TopBarSlot } from '@/components/mobile/shell'
 import { Sankey } from '@/components/sankey'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,9 +16,11 @@ import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, Table
 import { api, OTHER_COLOR, SERIES, TIER_COLOR, TIERS, type Overview, type Planning, type ScenarioId, type Tier, type TierTargets } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { pct, signed, thb, thbCompact, thMonth } from '@/lib/format'
+import { useIsMobile } from '@/lib/use-is-mobile'
 import { cn } from '@/lib/utils'
 import { efStatus, totals, type EfStatus, type Totals } from '@shared/planning'
 import { FLOW_COLOR, moneyFlow } from '@shared/sankey'
+import { BalanceSheetList, FlowBars } from './overview-mobile'
 
 const th = (c: string) => CATEGORY_TH[c] ?? c
 
@@ -35,9 +40,10 @@ export function OverviewPage() {
   const history = o.netHistory.length >= 2
   return (
     <div className="flex flex-col gap-6">
-      <section className="grid grid-cols-12 gap-4">
-        <NetWorthHero o={o} className="col-span-7" />
-        <div className="col-span-5 grid gap-3">
+      <TopBarSlot><span className="truncate text-xs text-muted-foreground">ปิดล่าสุด {thMonth(o.month)}</span></TopBarSlot>
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-12 lg:gap-4">
+        <NetWorthHero o={o} className="lg:col-span-7" />
+        <div className="grid grid-cols-2 gap-3 lg:col-span-5 lg:grid-cols-1">
           <SavingTile t={mainT} />
           <EfTile ef={ef} />
           <DebtTile o={o} />
@@ -47,16 +53,16 @@ export function OverviewPage() {
       <MoneyFlowCard planning={p} />
 
       {history && (
-        <div className="grid grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
           <ChartCard
-            className="col-span-7"
+            className="lg:col-span-7"
             title="สินทรัพย์ vs หนี้ รายเดือน"
             description={`ปิดแล้ว ${o.netHistory.length} เดือน · ใหม่สุดอยู่ซ้าย`}
             legend={<Legend items={[{ label: 'สินทรัพย์', color: 'var(--chart-1)' }, { label: 'หนี้สิน', color: 'var(--chart-2)' }, { label: 'สุทธิ', color: 'var(--chart-3)', line: true, value: thb(o.netWorth) }]} />}
-            chart={<NetWorthChart data={o.netHistory} />}
+            chart={<ScrollX count={o.netHistory.length}><NetWorthChart data={o.netHistory} /></ScrollX>}
             table={<NetTable rows={o.netHistory} />}
           />
-          <Card className="col-span-5">
+          <Card className="lg:col-span-5">
             <CardHeader>
               <CardTitle>เดือนนี้เปลี่ยนเพราะอะไร</CardTitle>
               <CardDescription>ผลต่อความมั่งคั่งสุทธิ แยกหมวด เทียบ {thMonth(o.prev!.month)} · หนี้ลด = บวก</CardDescription>
@@ -88,14 +94,14 @@ function Onboarding({ checklist }: { checklist: Overview['checklist'] }) {
   const next = steps.findIndex((s) => !s.done)
   return (
     <div className="flex flex-col gap-6">
-      <section className="grid grid-cols-12 gap-4">
-        <Card className="finance-hero col-span-8">
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Card className="finance-hero lg:col-span-8">
           <CardContent className="flex flex-col gap-4 py-2">
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">ยินดีต้อนรับ</h1>
               <p className="text-sm text-muted-foreground">เริ่มใช้ 3 ขั้น แล้วหน้านี้จะสรุปการเงินของคุณให้</p>
             </div>
-            <ol className="grid grid-cols-3 gap-3">
+            <ol className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {steps.map((s, i) => (
                 <li key={s.title} className={cn('flex flex-col gap-1 rounded-xl border bg-card p-3', !s.done && i !== next && 'opacity-60')}>
                   <span className="flex items-center gap-2 font-medium">
@@ -111,7 +117,7 @@ function Onboarding({ checklist }: { checklist: Overview['checklist'] }) {
             </ol>
           </CardContent>
         </Card>
-        <Card className="col-span-4">
+        <Card className="lg:col-span-4">
           <CardHeader><CardTitle>หน้านี้จะมีอะไร</CardTitle></CardHeader>
           <CardContent>
             <ul className="list-disc space-y-1 pl-4 text-sm text-muted-foreground">
@@ -123,7 +129,7 @@ function Onboarding({ checklist }: { checklist: Overview['checklist'] }) {
           </CardContent>
         </Card>
       </section>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <GhostChart label="Net worth ตามเวลา" />
         <GhostChart label="สัดส่วนสินทรัพย์" />
       </div>
@@ -150,7 +156,7 @@ function NetWorthHero({ o, className }: { o: Overview; className?: string }) {
       <CardContent className="flex h-full flex-col gap-3 py-2">
         <span className="text-sm text-muted-foreground">ความมั่งคั่งสุทธิ · Net worth · {thMonth(o.month!, true)}</span>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <span className="tabular text-5xl font-semibold tracking-tight">{thb(o.netWorth)}</span>
+          <span className="tabular text-4xl font-semibold lg:text-5xl tracking-tight">{thb(o.netWorth)}</span>
           {change != null && <Change value={change} base={o.prev!.netWorth} label={`จาก ${thMonth(o.prev!.month)}`} />}
         </div>
         {h.length >= 2 && <Sparkline values={[...h].reverse().map((r) => r.net)} />}
@@ -190,11 +196,11 @@ function Sparkline({ values }: { values: number[] }) {
   )
 }
 
-function Tile({ label, value, share, color, sub }: { label: string; value: ReactNode; share?: number; color?: string; sub: ReactNode }) {
+function Tile({ label, value, share, color, sub, className }: { label: string; value: ReactNode; share?: number; color?: string; sub: ReactNode; className?: string }) {
   return (
-    <Card size="sm">
+    <Card size="sm" className={className}>
       <CardContent className="flex flex-col gap-1.5">
-        <div className="flex items-baseline justify-between gap-2">
+        <div className="flex flex-col gap-0.5 lg:flex-row lg:items-baseline lg:justify-between lg:gap-2">
           <span className="text-sm text-muted-foreground">{label}</span>
           <span className="tabular">{value}</span>
         </div>
@@ -234,16 +240,16 @@ function EfTile({ ef }: { ef: EfStatus }) {
 function DebtTile({ o }: { o: Overview }) {
   const ratio = o.totalAssets ? o.totalLiabilities / o.totalAssets : 0
   return (
-    <Tile label="หนี้ต่อสินทรัพย์" value={<b>{pct(ratio)}</b>} share={ratio} color="var(--chart-2)"
+    <Tile className="col-span-2 lg:col-span-1" label="หนี้ต่อสินทรัพย์" value={<b>{pct(ratio)}</b>} share={ratio} color="var(--chart-2)"
       sub={`หนี้ ${thb(o.totalLiabilities)} · สินทรัพย์ ${thb(o.totalAssets)}`} />
   )
 }
 
 // ---- where the salary goes (Sankey like the portfolio Flow page) ----
 
-function Segmented<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string }) {
+function Segmented<T extends string>({ value, onChange, options, label, className }: { value: T; onChange: (v: T) => void; options: { value: T; label: string }[]; label: string; className?: string }) {
   return (
-    <div className="inline-flex rounded-lg border p-0.5 text-xs" role="tablist" aria-label={label}>
+    <div className={cn('inline-flex rounded-lg border p-0.5 text-xs', className)} role="tablist" aria-label={label}>
       {options.map((o) => (
         <button key={o.value} type="button" role="tab" aria-selected={o.value === value} onClick={() => onChange(o.value)}
           className={cn('rounded-md px-2.5 py-1 transition-colors', o.value === value ? 'bg-primary font-medium text-primary-foreground' : 'text-muted-foreground hover:text-foreground')}>
@@ -260,6 +266,23 @@ function MoneyFlowCard({ planning }: { planning: Planning }) {
   const flow = moneyFlow(sc.lines, th)
   const t = totals(sc.lines)
   const share = (v: number) => (t.income ? ` · ${pct(v / t.income, 0)}` : '')
+  const mobile = useIsMobile()
+  if (mobile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>เงินเดือนไปไหน</CardTitle>
+          <CardDescription>{flow ? `รายรับ ${thb(flow.income)} / เดือน · แตะกลุ่มเพื่อดูรายการ` : `ยังไม่มีรายรับในชุด ${sc.name}`}</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          <Segmented value={sc.id} onChange={setId} label="ชุดงบ" className="w-full *:min-h-9 *:flex-1" options={planning.scenarios.map((s) => ({ value: s.id, label: s.name }))} />
+          {flow ? <FlowBars flow={flow} /> : <span className="py-4 text-center text-sm text-muted-foreground">ใส่รายรับในชุด "{sc.name}" แล้วภาพนี้จะขึ้น</span>}
+          {t.left < -0.5 && <p className="flex items-center gap-2 text-sm text-critical"><CircleAlert className="size-4" aria-hidden />จัดสรรเกินรายรับ {thb(-t.left)} / เดือน</p>}
+          <Link to="/planning" className={cn(buttonVariants({ variant: 'outline' }), 'h-11')}>แก้ใน Planning →</Link>
+        </CardContent>
+      </Card>
+    )
+  }
   return (
     <Card>
       <CardHeader>
@@ -347,12 +370,12 @@ function AssetMixCard({ o }: { o: Overview }) {
       title="สัดส่วนสินทรัพย์ตามเวลา"
       description={`${shown.length < series.length ? `${shown.length} จาก ${series.length} หมวด` : 'สินทรัพย์ทุกหมวด'} · ใหม่สุดอยู่ซ้าย · กดชื่อหมวดเพื่อซ่อน`}
       legend={
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-wrap items-start justify-between gap-2 lg:flex-nowrap">
           <ToggleLegend items={series.map((c) => ({ label: c.key, color: c.color }))} active={active} onChange={setActive} />
           <Segmented value={mode} onChange={setMode} label="แบบกราฟ" options={[{ value: 'stacked', label: 'ซ้อน' }, { value: 'lines', label: 'เส้น' }]} />
         </div>
       }
-      chart={mode === 'stacked' ? <StackedColumns data={rows} series={shown} /> : <MultiLines data={rows} series={shown} />}
+      chart={<ScrollX count={rows.length}>{mode === 'stacked' ? <StackedColumns data={rows} series={shown} /> : <MultiLines data={rows} series={shown} />}</ScrollX>}
       table={
         <Table>
           <TableHeader><TableRow><TableHead>เดือน</TableHead>{shown.map((c) => <TableHead key={c.key} className="text-right">{c.key}</TableHead>)}{shown.length > 1 && <TableHead className="text-right">รวม</TableHead>}</TableRow></TableHeader>
@@ -399,17 +422,23 @@ function RankCard({ title, description, rows, total, limit, className }: { title
 
 function PortfolioSection({ o, onChange }: { o: Overview; onChange: (o: Overview) => void }) {
   const [editing, setEditing] = useState(false)
+  const mobile = useIsMobile()
   return (
     <section className="flex flex-col gap-3">
-      <div className="flex items-baseline gap-3 px-1">
+      <div className="flex flex-wrap items-baseline gap-3 px-1 lg:flex-nowrap">
         <h2 className="text-xl font-semibold tracking-tight">พอร์ตลงทุน</h2>
         <span className="text-sm text-muted-foreground">{thb(o.investTotal)} · ใส่กลุ่มพอร์ตแล้ว {o.investments.length} รายการ</span>
         <Button variant="outline" size="sm" className="ml-auto" onClick={() => setEditing((x) => !x)}><Pencil /> แก้เป้า</Button>
       </div>
-      {editing && <TargetsEditor tiers={o.tiers} onCancel={() => setEditing(false)} onSaved={(next) => { onChange(next); setEditing(false) }} />}
-      <div className="grid grid-cols-12 gap-6">
+      {editing && !mobile && <TargetsEditor tiers={o.tiers} onCancel={() => setEditing(false)} onSaved={(next) => { onChange(next); setEditing(false) }} />}
+      {mobile && (
+        <Sheet open={editing} onOpenChange={setEditing} title="แก้เป้าพอร์ต" description="4 กลุ่มรวมกันต้องได้ 100%">
+          <TargetsEditor tiers={o.tiers} onCancel={() => setEditing(false)} onSaved={(next) => { onChange(next); setEditing(false) }} />
+        </Sheet>
+      )}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
         <ChartCard
-          className="col-span-7"
+          className="lg:col-span-7"
           title="เทียบเป้า"
           description={`แท่ง = สัดส่วนตอนนี้ · ขีด = เป้า ${o.tiers.map((t) => pct(t.target, 0)).join(' / ')}`}
           chart={<AllocationBullets tiers={o.tiers} />}
@@ -430,7 +459,7 @@ function PortfolioSection({ o, onChange }: { o: Overview; onChange: (o: Overview
             </Table>
           }
         />
-        <div className="col-span-5 grid gap-6">
+        <div className="grid gap-6 lg:col-span-5">
           <RankCard title="ตามประเภท" rows={rank(o.investments, 'type')} total={o.investTotal} />
           <RankCard title="ตามประเทศ" rows={rank(o.investments, 'country')} total={o.investTotal} />
         </div>
@@ -463,9 +492,9 @@ function TargetsEditor({ tiers, onCancel, onSaved }: { tiers: Overview['tiers'];
     <Card size="sm">
       <CardContent className="flex flex-wrap items-end gap-3">
         {TIERS.map((t) => (
-          <label key={t} className="flex flex-col gap-1 text-xs text-muted-foreground">
+          <label key={t} className="flex w-[calc(50%-0.375rem)] flex-col gap-1 text-xs text-muted-foreground lg:w-auto">
             {t} (%)
-            <Input inputMode="decimal" value={v[t]} onChange={(e) => setV({ ...v, [t]: e.target.value })} className="w-24 text-right" />
+            <Input inputMode="decimal" value={v[t]} onChange={(e) => setV({ ...v, [t]: e.target.value })} className="w-full text-right lg:w-24" />
           </label>
         ))}
         <span className={cn('tabular pb-2 text-sm', valid ? 'text-muted-foreground' : 'text-critical')}>รวม {sum.toFixed(1)}%{valid ? '' : ' — ต้องได้ 100%'}</span>
@@ -513,6 +542,18 @@ function BalanceTable({ title, groups, total, base }: { title: string; groups: O
 }
 
 function BalanceSheetCard({ o }: { o: Overview }) {
+  const mobile = useIsMobile()
+  if (mobile) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>งบดุล · Balance sheet</CardTitle>
+          <CardDescription>{thMonth(o.month!, true)} (เดือนล่าสุดที่ปิดแล้ว)</CardDescription>
+        </CardHeader>
+        <CardContent><BalanceSheetList o={o} /></CardContent>
+      </Card>
+    )
+  }
   return (
     <Card>
       <CardHeader>
