@@ -6,9 +6,11 @@ import { cn } from '@/lib/utils'
  * Bottom sheet for the phone layout. Swipe down, tap outside or Esc closes it; it keeps the focused field above
  * the iPhone keyboard. Controlled — the parent owns `open`. `footer` holds the main buttons under the scrolling body.
  */
-export function Sheet({ open, onOpenChange, title, description, actions, footer, children, className }: {
+export function Sheet({ open, onOpenChange, onClosed, title, description, actions, footer, children, className }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** after the close animation has finished */
+  onClosed?: () => void
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
@@ -17,7 +19,7 @@ export function Sheet({ open, onOpenChange, title, description, actions, footer,
   className?: string
 }) {
   return (
-    <Drawer.Root open={open} onOpenChange={(next) => onOpenChange(next)}>
+    <Drawer.Root open={open} onOpenChange={(next) => onOpenChange(next)} onOpenChangeComplete={(o) => !o && onClosed?.()}>
       <Drawer.VirtualKeyboardProvider>
         <Drawer.Portal>
           <Drawer.Backdrop className="fixed inset-0 z-40 min-h-dvh bg-black/35 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 data-swiping:duration-0 data-starting-style:opacity-0 data-ending-style:opacity-0" />

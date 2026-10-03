@@ -2,8 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router'
 import { ArrowDown, ClipboardList, LayoutDashboard, Loader2, LogOut, Scale } from 'lucide-react'
-import { Avatar } from '@/components/avatar'
 import { toast } from 'sonner'
+import { Avatar } from '@/components/avatar'
 import { PULL_THRESHOLD, RefreshContext, usePullToRefresh } from '@/components/mobile/pull-to-refresh'
 import { Sheet } from '@/components/mobile/sheet'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ export const MOBILE_PAGES = [
 type Slots = { inline: HTMLElement | null; below: HTMLElement | null }
 const SlotContext = createContext<Slots>({ inline: null, below: null })
 
-/** Page controls in the phone header: `children` sit right of the title, `below` gets its own full-width row. Renders nothing outside MobileShell. */
+/** Page controls in the phone header: `children` sit right of the title, `below` gets its own full-width row. Renders nothing in the desktop layout. */
 export function TopBarSlot({ children, below }: { children?: ReactNode; below?: ReactNode }) {
   const slots = useContext(SlotContext)
   return (
@@ -30,7 +30,12 @@ export function TopBarSlot({ children, below }: { children?: ReactNode; below?: 
   )
 }
 
-export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () => void; children: ReactNode }) {
+/**
+ * The app frame for both layouts. Desktop: its own header + the page. Phone (< 1024px): fixed header with page slots,
+ * pull to refresh, bottom tabs, account sheet. <main> sits at the same place in both, so crossing 1024px (iPad rotation,
+ * resizing a window) keeps the page and its data instead of remounting and refetching it.
+ */
+export function AppShell({ me, onLogout, mobile, desktopHeader, children }: { me: Me; onLogout: () => void; mobile: boolean; desktopHeader: ReactNode; children: ReactNode }) {
   const [inline, setInline] = useState<HTMLElement | null>(null)
   const [below, setBelow] = useState<HTMLElement | null>(null)
   const [account, setAccount] = useState(false)
@@ -45,19 +50,19 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
     const ro = new ResizeObserver(() => setHeaderH(el.offsetHeight))
     ro.observe(el)
     return () => ro.disconnect()
-  }, [])
+  }, [mobile])
   // pull to refresh runs the reloads the page registered; the page keeps showing its data until the new data arrives
   const reloads = useRef(new Set<() => Promise<unknown>>())
   const register = useCallback((fn: () => Promise<unknown>) => { reloads.current.add(fn); return () => { reloads.current.delete(fn) } }, [])
   const { pull, refreshing } = usePullToRefresh(async () => {
     const results = await Promise.allSettled([...reloads.current].map((fn) => fn()))
     if (results.some((r) => r.status === 'rejected')) toast.error('โหลดข้อมูลใหม่ไม่ได้', { description: 'ลองดึงใหม่อีกครั้ง' })
-  })
+  }, mobile)
   return (
     <RefreshContext value={register}>
     <SlotContext value={{ inline, below }}>
       <div className="min-h-svh bg-background">
-        <header ref={header} className="fixed inset-x-0 top-0 z-20 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+        {mobile ? <header ref={header} className="fixed inset-x-0 top-0 z-20 border-b bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur">
           <div className="mx-auto flex h-13 max-w-[640px] items-center gap-2 pl-4 pr-1.5">
             <h1 className="shrink-0 text-base font-semibold tracking-tight">{page.label}</h1>
             <div ref={setInline} className="flex min-w-0 flex-1 items-center justify-end gap-1" />
@@ -66,20 +71,22 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
             </button>
           </div>
           <div ref={setBelow} className="mx-auto max-w-[640px] px-3 pb-2 empty:hidden" />
-        </header>
-        <div aria-hidden={!refreshing} className="pointer-events-none fixed inset-x-0 z-10 flex items-end justify-center overflow-hidden text-xs text-muted-foreground"
+        </header> : desktopHeader}
+        {mobile && <div aria-hidden={!refreshing} className="pointer-events-none fixed inset-x-0 z-10 flex items-end justify-center overflow-hidden text-xs text-muted-foreground"
           style={{ top: headerH, height: pull }}>
           <span className="flex items-center gap-1.5 pb-2">
             {refreshing
               ? <><Loader2 className="size-4 animate-spin" />กำลังโหลดใหม่</>
               : <><ArrowDown className={cn('size-4 transition-transform', pull >= PULL_THRESHOLD && 'rotate-180')} />{pull >= PULL_THRESHOLD ? 'ปล่อยเพื่อโหลดใหม่' : 'ดึงเพื่อโหลดใหม่'}</>}
           </span>
-        </div>
-        <main className={cn('mx-auto max-w-[640px] px-3 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]', pull === 0 && 'transition-transform duration-200')}
-          style={{ ...(headerH ? { paddingTop: headerH + 12 } : {}), transform: pull ? `translateY(${pull}px)` : undefined }}>
+        </div>}
+        <main className={mobile
+          ? cn('mx-auto max-w-[640px] px-3 pt-[calc(4.5rem+env(safe-area-inset-top))] pb-[calc(5.5rem+env(safe-area-inset-bottom))]', pull === 0 && 'transition-transform duration-200')
+          : 'mx-auto max-w-[1600px] px-8 py-8'}
+          style={mobile ? { ...(headerH ? { paddingTop: headerH + 12 } : {}), transform: pull ? `translateY(${pull}px)` : undefined } : undefined}>
           {children}
         </main>
-        <nav aria-label="เมนูหลัก" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+        {mobile && <nav aria-label="เมนูหลัก" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
           <div className="mx-auto grid h-16 max-w-[640px] grid-cols-3">
             {MOBILE_PAGES.map(({ to, label, icon: Icon }) => (
               <NavLink key={to} to={to} end
@@ -88,8 +95,8 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
               </NavLink>
             ))}
           </div>
-        </nav>
-        <Sheet open={account} onOpenChange={setAccount} title="บัญชี">
+        </nav>}
+        {mobile && <Sheet open={account} onOpenChange={setAccount} title="บัญชี">
           <div className="flex items-center gap-3 py-2">
             <Avatar me={me} className="size-10 text-sm" />
             <div className="min-w-0">
@@ -98,7 +105,7 @@ export function MobileShell({ me, onLogout, children }: { me: Me; onLogout: () =
             </div>
           </div>
           <Button variant="ghost" className="h-11 w-full justify-start text-critical" onClick={onLogout}><LogOut /> ออกจากระบบ</Button>
-        </Sheet>
+        </Sheet>}
       </div>
     </SlotContext>
     </RefreshContext>

@@ -22,7 +22,7 @@ const MIN_SPIN_MS = 700
  * Ignored while a sheet (role="dialog") is open or when the page is not scrolled to the top.
  * `pull` is the current drag distance; `refreshing` stays true until `onRefresh` settles (at least MIN_SPIN_MS).
  */
-export function usePullToRefresh(onRefresh: () => Promise<unknown>) {
+export function usePullToRefresh(onRefresh: () => Promise<unknown>, enabled = true) {
   const [pull, setPull] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const start = useRef<number | null>(null)
@@ -32,6 +32,7 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown>) {
   refresh.current = onRefresh
 
   useEffect(() => {
+    if (!enabled) return
     const set = (v: number) => { current.current = v; setPull(v) }
     const onStart = (e: TouchEvent) => {
       const inSheet = e.target instanceof Element && e.target.closest('[role="dialog"]')
@@ -64,7 +65,7 @@ export function usePullToRefresh(onRefresh: () => Promise<unknown>) {
       window.removeEventListener('touchend', onEnd)
       window.removeEventListener('touchcancel', onEnd)
     }
-  }, [])
+  }, [enabled])
 
   return { pull, refreshing }
 }

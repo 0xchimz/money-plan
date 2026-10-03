@@ -1,7 +1,7 @@
 import { LogOut } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { Avatar } from '@/components/avatar'
-import { MobileShell } from '@/components/mobile/shell'
+import { AppShell } from '@/components/mobile/shell'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { api, type Me } from '@/lib/api'
@@ -21,9 +21,7 @@ export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {
     window.google?.accounts.id.disableAutoSelect()
     onLogout()
   }
-  if (mobile) return <MobileShell me={me} onLogout={logout}><Outlet /></MobileShell>
-  return (
-    <div className="min-h-svh bg-background">
+  const desktopHeader = (
       <header className="sticky top-0 z-10 border-b bg-background/85 backdrop-blur">
         <div className="flex h-14 items-center gap-6 px-8">
           <span className="font-semibold tracking-tight">money-plan</span>
@@ -53,11 +51,8 @@ export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {
           </DropdownMenu>
         </div>
       </header>
-      <main className="mx-auto max-w-[1600px] px-8 py-8">
-        <Outlet />
-      </main>
-    </div>
   )
+  return <AppShell me={me} onLogout={logout} mobile={mobile} desktopHeader={desktopHeader}><Outlet /></AppShell>
 }
 
 export function PageState({ error }: { error?: unknown }) {

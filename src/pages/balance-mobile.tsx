@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight, Circle, CircleAlert, CircleCheck, Lock, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { CategoryIcon } from '@/components/category-icon'
@@ -61,6 +61,8 @@ export function BalanceMobile(p: BalanceMobileProps) {
   const [adding, setAdding] = useState<Adding | null>(null)
   const [panel, setPanel] = useState(false)
   const [rateOpen, setRateOpen] = useState(false)
+  // the last checked row hands over to the close panel once its sheet has slid away (no two sheets at once)
+  const panelNext = useRef(false)
   const rate = data.fx.usdThb
   const row = data.rows.find((r) => r.id === editing) ?? null
   const unconfirmed = data.rows.filter((r) => !r.confirmed).length
@@ -70,7 +72,7 @@ export function BalanceMobile(p: BalanceMobileProps) {
   const advance = (fromId: number) => {
     const next = nextUnconfirmed(data.rows, fromId)
     if (next != null) setEditing(next)
-    else { setEditing(null); setPanel(true) }
+    else { panelNext.current = true; setEditing(null) }
   }
   const needRate = () => { toast.error('ใส่เรท USD/THB ของเดือนนี้ก่อน'); setRateOpen(true) }
   const showRate = rate != null || p.usdRows > 0
@@ -114,7 +116,7 @@ export function BalanceMobile(p: BalanceMobileProps) {
       <FloatingBar {...p} unconfirmed={unconfirmed} onOpenPanel={() => setPanel(true)} />
 
       <RowSheet row={row} rows={data.rows} draft={draft} prevMonth={data.prevMonth} rate={rate}
-        onClose={() => setEditing(null)} onAdvance={advance} onNeedRate={needRate} actions={actions} />
+        onClose={() => setEditing(null)} onClosed={() => { if (panelNext.current) { panelNext.current = false; setPanel(true) } }} onAdvance={advance} onNeedRate={needRate} actions={actions} />
       <AddSheet target={adding} rows={data.rows} rate={rate} onClose={() => setAdding(null)} onNeedRate={needRate}
         onAdd={(item) => actions.add(item)} />
       <ClosePanel open={panel} onOpenChange={setPanel} {...p} unconfirmed={unconfirmed}
@@ -239,9 +241,9 @@ function EmptyCategory({ category, chips, expanded, onAdd }: { category: string;
 
 const textOf = (r: BalanceRow) => r.expr ?? String(r.usd ?? r.thb)
 
-function RowSheet({ row: shown, rows, draft, prevMonth, rate, onClose, onAdvance, onNeedRate, actions }: {
+function RowSheet({ row: shown, rows, draft, prevMonth, rate, onClose, onClosed, onAdvance, onNeedRate, actions }: {
   row: BalanceRow | null; rows: BalanceRow[]; draft: boolean; prevMonth: string | null; rate: number | null
-  onClose: () => void; onAdvance: (fromId: number) => void; onNeedRate: () => void; actions: BalanceMobileProps['actions']
+  onClose: () => void; onClosed: () => void; onAdvance: (fromId: number) => void; onNeedRate: () => void; actions: BalanceMobileProps['actions']
 }) {
   // the sheet stays mounted so it can slide out; while closing it keeps showing the last row
   const [last, setLast] = useState(shown)
@@ -301,7 +303,7 @@ function RowSheet({ row: shown, rows, draft, prevMonth, rate, onClose, onAdvance
   }
 
   return (
-    <Sheet open={shown != null} onOpenChange={(o) => !o && leave()}
+    <Sheet open={shown != null} onOpenChange={(o) => !o && leave()} onClosed={onClosed}
       title={row.item}
       description={`${CATEGORY_TH[row.category] ?? row.category}${draft ? (k >= 0 ? ` · แถว ${k + 1} จาก ${pending.length} ที่ยังไม่เช็ก` : ` · เช็กแล้ว · เหลือ ${pending.length} แถว`) : ''}`}
       actions={
@@ -318,7 +320,7 @@ function RowSheet({ row: shown, rows, draft, prevMonth, rate, onClose, onAdvance
         draft
           ? (
             <div className="grid grid-cols-[1fr_1.3fr] gap-2">
-              <Button variant="secondary" className="h-12" disabled={saving || changed} onPointerDown={(e) => e.preventDefault()} onClick={sameAsBefore}><CircleCheck /> ยอดไม่เปลี่ยน</Button>
+              <Button variant="secondary" className="h-12" disabled={saving || changed || !ok} onPointerDown={(e) => e.preventDefault()} onClick={sameAsBefore}><CircleCheck /> ยอดไม่เปลี่ยน</Button>
               <Button className="h-12" disabled={!ok || saving} onPointerDown={(e) => e.preventDefault()} onClick={() => save(true)}>บันทึก · ถัดไป <ChevronRight /></Button>
             </div>
           )
@@ -400,7 +402,7 @@ function AddSheet({ target: current, rows, rate, onClose, onNeedRate, onAdd }: {
         ...(target.side === 'asset' ? f.cls : { tier: null, type: null, country: null }),
         ...(blank ? {} : f.cur === 'USD' ? { usd: value!, expr } : { thb: value!, expr }),
       })
-      if (done) { setForm(null); onClose() }
+      if (done) onClose() // the next open gets a new target, so the form starts fresh then
     } finally { setSaving(false) }
   }
 
@@ -508,8 +510,8 @@ function ClosePanel(p: BalanceMobileProps & { open: boolean; onOpenChange: (o: b
       <ul className="flex flex-col divide-y">
         {(data.fx.usdThb != null || p.usdRows > 0) && (
           <li className="flex min-h-12 items-center gap-3 py-2 text-sm">
-            {p.fxStale ? <CircleAlert className="size-5 text-warning" /> : <CircleCheck className="size-5 text-good" />}
-            <span className="flex-1">{data.fx.usdThb != null ? `เรท USD/THB ${decimal(data.fx.usdThb, 4)}` : 'ยังไม่ได้ใส่เรท USD/THB'}{p.fxStale ? ' · ยังเป็นของเดือนก่อน' : ' · ยืนยันแล้ว'}</span>
+            {p.fxStale ? <CircleAlert className="size-5 text-warning" /> : data.fx.confirmed ? <CircleCheck className="size-5 text-good" /> : <Circle className="size-5 text-muted-foreground" />}
+            <span className="flex-1">{data.fx.usdThb != null ? `เรท USD/THB ${decimal(data.fx.usdThb, 4)}` : 'ยังไม่ได้ใส่เรท USD/THB'}{p.fxStale ? ' · ยังเป็นของเดือนก่อน' : data.fx.confirmed ? ' · ยืนยันแล้ว' : ''}</span>
             <Button variant="outline" size="sm" className="h-11" onClick={p.onRate}>แก้เรท</Button>
           </li>
         )}

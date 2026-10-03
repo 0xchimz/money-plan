@@ -100,7 +100,7 @@ export function ToggleLegend({ items, active, onChange }: {
       })}
       {!all && (
         <li>
-          <button type="button" onClick={() => onChange(items.map((i) => i.label))} className="px-1.5 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline">
+          <button type="button" onClick={() => onChange(items.map((i) => i.label))} className="px-1.5 text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline max-lg:min-h-11 max-lg:px-3">
             Show all
           </button>
         </li>

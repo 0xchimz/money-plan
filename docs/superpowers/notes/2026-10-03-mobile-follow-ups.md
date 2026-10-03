@@ -16,15 +16,16 @@ Shipped to prod 3 Oct 2026 (`main` 6840027). Spec: `../specs/2026-10-03-mobile-d
 - [x] Header fixed + no iOS rubber-band on phones (`overscroll-behavior-y: none`)
 - [x] Pull to refresh: pages register a reload (`usePageRefresh`) that runs in place — no flash to กำลังโหลด…
 
-## Known, left on purpose (fix on the next touch of these files)
+## Small issues fixed 3 Oct (were left on purpose at first)
 
-- Crossing 1024px (iPad rotation, resizing a desktop window) remounts the page and refetches; an open sheet and typed text are dropped, and a write still in flight can race the refetch so old numbers show until the next action.
-- When the last unchecked row hands over to the close panel, two sheets overlap for ~400ms.
-- The add sheet slides out showing an empty form after a successful add.
-- ToggleLegend's "แสดงทั้งหมด" text button is still under 44px on phones.
-- "ยอดไม่เปลี่ยน" stays enabled while the typed text can't be read (tapping it drops that text; nothing wrong is saved).
-- The close panel's rate line says "ยืนยันแล้ว" when the rate is not stale but was never confirmed (no USD rows).
-- `AmountField`'s `autoFocus` prop has no caller; the ฿/$ toggle markup is written twice in `balance-mobile.tsx`; the three sheets reset their forms three different ways.
+- [x] Crossing 1024px keeps the page and its data (one app frame; `<main>` keeps its place) — no remount, refetch or race
+- [x] The last checked row's sheet slides away before the close panel opens (no two sheets at once)
+- [x] The add sheet slides out showing what was added
+- [x] Chart legend "Show all" is 44px on phones
+- [x] "ยอดไม่เปลี่ยน" is disabled while the typed amount can't be read
+- [x] The close panel ticks the USD rate only when it was confirmed
+
+Still in the code, not user-visible: `AmountField`'s unused `autoFocus` prop, the ฿/$ toggle markup written twice in `balance-mobile.tsx`, three form-reset patterns across the sheets.
 
 ## Testing note
 
