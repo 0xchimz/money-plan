@@ -1,8 +1,11 @@
 import { LogOut } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
+import { Avatar } from '@/components/avatar'
+import { MobileShell } from '@/components/mobile/shell'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { api, type Me } from '@/lib/api'
+import { useIsMobile } from '@/lib/use-is-mobile'
 import { cn } from '@/lib/utils'
 
 const links = [
@@ -12,11 +15,13 @@ const links = [
 ]
 
 export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {
+  const mobile = useIsMobile()
   const logout = async () => {
     try { await api.logout() } catch { /* the page forgets the session either way */ }
     window.google?.accounts.id.disableAutoSelect()
     onLogout()
   }
+  if (mobile) return <MobileShell me={me} onLogout={logout}><Outlet /></MobileShell>
   return (
     <div className="min-h-svh bg-background">
       <header className="sticky top-0 z-10 border-b bg-background/85 backdrop-blur">
@@ -53,12 +58,6 @@ export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {
       </main>
     </div>
   )
-}
-
-function Avatar({ me }: { me: Me }) {
-  return me.picture
-    ? <img src={me.picture} alt="" referrerPolicy="no-referrer" className="size-7 rounded-full" />
-    : <span className="flex size-7 items-center justify-center rounded-full bg-chart-1 text-xs font-semibold text-white">{me.email[0]?.toUpperCase()}</span>
 }
 
 export function PageState({ error }: { error?: unknown }) {
