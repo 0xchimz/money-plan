@@ -34,9 +34,12 @@ export function AmountField({ text, onText, unit, digits = 2, min, label, hint, 
   const insert = (op: string) => {
     const el = ref.current
     if (!el) return
-    const s = el.selectionStart ?? text.length, e = el.selectionEnd ?? text.length
+    let s = el.selectionStart ?? text.length, e = el.selectionEnd ?? text.length
+    // The field selects all on focus; a fully selected number means "append", not "replace"
+    if (text !== '' && s === 0 && e === text.length) s = e = text.length
+    el.focus()
     onText(text.slice(0, s) + op + text.slice(e))
-    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(s + op.length, s + op.length) })
+    requestAnimationFrame(() => el.setSelectionRange(s + op.length, s + op.length))
   }
   return (
     <div className="flex flex-col gap-2">
@@ -46,12 +49,12 @@ export function AmountField({ text, onText, unit, digits = 2, min, label, hint, 
           onChange={(e) => onText(e.target.value)}
           onFocus={(e) => e.currentTarget.select()}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); onEnter?.() } }}
-          className="tabular h-14 min-w-0 flex-1 bg-transparent text-right text-2xl font-semibold outline-none" />
+          style={{ fontSize: '1.5rem' }} className="tabular h-14 min-w-0 flex-1 bg-transparent text-right font-semibold outline-none" />
         <span className="shrink-0 text-sm text-muted-foreground">{unit}</span>
       </div>
       <div className="flex items-start gap-1.5">
         {OPS.map((o) => (
-          <button key={o.op} type="button" aria-label={`ใส่ ${o.label}`} onPointerDown={(e) => e.preventDefault()} onClick={() => insert(o.op)}
+          <button key={o.op} type="button" aria-label={`ใส่ ${o.label}`} onPointerDown={(e) => e.preventDefault()} onMouseDown={(e) => e.preventDefault()} onClick={() => insert(o.op)}
             className="size-11 shrink-0 rounded-xl bg-muted text-lg font-medium text-foreground active:bg-accent">
             {o.label}
           </button>
