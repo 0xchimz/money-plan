@@ -5,6 +5,7 @@ import { CategoryIcon } from '@/components/category-icon'
 import { RankedBars } from '@/components/charts'
 import { Chips } from '@/components/chips'
 import { PageState } from '@/components/layout'
+import { TopBarSlot } from '@/components/mobile/shell'
 import { MoneyInput } from '@/components/money-input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -14,9 +15,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { api, type BudgetLineInput, type BudgetLineRow, type BudgetType, type Planning, type Scenario, type ScenarioId } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { money, pct, thb, thMonth } from '@/lib/format'
+import { useIsMobile } from '@/lib/use-is-mobile'
 import { cn } from '@/lib/utils'
 import { PLANNING_CHIPS, unusedChips } from '@shared/categories'
 import { debtOf, partOf, totals } from '@shared/planning'
+import { LineSheet, MobileLineRow, type LineSheetState } from './planning-mobile'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
@@ -38,6 +41,8 @@ const SECTIONS: { type: BudgetType; title: string; sub: string; icon: LucideIcon
 const defaultCategory = (t: BudgetType) => (t === 'Income' ? 'Salary' : t === 'Saving' ? 'Saving' : 'Daily Living')
 
 export function PlanningPage() {
+  const mobile = useIsMobile()
+  const [sheet, setSheet] = useState<LineSheetState>(null)
   const [data, setData] = useState<Planning | null>(null)
   const [error, setError] = useState<unknown>()
   const [scenario, setScenario] = useState<ScenarioId>('main')
@@ -48,38 +53,45 @@ export function PlanningPage() {
     api.planning().then(setData, setError)
   }, [])
 
-  async function mutate(call: Promise<Planning>, done?: string) {
+  async function mutate(call: Promise<Planning>, done?: string): Promise<boolean> {
     const n = ++seq.current
     try {
       const next = await call
       if (n === seq.current) setData(next)
       if (done) toast.success(done)
+      return true
     } catch (e) {
       toast.error('บันทึกไม่ได้', { description: errMsg(e) })
       api.planning().then((d) => n === seq.current && setData(d), () => {})
+      return false
     }
   }
 
   if (!data) return <PageState error={error} />
   const sc = data.scenarios.find((s) => s.id === scenario) ?? data.scenarios[0]
 
-  const header = (
-    <section className="flex items-end justify-between gap-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-sm text-muted-foreground">Planning · แผนการเงินรายเดือน</span>
-        <h1 className="text-3xl font-semibold tracking-tight">แผนการใช้เงินต่อเดือน</h1>
-        {sc.note && <p className="text-sm text-muted-foreground">{sc.note}</p>}
-      </div>
-      <div className="inline-flex rounded-2xl bg-muted p-1 text-sm" role="tablist" aria-label="ชุดงบ">
-        {data.scenarios.map((s) => (
-          <button key={s.id} type="button" role="tab" aria-selected={s.id === sc.id} onClick={() => setScenario(s.id)}
-            className={cn('rounded-xl px-4 py-1.5 transition-colors', s.id === sc.id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
-            {s.name}
-          </button>
-        ))}
-      </div>
-    </section>
+  const tabs = (
+    <div className={cn('inline-flex rounded-2xl bg-muted p-1 text-sm', mobile && 'flex w-full')} role="tablist" aria-label="ชุดงบ">
+      {data.scenarios.map((s) => (
+        <button key={s.id} type="button" role="tab" aria-selected={s.id === sc.id} onClick={() => setScenario(s.id)}
+          className={cn('rounded-xl px-4 py-1.5 transition-colors', mobile && 'min-h-11 flex-1 px-2', s.id === sc.id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
+          {s.name}
+        </button>
+      ))}
+    </div>
   )
+  const header = mobile
+    ? <>{<TopBarSlot below={tabs} />}{sc.note && <p className="px-1 text-sm text-muted-foreground">{sc.note}</p>}</>
+    : (
+      <section className="flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-sm text-muted-foreground">Planning · แผนการเงินรายเดือน</span>
+          <h1 className="text-3xl font-semibold tracking-tight">แผนการใช้เงินต่อเดือน</h1>
+          {sc.note && <p className="text-sm text-muted-foreground">{sc.note}</p>}
+        </div>
+        {tabs}
+      </section>
+    )
 
   if (sc.id !== 'main' && !sc.lines.length && !blank.includes(sc.id)) {
     const mainLines = data.scenarios.find((s) => s.id === 'main')?.lines ?? []
@@ -127,7 +139,7 @@ export function PlanningPage() {
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-1">
               <span className="text-sm text-muted-foreground">ออมและลงทุนต่อเดือน</span>
-              <span className="text-6xl font-semibold tracking-tight">{thb(saved)}</span>
+              <span className="text-4xl font-semibold lg:text-6xl tracking-tight">{thb(saved)}</span>
               <span className="text-sm text-muted-foreground">{t.income ? `${pct(saved / t.income)} ของรายรับ ${thb(t.income)}` : 'ยังไม่มีรายรับในงบนี้'}</span>
             </div>
             <div className="flex flex-wrap gap-x-8 gap-y-2">
@@ -151,7 +163,7 @@ export function PlanningPage() {
         </CardContent>
       </Card>
 
-      <section className="grid grid-cols-4 gap-4">
+      <section className={mobile ? '-mx-3 flex snap-x snap-mandatory gap-3 overflow-x-auto px-3 pb-1 [scrollbar-width:none] *:w-[80%] *:shrink-0 *:snap-start' : 'grid grid-cols-4 gap-4'}>
         <Card size="sm" className="col-span-2">
           <CardContent><Allocation t={t} /></CardContent>
         </Card>
@@ -162,15 +174,17 @@ export function PlanningPage() {
         )}
       </section>
 
-      <div className="grid grid-cols-12 items-start gap-6">
-        <div className="col-span-8 flex min-w-0 flex-col gap-6">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+        <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
           {SECTIONS.map((s) => (
             <SectionCard key={`${sc.id}:${s.type}`} section={s} lines={sc.lines.filter((l) => l.type === s.type)} income={t.income}
               onPatch={patch} onRemove={remove}
-              onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)} />
+              onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)}
+              onEdit={mobile ? (l) => setSheet({ mode: 'edit', line: l }) : undefined}
+              onNew={mobile ? (pr) => setSheet({ mode: 'add', type: s.type, ...pr }) : undefined} />
           ))}
         </div>
-        <aside className="sticky top-20 col-span-4 flex min-w-0 flex-col gap-6">
+        <aside className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-20 lg:col-span-4">
           <Card>
             <CardHeader>
               <CardTitle>รายจ่ายตามหมวด</CardTitle>
@@ -191,6 +205,12 @@ export function PlanningPage() {
           </Card>
         </aside>
       </div>
+      {mobile && (
+        <LineSheet state={sheet} income={t.income} lines={sc.lines} onClose={() => setSheet(null)}
+          onSave={(l, p) => patch(l, p)}
+          onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)}
+          onRemove={(l) => remove(l)} />
+      )}
     </div>
   )
 }
@@ -296,7 +316,7 @@ function ScenarioTable({ scenarios, active }: { scenarios: Planning['scenarios']
     { label: 'เหลือ', get: (t) => t.left },
   ]
   return (
-    <Table>
+    <Table className="text-xs lg:text-sm">
       <TableHeader>
         <TableRow>
           <TableHead />
@@ -319,13 +339,15 @@ function ScenarioTable({ scenarios, active }: { scenarios: Planning['scenarios']
   )
 }
 
-function SectionCard({ section, lines, income, onPatch, onRemove, onAdd }: {
+function SectionCard({ section, lines, income, onPatch, onRemove, onAdd, onEdit, onNew }: {
   section: (typeof SECTIONS)[number]
   lines: BudgetLineRow[]
   income: number
   onPatch: (l: BudgetLineRow, p: Partial<BudgetLineInput>) => void
   onRemove: (l: BudgetLineRow) => void
   onAdd: (line: BudgetLineInput) => void
+  onEdit?: (l: BudgetLineRow) => void
+  onNew?: (preset: { category: string; item: string }) => void
 }) {
   const [preset, setPreset] = useState<{ category: string; item: string } | null>(null)
   const total = lines.reduce((s, l) => s + l.thb, 0)
@@ -362,7 +384,9 @@ function SectionCard({ section, lines, income, onPatch, onRemove, onAdd }: {
                 <span className="tabular ml-auto">{money(sum)}</span>
               </div>
               <ul className="flex flex-col">
-                {cl.map((l) => <LineRow key={l.id} line={l} income={income} categories={cats} onPatch={onPatch} onRemove={onRemove} />)}
+                {cl.map((l) => onEdit
+                  ? <MobileLineRow key={l.id} line={l} income={income} onOpen={() => onEdit(l)} />
+                  : <LineRow key={l.id} line={l} income={income} categories={cats} onPatch={onPatch} onRemove={onRemove} />)}
               </ul>
             </div>
           )
@@ -374,7 +398,9 @@ function SectionCard({ section, lines, income, onPatch, onRemove, onAdd }: {
           ? <AddLineForm type={section.type} categories={cats} initial={preset} onCancel={() => setPreset(null)} onAdd={(l) => { onAdd(l); setPreset(null) }} />
           : <Chips chips={chips.map((c) => c.label)} onPick={(label) => {
               const chip = chips.find((c) => c.label === label)
-              setPreset({ category: chip?.category ?? cats[0] ?? defaultCategory(section.type), item: label })
+              const next = { category: chip?.category ?? cats[0] ?? defaultCategory(section.type), item: label }
+              if (onNew) onNew(next)
+              else setPreset(next)
             }} />}
       </div>
     </Card>
@@ -503,7 +529,7 @@ function EmptyScenario({ scenario, canCopy, onCopy, onBlank }: { scenario: Scena
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-3">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-center gap-2">
           <Button onClick={onCopy} disabled={!canCopy}><Copy /> {em ? 'คัดลอกรายจ่ายจาก ปัจจุบัน' : 'คัดลอกทั้งหมดจาก ปัจจุบัน'}</Button>
           <Button variant="outline" onClick={onBlank}>เริ่มจากว่าง</Button>
         </div>
