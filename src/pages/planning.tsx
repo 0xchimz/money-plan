@@ -74,7 +74,7 @@ export function PlanningPage() {
     <div className={cn('inline-flex rounded-2xl bg-muted p-1 text-sm', mobile && 'flex w-full')} role="tablist" aria-label="ชุดงบ">
       {data.scenarios.map((s) => (
         <button key={s.id} type="button" role="tab" aria-selected={s.id === sc.id} onClick={() => setScenario(s.id)}
-          className={cn('rounded-xl px-4 py-1.5 transition-colors', mobile && 'min-h-10 flex-1 px-2', s.id === sc.id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
+          className={cn('rounded-xl px-4 py-1.5 transition-colors', mobile && 'min-h-11 flex-1 px-2', s.id === sc.id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
           {s.name}
         </button>
       ))}

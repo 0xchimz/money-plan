@@ -50,6 +50,7 @@ export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemo
   const f = form.key === keyOf(state) ? form : fresh(state)
   const set = (p: Partial<typeof f>) => setForm({ ...f, ...p })
   const [saving, setSaving] = useState(false)
+  const close = () => { setForm(fresh(null)); onClose() }
   if (!state) return null
 
   const type = state.mode === 'edit' ? state.line.type : state.type
@@ -73,15 +74,15 @@ export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemo
       } else {
         done = await onAdd({ type, ...next })
       }
-      if (done) onClose()
+      if (done) close()
     } finally { setSaving(false) }
   }
 
   return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}
+    <Sheet open onOpenChange={(o) => !o && close()}
       title={state.mode === 'edit' ? 'แก้รายการ' : 'เพิ่มรายการ'}
-      actions={state.mode === 'edit' ? <Button variant="ghost" className="h-9 text-critical" onClick={() => { onRemove(state.line); onClose() }}>ลบ</Button> : undefined}
-      footer={<div className="grid grid-cols-[1fr_1.6fr] gap-2"><Button variant="outline" className="h-12" onClick={onClose}>ยกเลิก</Button><Button className="h-12" disabled={!ready} onClick={submit}>{state.mode === 'edit' ? 'บันทึก' : 'เพิ่ม'}</Button></div>}>
+      actions={state.mode === 'edit' ? <Button variant="ghost" className="h-11 text-critical" onClick={() => { onRemove(state.line); close() }}>ลบ</Button> : undefined}
+      footer={<div className="grid grid-cols-[1fr_1.6fr] gap-2"><Button variant="outline" className="h-12" onClick={close}>ยกเลิก</Button><Button className="h-12" disabled={!ready} onClick={submit}>{state.mode === 'edit' ? 'บันทึก' : 'เพิ่ม'}</Button></div>}>
       <div className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 text-xs text-muted-foreground">
           ชื่อรายการ
@@ -96,12 +97,12 @@ export function LineSheet({ state, income, lines, onClose, onSave, onAdd, onRemo
           <div className="flex flex-wrap gap-1.5">
             {known.map((c) => (
               <button key={c} type="button" onClick={() => set({ category: c, own: false })}
-                className={cn('min-h-9 rounded-full border px-3 text-sm', !f.own && f.category === c ? 'border-primary bg-primary text-primary-foreground' : 'text-foreground')}>
+                className={cn('min-h-11 rounded-full border px-3 text-sm', !f.own && f.category === c ? 'border-primary bg-primary text-primary-foreground' : 'text-foreground')}>
                 {CATEGORY_TH[c] ?? c}
               </button>
             ))}
             <button type="button" onClick={() => set({ own: true, category: known.includes(f.category) ? '' : f.category })}
-              className={cn('min-h-9 rounded-full border border-dashed px-3 text-sm', f.own ? 'border-primary text-foreground' : 'text-muted-foreground')}>หมวดอื่น…</button>
+              className={cn('min-h-11 rounded-full border border-dashed px-3 text-sm', f.own ? 'border-primary text-foreground' : 'text-muted-foreground')}>หมวดอื่น…</button>
           </div>
           {f.own && <Input autoFocus value={f.category} onChange={(e) => set({ category: e.target.value })} placeholder="ชื่อหมวด เช่น Pets" className="h-11" />}
         </div>
