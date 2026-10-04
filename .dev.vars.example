@@ -1,5 +1,5 @@
 # Copy to .dev.vars (git-ignored). Read by `pnpm dev` (vite + workerd).
 # Emails allowed to log in, comma-separated
 ALLOWED_EMAILS=c.soonue@gmail.com
-# Optional: skip Google on localhost and act as this user (works only on localhost / 127.0.0.1)
+# Optional: the login page shows a demo button that signs in as this user without Google (works only on localhost / 127.0.0.1)
 DEV_USER_EMAIL=demo@money-plan.local

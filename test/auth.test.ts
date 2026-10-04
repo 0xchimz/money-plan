@@ -170,16 +170,27 @@ describe('JSON-only writes', () => {
   })
 })
 
-describe('dev bypass', () => {
+describe('demo login', () => {
   const dev = { DEV_USER_EMAIL: 'Dev@Example.com' }
+  const local = { origin: 'http://localhost:5173', env: dev }
 
-  it('acts as DEV_USER_EMAIL on localhost', async () => {
-    const me = await ok(call('/api/me', { origin: 'http://localhost:5173', env: dev }))
+  it('does not log anyone in until the button is pressed', async () => {
+    expect((await call('/api/me', local)).status).toBe(401)
+  })
+
+  it('starts a session as DEV_USER_EMAIL on localhost, without the allowlist', async () => {
+    const res = await call('/api/auth/dev', { json: {}, ...local })
+    expect(res.status).toBe(200)
+    const cookie = res.headers.get('set-cookie')!.split(';')[0]
+    const me = await ok(call('/api/me', { ...local, cookie }))
     expect(me.email).toBe('dev@example.com')
   })
 
-  it('is ignored on any other host', async () => {
-    expect((await call('/api/me', { env: dev })).status).toBe(401)
+  it('does not exist on any other host, and its session is refused there', async () => {
+    expect((await call('/api/auth/dev', { json: {}, env: dev })).status).toBe(404)
+    expect((await call('/api/auth/dev', { json: {}, origin: 'http://localhost:5173' })).status).toBe(404)
+    const cookie = (await call('/api/auth/dev', { json: {}, ...local })).headers.get('set-cookie')!.split(';')[0]
+    expect((await call('/api/me', { env: dev, cookie })).status).toBe(403)
   })
 
   it('shows in the auth config', async () => {

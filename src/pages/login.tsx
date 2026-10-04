@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { CircleAlert } from 'lucide-react'
+import { CircleAlert, FlaskConical } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { api, ApiError, type AuthConfig, type Me } from '@/lib/api'
 import { loadGoogle } from '@/lib/google'
 
@@ -35,15 +36,25 @@ export function LoginPage({ onLogin, denied }: { onLogin: (me: Me) => void; deni
     return () => { alive = false }
   }, [config, onLogin])
 
+  const demo = () => {
+    setProblem(null)
+    api.loginDev().then(onLogin, (e) => setProblem({ title: 'เข้าแบบ demo ไม่สำเร็จ', detail: message(e) }))
+  }
+
   return (
     <div className="grid min-h-svh place-items-center bg-[radial-gradient(ellipse_at_top,var(--hero-from),var(--background)_60%)] px-4">
       <div className="w-full max-w-[380px] rounded-2xl border bg-card p-7 text-center shadow-[var(--card-shadow)]">
-        <div className="mx-auto mb-3 grid size-11 place-items-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">฿</div>
+        <img src="/favicon.svg" alt="" className="mx-auto mb-3 size-14" />
         <h1 className="text-xl font-semibold tracking-tight">money-plan</h1>
         <p className="mt-1 text-sm text-muted-foreground">วางแผนเงินรายเดือน · งบดุลส่วนตัว · สรุปการเงินของคุณ</p>
         <div ref={button} className="mt-5 flex min-h-11 justify-center" />
         {config && !config.googleClientId && <p className="mt-2 text-sm text-warning">ยังไม่ได้ตั้ง GOOGLE_CLIENT_ID (ดู README)</p>}
-        <p className="mt-3 text-xs text-muted-foreground">เฉพาะอีเมลที่ได้รับเชิญ · ข้อมูลของแต่ละคนแยกกัน คนอื่นมองไม่เห็น</p>
+        {config?.dev && (
+          <Button variant="outline" className="mt-2 h-10 w-[260px] rounded-full" onClick={demo}>
+            <FlaskConical aria-hidden />เข้าแบบ demo (local)
+          </Button>
+        )}
+        <p className="mt-3 text-xs text-muted-foreground">เฉพาะอีเมลที่ได้รับเชิญ</p>
         {problem && (
           <div role="alert" className="mt-4 flex gap-2 rounded-xl bg-critical/10 p-3 text-left text-sm text-critical">
             <CircleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />

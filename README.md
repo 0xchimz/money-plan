@@ -13,7 +13,7 @@ pnpm db:seed:demo                # optional: demo@money-plan.local with six clos
 pnpm dev                         # http://localhost:5173
 ```
 
-`DEV_USER_EMAIL` makes localhost act as that user (never works on any other host). To try the real Google button locally,
+`DEV_USER_EMAIL` adds a "เข้าแบบ demo (local)" button to the login page that signs in as that user without Google (localhost only; the route is a 404 on any other host). To try the real Google button locally,
 add `http://localhost:5173` to the OAuth client's JavaScript origins and put its id in `wrangler.jsonc` → `vars.GOOGLE_CLIENT_ID`.
 
 ## Test

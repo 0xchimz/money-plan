@@ -75,7 +75,7 @@ async function startSession(c: Context<AppEnv>, uid: number) {
   })
 }
 
-/** DEV_USER_EMAIL acts as the logged-in user, but only for requests to localhost */
+/** DEV_USER_EMAIL is the demo user the login page offers, but only for requests to localhost */
 function devEmail(c: Context<AppEnv>): string | null {
   const email = c.env.DEV_USER_EMAIL?.trim().toLowerCase()
   if (!email) return null
@@ -100,6 +100,15 @@ authRoutes.post('/google', async (c) => {
   return c.json(await getMe(c.env.DB, user.id))
 })
 
+/** Demo login: a session as DEV_USER_EMAIL without Google. The route does not exist off localhost. */
+authRoutes.post('/dev', async (c) => {
+  const email = devEmail(c)
+  if (!email) return c.json({ error: 'not found' }, 404)
+  const user = await findOrCreateUser(c.env.DB, { email, name: 'Demo', picture: null })
+  await startSession(c, user.id)
+  return c.json(await getMe(c.env.DB, user.id))
+})
+
 authRoutes.post('/logout', async (c) => {
   const token = getCookie(c, COOKIE)
   if (token) await run(c.env.DB, 'DELETE FROM sessions WHERE token_hash = ?', await hashToken(token))
@@ -107,26 +116,19 @@ authRoutes.post('/logout', async (c) => {
   return c.json({ ok: true })
 })
 
-const PUBLIC = ['/api/health', '/api/auth/config', '/api/auth/google', '/api/auth/logout']
+const PUBLIC = ['/api/health', '/api/auth/config', '/api/auth/google', '/api/auth/dev', '/api/auth/logout']
 
-/** Every other /api/* route needs a live session whose email is still on the allowlist.
+/** Every other /api/* route needs a live session whose email is still on the allowlist (or is the demo user on localhost).
  *  PUBLIC is exact paths, not prefixes: an unknown path under /api/auth/ still needs auth (401, not a 404 leak). */
 export const requireUser: MiddlewareHandler<AppEnv> = async (c, next) => {
   if (PUBLIC.includes(c.req.path)) return next()
-  const dev = devEmail(c)
-  if (dev) {
-    const user = await findOrCreateUser(c.env.DB, { email: dev, name: 'Dev', picture: null })
-    c.set('uid', user.id)
-    c.set('email', user.email)
-    return next()
-  }
   const token = getCookie(c, COOKIE)
   if (!token) return c.json({ error: 'กรุณาเข้าสู่ระบบ' }, 401)
   const row = await one<{ user_id: number; email: string }>(c.env.DB,
     'SELECT s.user_id, u.email FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token_hash = ? AND s.expires_at > ?',
     await hashToken(token), now())
   if (!row) return c.json({ error: 'session หมดอายุ กรุณาเข้าสู่ระบบใหม่' }, 401)
-  if (!allowed(c.env, row.email)) return c.json({ error: 'not_allowed', email: row.email }, 403)
+  if (!allowed(c.env, row.email) && row.email !== devEmail(c)) return c.json({ error: 'not_allowed', email: row.email }, 403)
   c.set('uid', row.user_id)
   c.set('email', row.email)
   await next()

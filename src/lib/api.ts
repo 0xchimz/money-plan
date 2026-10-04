@@ -50,6 +50,7 @@ const get = <T>(url: string) => request<T>('GET', url)
 export const api = {
   authConfig: () => get<AuthConfig>('/api/auth/config'),
   loginGoogle: (credential: string) => request<Me>('POST', '/api/auth/google', { credential }),
+  loginDev: () => request<Me>('POST', '/api/auth/dev'),
   logout: () => request<{ ok: true }>('POST', '/api/auth/logout'),
   me: () => get<Me>('/api/me'),
 
