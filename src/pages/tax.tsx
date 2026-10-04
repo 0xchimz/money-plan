@@ -2,12 +2,17 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { PageState } from '@/components/layout'
+import { TopBarSlot } from '@/components/mobile/shell'
 import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
 import { Card, CardContent } from '@/components/ui/card'
 import { api, type Tax, type TaxLine, type TaxLinkedInput } from '@/lib/api'
+import { money } from '@/lib/format'
 import { useIsMobile } from '@/lib/use-is-mobile'
+import { cn } from '@/lib/utils'
+import type { Advice } from '@shared/tax'
 import { buildView } from '@shared/tax-view'
 import { AdviceCard, be, ReserveCard, ResultCard, TaxSectionCard, type TaxActions } from './tax-parts'
+import { ScenarioPanel } from './tax-scenarios'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
@@ -16,6 +21,7 @@ export function TaxPage() {
   const [data, setData] = useState<Tax | null>(null)
   const [error, setError] = useState<unknown>()
   const seq = useRef(0)
+  const [mode, setMode] = useState<'real' | 'scenario'>('real')
 
   useEffect(() => {
     api.tax().then(setData, setError)
@@ -59,15 +65,34 @@ export function TaxPage() {
     setData((d) => d && { ...d, reserve: { ...d.reserve, ...v } })
     mutate(api.setTaxReserve(year, v))
   }
+  const tryAdvice = async (a: Advice) => {
+    if (await mutate(api.addTaxScenario(year, { name: `${a.label} เพิ่ม ${money(a.room)}`, changes: [{ kind: a.kind, thb: a.room }] }))) setMode('scenario')
+  }
+  const modeTabs = (
+    <div className={cn('inline-flex rounded-2xl bg-muted p-1 text-sm', mobile && 'flex w-full')} role="tablist" aria-label="มุมมอง">
+      {([['real', 'ตัวเลขจริง'], ['scenario', `ฉากทัศน์${data.scenarios.length ? ` ${data.scenarios.length}` : ''}`]] as const).map(([id, label]) => (
+        <button key={id} type="button" role="tab" aria-selected={mode === id} onClick={() => setMode(id)}
+          className={cn('rounded-xl px-4 py-1.5 transition-colors', mobile && 'min-h-11 flex-1 px-2', mode === id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
 
   return (
     <div className="flex flex-col gap-6">
-      {!mobile && (
-        <section className="flex flex-col gap-1">
-          <span className="text-sm text-muted-foreground">ภาษีเงินได้บุคคลธรรมดา · ประมาณการ</span>
-          <h1 className="text-3xl font-semibold tracking-tight">ปีภาษี {be(year)}</h1>
-        </section>
-      )}
+      {mobile
+        ? <TopBarSlot below={modeTabs} />
+        : (
+          <section className="flex items-end justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm text-muted-foreground">ภาษีเงินได้บุคคลธรรมดา · ประมาณการ</span>
+              <h1 className="text-3xl font-semibold tracking-tight">ปีภาษี {be(year)}</h1>
+            </div>
+            {modeTabs}
+          </section>
+        )}
+      {mode === 'real' && (<>
       {!data.lines.length && (
         <Card>
           <CardContent className="flex flex-col gap-1 text-sm">
@@ -84,9 +109,17 @@ export function TaxPage() {
         <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:col-span-5">
           <ResultCard view={view} />
           <ReserveCard tax={data} view={view} onSave={saveReserve} />
-          <AdviceCard view={view} />
+          <AdviceCard view={view} onTry={tryAdvice} />
         </div>
       </div>
+      </>)}
+      {mode === 'scenario' && (
+        <ScenarioPanel tax={data} view={view}
+          onAdd={(s) => mutate(api.addTaxScenario(year, s))}
+          onUpdate={(id, s) => { mutate(api.updateTaxScenario(id, s)) }}
+          onDelete={(id) => { mutate(api.deleteTaxScenario(id)) }}
+          onApply={async (id) => { if (await mutate(api.applyTaxScenario(id), 'เพิ่มเข้าตัวเลขจริงแล้ว')) setMode('real') }} />
+      )}
       <p className="text-xs text-muted-foreground">ประมาณการจากข้อมูลที่กรอก ตรวจกับกรมสรรพากรก่อนยื่นจริง</p>
     </div>
   )
