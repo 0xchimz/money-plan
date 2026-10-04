@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils'
 import { categoryOrder, nextUnconfirmed, pageOrder, SIDES } from '@shared/balance-order'
 import { BALANCE_CATEGORIES, unusedChips } from '@shared/categories'
 import {
-  Change, ContribCard, EfHint, EmergencyMeter, guess, guessCurrency, HiddenCard, HistoryCard, InvestCard, InvestFields,
+  Change, ContribCard, EfCard, guess, guessCurrency, HiddenCard, HistoryCard, InvestCard, InvestFields,
   NetWorthCard, round2, SIDE_TH, StatusBadge, TargetBar, TransferList, type Group,
 } from './balance-parts'
 
@@ -32,7 +32,7 @@ export interface BalanceMobileProps {
   nav: { newer?: string; older?: string; canStartNext: boolean; openDraft: string | null }
   summary: {
     net: number; change: number | null; prevNet: number | null; assets: number; liabilities: number
-    invest: number; investPrev: number; ef: number; efTarget: number | null
+    invest: number; investPrev: number; ef: number
     contrib: { label: string; value: number; sub?: string }[]
     hist: { month: string; label: string; assets: number; liabilities: number; net: number; live: boolean }[]
   }
@@ -50,6 +50,7 @@ export interface BalanceMobileProps {
     startNext: () => void
     closeMonth: () => Promise<boolean>
     discard: () => Promise<boolean>
+    reload: () => void
   }
 }
 
@@ -108,7 +109,7 @@ export function BalanceMobile(p: BalanceMobileProps) {
 
       <NetWorthCard net={s.net} change={s.change} prevNet={s.prevNet} prevMonth={data.prevMonth} assets={s.assets} liabilities={s.liabilities} />
       <InvestCard invest={s.invest} investPrev={s.investPrev} prevMonth={data.prevMonth} />
-      {s.efTarget != null ? <EmergencyMeter value={s.ef} target={s.efTarget} /> : <EfHint />}
+      <EfCard value={s.ef} data={data} onSaved={actions.reload} />
       {s.contrib.length > 0 && data.prevMonth && <ContribCard rows={s.contrib} prevMonth={data.prevMonth} />}
       <HistoryCard hist={s.hist} draft={draft} />
       {draft && data.hidden.length > 0 && <HiddenCard hidden={data.hidden} onRestore={actions.restore} />}

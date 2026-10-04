@@ -32,4 +32,12 @@ describe('planning math', () => {
     expect(efStatus(90000, totals([L('Expense', 'Housing', 30000), L('Income', 'Rental', 12000)]))).toEqual({ thb: 90000, target: 180000, months: 3, netMonths: 5 })
     expect(efStatus(90000, totals([L('Expense', 'Housing', 30000), L('Income', 'Rental', 30000)])).netMonths).toBeNull()
   })
+
+  it('takes the number of months, and a typed monthly amount instead of the job-loss scenario', () => {
+    const em = totals([L('Expense', 'Housing', 30000), L('Income', 'Rental', 12000)])
+    expect(efStatus(90000, em, { mode: 'plan', months: 12, monthly: 45000, expr: null })).toEqual({ thb: 90000, target: 360000, months: 3, netMonths: 5 })
+    expect(efStatus(90000, em, { mode: 'custom', months: 4, monthly: 45000, expr: null })).toEqual({ thb: 90000, target: 180000, months: 2, netMonths: null })
+    expect(efStatus(90000, null, { mode: 'custom', months: 4, monthly: 45000, expr: null })).toEqual({ thb: 90000, target: 180000, months: 2, netMonths: null })
+    expect(efStatus(90000, em, { mode: 'custom', months: 4, monthly: null, expr: null })).toEqual({ thb: 90000, target: null, months: null, netMonths: null })
+  })
 })

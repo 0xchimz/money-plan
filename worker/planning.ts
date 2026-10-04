@@ -1,5 +1,6 @@
 // Planning page: the monthly plan (income / saving & investing / expenses) in three fixed scenarios per user
-import { BUDGET_TYPES, type BudgetLineInput, type BudgetLineRow, type BudgetType, type MonthStatus, type Planning, type ScenarioId } from '../shared/types'
+import { EF_MONTHS_MAX } from '../shared/planning'
+import { BUDGET_TYPES, type BudgetLineInput, type BudgetLineRow, type BudgetType, type EfTarget, type MonthStatus, type Planning, type ScenarioId } from '../shared/types'
 import { all, one, run, type Db } from './db'
 import { bad, conflict, notFound } from './http'
 
@@ -18,14 +19,34 @@ export function latestEf(db: Db, uid: number) {
     ORDER BY m.month DESC LIMIT 1`, uid)
 }
 
+/** The user's emergency-fund target setting */
+export async function getEfTarget(db: Db, uid: number): Promise<EfTarget> {
+  return (await one<EfTarget>(db, 'SELECT ef_mode AS mode, ef_months AS months, ef_monthly AS monthly, ef_monthly_expr AS expr FROM users WHERE id = ?', uid))!
+}
+
+/** 'plan' sets the months only (a typed amount stays for later); 'custom' needs the monthly amount too */
+export async function setEfTarget(db: Db, uid: number, input: unknown) {
+  const v = (input ?? {}) as Record<string, unknown>
+  if (v.mode !== 'plan' && v.mode !== 'custom') throw bad('เลือกว่าจะใช้แผนตกงานหรือกรอกเอง')
+  if (typeof v.months !== 'number' || !Number.isInteger(v.months) || v.months < 1 || v.months > EF_MONTHS_MAX) throw bad(`จำนวนเดือนต้องเป็นเลขเต็ม 1–${EF_MONTHS_MAX}`)
+  if (v.mode === 'plan') {
+    await run(db, "UPDATE users SET ef_mode = 'plan', ef_months = ? WHERE id = ?", v.months, uid)
+    return
+  }
+  if (typeof v.monthly !== 'number' || !Number.isFinite(v.monthly) || v.monthly <= 0) throw bad('ยอดต่อเดือนต้องเป็นตัวเลขมากกว่า 0')
+  await run(db, "UPDATE users SET ef_mode = 'custom', ef_months = ?, ef_monthly = ?, ef_monthly_expr = ? WHERE id = ?",
+    v.months, Math.round(v.monthly * 100) / 100, v.expr ? String(v.expr) : null, uid)
+}
+
 export async function getPlanning(db: Db, uid: number): Promise<Planning> {
-  const [scenarios, lines, ef] = await Promise.all([
+  const [scenarios, lines, ef, efTarget] = await Promise.all([
     all<{ id: ScenarioId; name: string; note: string | null }>(db, 'SELECT id, name, note FROM budget_scenarios WHERE user_id = ? ORDER BY sort, id', uid),
     all<BudgetLineRow>(db, `SELECT id, scenario, type, category, item, thb, expr, account FROM budget_lines WHERE user_id = ?
       ORDER BY CASE type WHEN 'Income' THEN 0 WHEN 'Saving' THEN 1 ELSE 2 END, sort, id`, uid),
     latestEf(db, uid),
+    getEfTarget(db, uid),
   ])
-  return { scenarios: scenarios.map((s) => ({ ...s, lines: lines.filter((l) => l.scenario === s.id) })), ef }
+  return { scenarios: scenarios.map((s) => ({ ...s, lines: lines.filter((l) => l.scenario === s.id) })), ef, efTarget }
 }
 
 type RawLine = Partial<Record<keyof BudgetLineInput, unknown>>

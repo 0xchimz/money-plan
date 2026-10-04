@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { ArrowDownRight, ArrowUpRight, Circle, CircleCheck, Lock, Plus, Undo2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { DivergingList, NetWorthChart } from '@/components/charts'
+import { EfTargetButton, EfTargetEditor } from '@/components/ef-target'
 import { Legend } from '@/components/chart-card'
 import { MoneyInput } from '@/components/money-input'
 import { ScrollX } from '@/components/mobile/scroll-x'
@@ -124,13 +125,34 @@ export function AssetsVsDebts({ assets, liabilities }: { assets: number; liabili
   )
 }
 
-export function EmergencyMeter({ value, target }: { value: number; target: number }) {
+/** Emergency fund on the balance sheet: the meter (or a hint while there is no target) and "ตั้งเป้า" with its editor */
+export function EfCard({ value, data, onSaved }: { value: number; data: Pick<Balance, 'targets' | 'efTarget' | 'emExpense'>; onSaved: () => void }) {
+  const [editing, setEditing] = useState(false)
+  const target = data.targets['Emergency Funds'] ?? null
+  const edit = () => setEditing((x) => !x)
+  const t = data.efTarget
+  const monthly = target != null ? thb(target / t.months) : ''
+  return (
+    <div className="flex flex-col gap-2">
+      {target != null
+        ? <EmergencyMeter value={value} target={target} source={`${t.months} เดือน × ${t.mode === 'plan' ? `รายจ่ายชุดตกงาน ${monthly}` : `${monthly} (กรอกเอง)`}`} onEdit={edit} />
+        : <EfHint months={t.months} onEdit={edit} />}
+      <EfTargetEditor open={editing} target={t} planMonthly={data.emExpense} onClose={() => setEditing(false)}
+        onSaved={() => { setEditing(false); onSaved() }} />
+    </div>
+  )
+}
+
+function EmergencyMeter({ value, target, source, onEdit }: { value: number; target: number; source: string; onEdit: () => void }) {
   const share = value / target
   const short = target - value
   return (
     <Card size="sm">
       <CardContent className="flex flex-col gap-2">
-        <span className="text-sm text-muted-foreground">เงินสำรองฉุกเฉิน · Emergency fund</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-muted-foreground">เงินสำรองฉุกเฉิน · Emergency fund</span>
+          <EfTargetButton onClick={onEdit} />
+        </div>
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-2xl font-semibold tracking-tight">{thb(value)}</span>
           <span className="text-sm text-muted-foreground">เป้า {thb(target)}</span>
@@ -144,6 +166,7 @@ export function EmergencyMeter({ value, target }: { value: number; target: numbe
             ? <><span className="font-medium">{pct(share)}</span> <span className="text-muted-foreground">· ขาดอีก {thb(short)}</span></>
             : <span className="inline-flex items-center gap-1 text-good"><CircleCheck className="size-4" aria-hidden />ครบเป้าแล้ว ({pct(share)})</span>}
         </span>
+        <span className="text-xs text-muted-foreground">เป้า = {source}</span>
       </CardContent>
     </Card>
   )
@@ -169,13 +192,16 @@ export function StartCard({ months, busy, onStart }: { months: string[]; busy: b
   )
 }
 
-/** No emergency-fund target until the ตกงาน plan has expenses */
-export function EfHint() {
+/** No emergency-fund target until the ตกงาน plan has expenses, or a monthly amount is typed */
+function EfHint({ months, onEdit }: { months: number; onEdit: () => void }) {
   return (
     <Card size="sm">
       <CardContent className="flex flex-col gap-1">
-        <span className="text-sm text-muted-foreground">เงินสำรองฉุกเฉิน · Emergency fund</span>
-        <span className="text-sm">ตั้งชุด "ตกงาน" ใน <Link to="/planning" className="underline underline-offset-2">Planning</Link> แล้วจะเห็นเป้า (6 เดือน × รายจ่าย)</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-muted-foreground">เงินสำรองฉุกเฉิน · Emergency fund</span>
+          <EfTargetButton onClick={onEdit} />
+        </div>
+        <span className="text-sm">ตั้งชุด "ตกงาน" ใน <Link to="/planning" className="underline underline-offset-2">Planning</Link> แล้วจะเห็นเป้า ({months} เดือน × รายจ่าย) หรือกด ตั้งเป้า เพื่อกรอกยอดต่อเดือนเอง</span>
       </CardContent>
     </Card>
   )

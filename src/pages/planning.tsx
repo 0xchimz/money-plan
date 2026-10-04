@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CategoryIcon } from '@/components/category-icon'
 import { RankedBars } from '@/components/charts'
 import { Chips } from '@/components/chips'
+import { EfTargetButton, EfTargetEditor } from '@/components/ef-target'
 import { PageState } from '@/components/layout'
 import { TopBarSlot } from '@/components/mobile/shell'
 import { MoneyInput } from '@/components/money-input'
@@ -13,13 +14,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
-import { api, type BudgetLineInput, type BudgetLineRow, type BudgetType, type Planning, type Scenario, type ScenarioId } from '@/lib/api'
+import { api, type BudgetLineInput, type BudgetLineRow, type BudgetType, type EfTarget, type Planning, type Scenario, type ScenarioId } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { money, pct, thb, thMonth } from '@/lib/format'
 import { useIsMobile } from '@/lib/use-is-mobile'
 import { cn } from '@/lib/utils'
 import { PLANNING_CHIPS, unusedChips } from '@shared/categories'
-import { debtOf, partOf, totals } from '@shared/planning'
+import { debtOf, efMonthly, efStatus, partOf, totals, type EfStatus } from '@shared/planning'
 import { LineSheet, MobileLineRow, type LineSheetState } from './planning-mobile'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -48,6 +49,7 @@ export function PlanningPage() {
   const [error, setError] = useState<unknown>()
   const [scenario, setScenario] = useState<ScenarioId>('main')
   const [blank, setBlank] = useState<ScenarioId[]>([]) // empty scenarios the user chose to fill by hand
+  const [efEditing, setEfEditing] = useState(false)
   const seq = useRef(0)
 
   useEffect(() => {
@@ -102,7 +104,7 @@ export function PlanningPage() {
     return (
       <div className="flex flex-col gap-6">
         {header}
-        <EmptyScenario scenario={sc} canCopy={canCopy}
+        <EmptyScenario scenario={sc} canCopy={canCopy} efMonths={data.efTarget.months}
           onCopy={() => mutate(api.copyScenario(sc.id), sc.id === 'em' ? 'คัดลอกรายจ่ายจาก ปัจจุบัน แล้ว' : 'คัดลอกแผนจาก ปัจจุบัน แล้ว')}
           onBlank={() => setBlank((b) => [...b, sc.id])} />
       </div>
@@ -112,6 +114,7 @@ export function PlanningPage() {
   const t = totals(sc.lines)
   const em = data.scenarios.find((s) => s.id === 'em')
   const emT = em ? totals(em.lines) : null
+  const efBase = efMonthly(emT, data.efTarget)
   const debt = debtOf(sc.lines)
   // the page leads with money put to work: investing first, then savings, biggest first
   const saved = t.saving + t.invest
@@ -172,10 +175,12 @@ export function PlanningPage() {
         </Card>
         <Metric label="ภาระผ่อนต่อรายได้ · DSR" value={t.income ? pct(debt / t.income) : '—'}
           sub={`ผ่อนบ้าน + ผ่อนของ ${thb(debt)} · เส้น = 40% ที่ธนาคารมักให้`} share={t.income ? debt / t.income : 0} mark={0.4} markLabel="40%" />
-        {data.ef && emT && emT.expense > 0 && (
-          <Runway ef={data.ef} expense={emT.expense} income={emT.income} />
+        {data.ef && efBase != null && (
+          <Runway ef={data.ef} status={efStatus(data.ef.thb, emT, data.efTarget)} target={data.efTarget} monthly={efBase} onEdit={() => setEfEditing((x) => !x)} />
         )}
       </section>
+      <EfTargetEditor open={efEditing} target={data.efTarget} planMonthly={emT?.expense ?? 0} onClose={() => setEfEditing(false)}
+        onSaved={(efTarget) => { setData((d) => d && { ...d, efTarget }); setEfEditing(false) }} />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
@@ -283,26 +288,33 @@ function Metric({ label, value, sub, share, mark, markLabel }: { label: string; 
   )
 }
 
-/** Emergency fund in months of the job-loss plan — the 6-month rule behind the target */
-function Runway({ ef, expense, income }: { ef: NonNullable<Planning['ef']>; expense: number; income: number }) {
-  const months = ef.thb / expense
-  const withRent = expense > income ? ef.thb / (expense - income) : null
-  const goal = 6
+const RUNWAY_SEGMENTS = 12 // more target months than this draw as one bar
+
+/** Emergency fund in months of the target's monthly amount (the job-loss plan's expenses, or a typed one) against the target months */
+function Runway({ ef, status, target, monthly, onEdit }: { ef: NonNullable<Planning['ef']>; status: EfStatus; target: EfTarget; monthly: number; onEdit: () => void }) {
+  const months = status.months ?? 0
+  const goal = target.months
+  // one segment per target month; a long target is one bar, where a segment stands for the whole target
+  const segments = goal <= RUNWAY_SEGMENTS ? goal : 1
+  const filled = (months / goal) * segments
   return (
     <Card size="sm">
       <CardContent className="flex flex-col gap-2">
-        <span className="text-sm text-muted-foreground">ถ้าตกงาน เงินสำรองอยู่ได้</span>
-        <span className="text-2xl font-semibold tracking-tight">{months.toFixed(1)} เดือน</span>
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-sm text-muted-foreground">ถ้าตกงาน เงินสำรองอยู่ได้</span>
+          <EfTargetButton onClick={onEdit} />
+        </div>
+        <span className="text-2xl font-semibold tracking-tight">{months.toFixed(1)} เดือน <span className="text-sm font-normal text-muted-foreground">/ {goal}</span></span>
         <div className="flex gap-1" role="img" aria-label={`${months.toFixed(1)} จาก ${goal} เดือน`}>
-          {Array.from({ length: goal }, (_, i) => (
+          {Array.from({ length: segments }, (_, i) => (
             <div key={i} className="h-2 flex-1 overflow-hidden rounded-full" style={{ background: 'color-mix(in oklch, var(--chart-1) 16%, transparent)' }}>
-              <div className="h-full rounded-full bg-chart-1" style={{ width: `${Math.min(Math.max(months - i, 0), 1) * 100}%` }} />
+              <div className="h-full rounded-full bg-chart-1" style={{ width: `${Math.min(Math.max(filled - i, 0), 1) * 100}%` }} />
             </div>
           ))}
         </div>
         <span className="text-xs text-muted-foreground">
-          EF {thb(ef.thb)} ({thMonth(ef.month)}{ef.status === 'draft' ? ' ร่าง' : ''}) ÷ รายจ่ายชุดตกงาน {thb(expense)}
-          {withRent ? ` · หักรายรับที่ยังได้ อยู่ได้ ${withRent.toFixed(1)} เดือน` : ''}
+          EF {thb(ef.thb)} ({thMonth(ef.month)}{ef.status === 'draft' ? ' ร่าง' : ''}) ÷ {target.mode === 'plan' ? `รายจ่ายชุดตกงาน ${thb(monthly)}` : `${thb(monthly)} ต่อเดือน (กรอกเอง)`}
+          {status.netMonths != null && Math.abs(status.netMonths - months) > 0.05 ? ` · หักรายรับที่ยังได้ อยู่ได้ ${status.netMonths.toFixed(1)} เดือน` : ''}
         </span>
       </CardContent>
     </Card>
@@ -521,14 +533,14 @@ function AddLineForm({ type, categories, initial, onAdd, onCancel }: {
 }
 
 /** ตกงาน / Projection with no lines yet: start from ปัจจุบัน instead of retyping (mockup 4-planning.html) */
-function EmptyScenario({ scenario, canCopy, onCopy, onBlank }: { scenario: Scenario; canCopy: boolean; onCopy: () => void; onBlank: () => void }) {
+function EmptyScenario({ scenario, canCopy, efMonths, onCopy, onBlank }: { scenario: Scenario; canCopy: boolean; efMonths: number; onCopy: () => void; onBlank: () => void }) {
   const em = scenario.id === 'em'
   return (
     <Card className="mx-auto w-full max-w-2xl">
       <CardHeader className="text-center">
         <CardTitle className="text-xl">{em ? 'ถ้าไม่มีรายได้ ต้องจ่ายเดือนละเท่าไหร่?' : 'แผนอนาคตยังว่าง'}</CardTitle>
         <CardDescription>
-          {em ? 'ใช้คำนวณเป้าเงินสำรองฉุกเฉิน (6 เดือน × รายจ่ายชุดนี้) และดูว่าเงินสำรองที่มีอยู่ได้กี่เดือน' : 'เอาไว้วางแผน เช่น หลังขึ้นเงินเดือน แต่งงาน ย้ายบ้าน'}
+          {em ? `ใช้คำนวณเป้าเงินสำรองฉุกเฉิน (${efMonths} เดือน × รายจ่ายชุดนี้) และดูว่าเงินสำรองที่มีอยู่ได้กี่เดือน` : 'เอาไว้วางแผน เช่น หลังขึ้นเงินเดือน แต่งงาน ย้ายบ้าน'}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center gap-3">

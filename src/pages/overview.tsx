@@ -14,7 +14,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
-import { api, OTHER_COLOR, SERIES, TIER_COLOR, TIERS, type Overview, type Planning, type ScenarioId, type Tier, type TierTargets } from '@/lib/api'
+import { api, OTHER_COLOR, SERIES, TIER_COLOR, TIERS, type EfTarget, type Overview, type Planning, type ScenarioId, type Tier, type TierTargets } from '@/lib/api'
 import { CATEGORY_TH } from '@/lib/categories'
 import { pct, signed, thb, thbCompact, thMonth } from '@/lib/format'
 import { useIsMobile } from '@/lib/use-is-mobile'
@@ -38,7 +38,7 @@ export function OverviewPage() {
 
   const lines = (id: ScenarioId) => p.scenarios.find((s) => s.id === id)?.lines ?? []
   const mainT = totals(lines('main'))
-  const ef = efStatus(o.ef, totals(lines('em')))
+  const ef = efStatus(o.ef, totals(lines('em')), p.efTarget)
   const history = o.netHistory.length >= 2
   return (
     <div className="flex flex-col gap-6">
@@ -47,7 +47,7 @@ export function OverviewPage() {
         <NetWorthHero o={o} className="lg:col-span-7" />
         <div className="grid grid-cols-2 gap-3 lg:col-span-5 lg:grid-cols-1">
           <SavingTile t={mainT} />
-          <EfTile ef={ef} />
+          <EfTile ef={ef} target={p.efTarget} />
           <DebtTile o={o} />
         </div>
       </section>
@@ -228,14 +228,14 @@ function SavingTile({ t }: { t: Totals }) {
   )
 }
 
-function EfTile({ ef }: { ef: EfStatus }) {
+function EfTile({ ef, target }: { ef: EfStatus; target: EfTarget }) {
   if (ef.target == null) {
     return <Tile label="เงินสำรองฉุกเฉิน" value={<b>{thb(ef.thb)}</b>} sub={<>ตั้งชุด "ตกงาน" ใน <Link to="/planning" className="underline underline-offset-2">Planning</Link> แล้วจะเห็นเป้า</>} />
   }
   return (
-    <Tile label="เงินสำรองฉุกเฉิน" value={<><b>{ef.months!.toFixed(1)}</b> <span className="text-muted-foreground">/ 6 เดือน</span></>}
+    <Tile label="เงินสำรองฉุกเฉิน" value={<><b>{ef.months!.toFixed(1)}</b> <span className="text-muted-foreground">/ {target.months} เดือน</span></>}
       share={ef.thb / ef.target} color="var(--chart-1)"
-      sub={`${thb(ef.thb)} จากเป้า ${thb(ef.target)} (6 × รายจ่ายตอนตกงาน)${ef.netMonths != null && Math.abs(ef.netMonths - ef.months!) > 0.05 ? ` · หักรายรับที่ยังได้ อยู่ได้ ${ef.netMonths.toFixed(1)} เดือน` : ''}`} />
+      sub={`${thb(ef.thb)} จากเป้า ${thb(ef.target)} (${target.months} × ${target.mode === 'plan' ? 'รายจ่ายตอนตกงาน' : `${thb(ef.target / target.months)} กรอกเอง`})${ef.netMonths != null && Math.abs(ef.netMonths - ef.months!) > 0.05 ? ` · หักรายรับที่ยังได้ อยู่ได้ ${ef.netMonths.toFixed(1)} เดือน` : ''}`} />
   )
 }
 

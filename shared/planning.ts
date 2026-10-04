@@ -1,4 +1,4 @@
-import type { BudgetLineRow } from './types'
+import type { BudgetLineRow, EfTarget } from './types'
 
 export type Part = 'expense' | 'saving' | 'invest'
 type LineLike = Pick<BudgetLineRow, 'type' | 'category' | 'thb'>
@@ -25,18 +25,28 @@ export const debtOf = (lines: LineLike[]) =>
   lines.filter((l) => l.type === 'Expense' && (l.category === 'Mortgage' || l.category === 'Debt')).reduce((s, l) => s + l.thb, 0)
 
 export const EF_MONTHS = 6
+export const EF_MONTHS_MAX = 60
+export const DEFAULT_EF_TARGET: EfTarget = { mode: 'plan', months: EF_MONTHS, monthly: null, expr: null }
 export interface EfStatus { thb: number; target: number | null; months: number | null; netMonths: number | null }
 
+/** The monthly amount the target multiplies: the job-loss scenario's expenses, or the typed one; null when there is none yet */
+export function efMonthly(em: Totals | null, t: EfTarget = DEFAULT_EF_TARGET): number | null {
+  const v = t.mode === 'custom' ? t.monthly : em?.expense
+  return v != null && v > 0 ? v : null
+}
+
 /**
- * Emergency fund against the job-loss scenario: target = 6 × its expenses, months = fund ÷ expenses,
- * netMonths = fund ÷ (expenses − income that keeps coming, e.g. rent); null when that income covers the expenses.
+ * Emergency fund against its target: target = months × the monthly amount, months = fund ÷ that amount.
+ * With the job-loss scenario, netMonths = fund ÷ (expenses − income that keeps coming, e.g. rent); null when that
+ * income covers the expenses, and for a typed amount.
  */
-export function efStatus(thb: number, em: Totals | null): EfStatus {
-  if (!em || em.expense <= 0) return { thb, target: null, months: null, netMonths: null }
+export function efStatus(thb: number, em: Totals | null, t: EfTarget = DEFAULT_EF_TARGET): EfStatus {
+  const monthly = efMonthly(em, t)
+  if (monthly == null) return { thb, target: null, months: null, netMonths: null }
   return {
     thb,
-    target: EF_MONTHS * em.expense,
-    months: thb / em.expense,
-    netMonths: em.expense > em.income ? thb / (em.expense - em.income) : null,
+    target: t.months * monthly,
+    months: thb / monthly,
+    netMonths: t.mode === 'plan' && em && em.expense > em.income ? thb / (em.expense - em.income) : null,
   }
 }

@@ -1,4 +1,4 @@
-import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tier, TierTargets } from '@shared/types'
+import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, EfTarget, EfTargetInput, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tier, TierTargets } from '@shared/types'
 
 export * from '@shared/types'
 
@@ -61,6 +61,7 @@ export const api = {
   updateLine: (id: number, patch: Partial<BudgetLineInput>) => request<Planning>('PATCH', `/api/planning/lines/${id}`, patch),
   deleteLine: (id: number) => request<Planning>('DELETE', `/api/planning/lines/${id}`),
   copyScenario: (to: ScenarioId) => request<Planning>('POST', `/api/planning/${to}/copy`, { from: 'main' }),
+  setEfTarget: (t: EfTargetInput) => request<EfTarget>('PUT', '/api/ef-target', t),
 
   balance: (month?: string | null) => get<Balance>(`/api/balance${month ? `?month=${month}` : ''}`),
   startMonth: (month: string) => request<Balance>('POST', `/api/balance/${month}/start`),

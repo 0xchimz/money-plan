@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils'
 import { BALANCE_CATEGORIES, unusedChips } from '@shared/categories'
 import { BalanceMobile } from './balance-mobile'
 import {
-  askRate, Change, ContribCard, CurrencyToggle, EfHint, EmergencyMeter, errMsg, FxRate, FxRateContext, guess, guessCurrency,
+  askRate, Change, ContribCard, CurrencyToggle, EfCard, errMsg, FxRate, FxRateContext, guess, guessCurrency,
   HiddenCard, HistoryCard, InvestCard, InvestFields, NetWorthCard, round2, SIDE_TH, StartCard, StatusBadge, TargetBar, TransferCard, type Group,
 } from './balance-parts'
 
@@ -95,7 +95,7 @@ export function BalancePage() {
   const invest = data.rows.filter((r) => r.side === 'asset' && r.tier).reduce((s, r) => s + r.thb, 0)
   const investPrev = data.rows.filter((r) => r.side === 'asset' && r.tier).reduce((s, r) => s + (r.prev ?? 0), 0)
   const ef = data.rows.filter((r) => r.category === 'Emergency Funds').reduce((s, r) => s + r.thb, 0)
-  const efTarget = data.targets['Emergency Funds'] ?? null
+  const reload = () => { mutate(api.balance(month)) }
   const unconfirmed = data.rows.filter((r) => !r.confirmed)
   const usdRows = data.rows.filter((r) => r.usd != null).length
   const fxStale = draft && !data.fx.confirmed && data.fx.usdThb != null && usdRows > 0
@@ -155,8 +155,8 @@ export function BalancePage() {
         <BalanceMobile
           data={data} month={month} draft={draft} busy={busy} quote={quote} fxStale={fxStale} usdRows={usdRows}
           nav={{ newer, older, canStartNext: !!canStartNext, openDraft: data.months.find((m) => m.status === 'draft')?.month ?? null }}
-          summary={{ net, change, prevNet: prevHist?.net ?? null, assets, liabilities, invest, investPrev, ef, efTarget, contrib, hist }}
-          actions={{ go, setEntry, setCurrency, setRate, confirm, remove, restore, classify, add, toggleTransfer, startNext, closeMonth, discard }}
+          summary={{ net, change, prevNet: prevHist?.net ?? null, assets, liabilities, invest, investPrev, ef, contrib, hist }}
+          actions={{ go, setEntry, setCurrency, setRate, confirm, remove, restore, classify, add, toggleTransfer, startNext, closeMonth, discard, reload }}
         />
       </FxRateContext>
     )
@@ -207,7 +207,7 @@ export function BalancePage() {
         <NetWorthCard className="xl:col-span-7" net={net} change={change} prevNet={prevHist?.net ?? null} prevMonth={data.prevMonth} assets={assets} liabilities={liabilities} />
         <div className="grid gap-4 sm:grid-cols-2 xl:col-span-5 xl:grid-cols-1">
           <InvestCard invest={invest} investPrev={investPrev} prevMonth={data.prevMonth} />
-          {efTarget != null ? <EmergencyMeter value={ef} target={efTarget} /> : <EfHint />}
+          <EfCard value={ef} data={data} onSaved={reload} />
         </div>
       </section>
 

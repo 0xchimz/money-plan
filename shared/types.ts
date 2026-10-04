@@ -23,10 +23,20 @@ export interface BudgetLineRow {
 }
 export type BudgetLineInput = Pick<BudgetLineRow, 'type' | 'category' | 'item' | 'thb' | 'expr' | 'account'>
 export interface Scenario { id: ScenarioId; name: string; note: string | null; lines: BudgetLineRow[] }
+/** Emergency-fund target = months × a monthly amount: the ตกงาน plan's expenses ('plan') or a typed one ('custom') */
+export type EfMode = 'plan' | 'custom'
+export interface EfTarget {
+  mode: EfMode
+  months: number                                             // 1..60, shared by both modes
+  monthly: number | null                                     // typed THB per month; kept while the mode is 'plan'
+  expr: string | null                                        // what was typed when it was a sum
+}
+export type EfTargetInput = Pick<EfTarget, 'mode' | 'months'> & Partial<Pick<EfTarget, 'monthly' | 'expr'>>
 export interface Planning {
   scenarios: Scenario[]
   /** Emergency Funds total on the latest balance month (draft included); null before any month exists */
   ef: { month: string; status: MonthStatus; thb: number } | null
+  efTarget: EfTarget
 }
 
 // ---- Balance (month-end balance sheet) ----
@@ -64,7 +74,9 @@ export interface Balance {
   rows: BalanceRow[]
   hidden: { id: number; side: BalanceSide; category: string; item: string; prev: number | null }[]
   history: { month: string; assets: number; liabilities: number; net: number; draft: boolean }[]  // newest first
-  targets: Record<string, number>                            // { 'Emergency Funds': 6 × ตกงาน expenses } when that plan exists
+  targets: Record<string, number>                            // { 'Emergency Funds': months × monthly amount } when there is an amount
+  efTarget: EfTarget
+  emExpense: number                                          // ตกงาน plan's expenses per month; 0 = no plan yet
   transfers: BalanceTransfers | null
   hasClosed: boolean
 }
