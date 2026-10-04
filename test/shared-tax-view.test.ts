@@ -79,6 +79,12 @@ describe('buildView', () => {
     expect(refund.reserve.need).toBe(0)
   })
 
+  it('uses the latest rules when the payload year has none', () => {
+    const v = buildView({ ...chin, year: 2031, today: '2031-10', lines: [typed('inc_wage', 'w', 500_000)] })
+    expect(v.rules.year).toBe(2026)
+    expect(v.result.tax).toBe(11_500)
+  })
+
   it('counts the months left in the tax year', () => {
     expect(monthsLeftIn(2026, '2025-11')).toBe(12)
     expect(monthsLeftIn(2026, '2026-01')).toBe(12)

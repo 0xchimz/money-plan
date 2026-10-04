@@ -1,6 +1,6 @@
 // What the tax page shows, derived from the API payload. Pure: the page and its tests share it.
 import { advise, annualOf, computeTax, monthsAfter, monthsBetween, reserveStatus, round2, type Advice, type Amount, type ReserveStatus, type TaxResult } from './tax'
-import { kindOf, PAGE_SECTIONS, SECTION_TH, TAX_RULES, type TaxKind, type TaxRules, type TaxSection } from './tax-rules'
+import { kindOf, PAGE_SECTIONS, SECTION_TH, rulesFor, type TaxKind, type TaxRules, type TaxSection } from './tax-rules'
 import type { Tax, TaxLine } from './types'
 
 /** Months of the tax year still to come, this month included */
@@ -37,7 +37,7 @@ export interface TaxView {
 }
 
 export function buildView(tax: Tax): TaxView {
-  const rules = TAX_RULES[tax.year]
+  const rules = rulesFor(tax.year)
   const rows: TaxRowView[] = tax.lines.flatMap((line) => {
     const kind = kindOf(rules, line.kind)
     if (!kind) return []
