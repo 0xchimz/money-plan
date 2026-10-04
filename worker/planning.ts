@@ -70,17 +70,30 @@ function checkTaxKind(scenario: string, type: BudgetType, taxKind: string | null
 
 /**
  * Before a plan line is deleted or loses its tax tag: tax lines linked to it that hold money become hand-typed lines
- * (paid so far + one-off, no more monthly projection); empty ones go. Run these statements in the same batch as the change.
+ * (paid so far + one-off, no more monthly projection; as_of stays, which marks the row as detached); empty ones go. Run these statements in the same batch as the change.
  */
 export function detachTaxLines(db: Db, uid: number, lineId: number) {
   return [
     stmt(db, `UPDATE tax_lines SET
         kind = COALESCE((SELECT tax_kind FROM budget_lines WHERE id = ?1 AND user_id = ?2), kind),
         label = COALESCE((SELECT item FROM budget_lines WHERE id = ?1 AND user_id = ?2), label),
-        paid_thb = ROUND(paid_thb + lump_thb, 2), paid_expr = NULL, lump_thb = 0, lump_expr = NULL, as_of = NULL, budget_line_id = NULL
+        paid_thb = ROUND(paid_thb + lump_thb, 2), paid_expr = NULL, lump_thb = 0, lump_expr = NULL, budget_line_id = NULL
       WHERE user_id = ?2 AND budget_line_id = ?1 AND paid_thb + lump_thb > 0`, lineId, uid),
     stmt(db, 'DELETE FROM tax_lines WHERE user_id = ?2 AND budget_line_id = ?1', lineId, uid),
   ]
+}
+
+/**
+ * When a plan line gains a tax tag: the detached hand-typed row of the same kind and name (one per year) links to it again,
+ * so the year is not counted twice. Rows whose amount the user re-typed have as_of cleared and are left alone.
+ */
+export function reattachTaxLines(db: Db, uid: number, lineId: number, kind: string, item: string) {
+  return stmt(db, `UPDATE tax_lines SET budget_line_id = ?1
+    WHERE user_id = ?2
+      AND id IN (SELECT MIN(id) FROM tax_lines
+                 WHERE user_id = ?2 AND budget_line_id IS NULL AND as_of IS NOT NULL AND kind = ?3 AND label = ?4
+                 GROUP BY year)
+      AND NOT EXISTS (SELECT 1 FROM tax_lines t WHERE t.user_id = ?2 AND t.budget_line_id = ?1 AND t.year = tax_lines.year)`, lineId, uid, kind, item)
 }
 
 export async function addLine(db: Db, uid: number, scenario: string, p: RawLine) {
@@ -91,23 +104,28 @@ export async function addLine(db: Db, uid: number, scenario: string, p: RawLine)
   if (!v.type || !v.category || !v.item) throw bad('ต้องมีประเภท หมวด และชื่อรายการ')
   checkTaxKind(scenario, v.type, v.taxKind)
   const sort = (await one<{ s: number | null }>(db, 'SELECT MAX(sort) AS s FROM budget_lines WHERE user_id = ? AND scenario = ?', uid, scenario))?.s ?? 0
-  await run(db, 'INSERT INTO budget_lines (user_id, scenario, type, category, item, thb, expr, account, tax_kind, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+  const ins = await one<{ id: number }>(db, 'INSERT INTO budget_lines (user_id, scenario, type, category, item, thb, expr, account, tax_kind, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id',
     uid, scenario, v.type, v.category, v.item, v.thb ?? 0, v.expr ?? null, v.account ?? null, v.taxKind ?? null, sort + 1)
+  // "undo" of a delete adds the line back with its tag: take its detached tax row back
+  if (ins && scenario === 'main' && v.taxKind && v.taxKind !== 'reserve') await reattachTaxLines(db, uid, ins.id, v.taxKind, v.item).run()
 }
 
 export async function updateLine(db: Db, uid: number, id: number, p: RawLine) {
   const v = clean(p)
   const keys = Object.keys(v) as (keyof BudgetLineInput)[]
   if (!keys.length) throw bad('ไม่มีอะไรให้แก้')
-  const cur = await one<{ scenario: string; type: BudgetType; taxKind: string | null }>(db, 'SELECT scenario, type, tax_kind AS taxKind FROM budget_lines WHERE id = ? AND user_id = ?', id, uid)
+  const cur = await one<{ scenario: string; type: BudgetType; item: string; taxKind: string | null }>(db, 'SELECT scenario, type, item, tax_kind AS taxKind FROM budget_lines WHERE id = ? AND user_id = ?', id, uid)
   if (!cur) throw notFound('ไม่พบรายการนี้')
   const nextKind = v.taxKind !== undefined ? v.taxKind : cur.taxKind
   if (v.taxKind !== undefined || v.type !== undefined) checkTaxKind(cur.scenario, v.type ?? cur.type, nextKind)
   // the tag goes away (or becomes the reserve, which has no tax line): keep what was already paid as a hand-typed line
   const detach = cur.taxKind != null && nextKind !== cur.taxKind && (nextKind == null || nextKind === 'reserve')
+  // the line gets a real tax tag (from none or from the reserve): a detached row of the same kind and name links to it again
+  const attach = cur.scenario === 'main' && (cur.taxKind == null || cur.taxKind === 'reserve') && nextKind != null && nextKind !== 'reserve'
   await db.batch([
     ...(detach ? detachTaxLines(db, uid, id) : []),
     stmt(db, `UPDATE budget_lines SET ${keys.map((k) => `${COLUMN[k]} = ?`).join(', ')} WHERE id = ? AND user_id = ?`, ...keys.map((k) => v[k] ?? null), id, uid),
+    ...(attach ? [reattachTaxLines(db, uid, id, nextKind, v.item ?? cur.item)] : []),
   ])
 }
 

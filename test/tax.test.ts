@@ -63,8 +63,8 @@ describe('tax', () => {
     // typing again replaces, never duplicates; PATCH by id does the same
     t = await ok<Tax>(put({ paid: 116650, paidExpr: null, asOf: '2026-10', lump: 61316.49, lumpExpr: null }))
     expect(t.lines).toHaveLength(1)
-    t = await ok<Tax>(call(`/api/tax/lines/${t.lines[0].id}`, { method: 'PATCH', cookie, json: { paid: 1, paidExpr: null, asOf: null, lump: 0, lumpExpr: null } }))
-    expect(t.lines[0]).toMatchObject({ paid: 1, asOf: null, lump: 0 })
+    t = await ok<Tax>(call(`/api/tax/lines/${t.lines[0].id}`, { method: 'PATCH', cookie, json: { paid: 1, paidExpr: null, asOf: '2026-10', lump: 0, lumpExpr: null } }))
+    expect(t.lines[0]).toMatchObject({ paid: 1, asOf: '2026-10', lump: 0 })
     // the name and amount follow the plan line
     await ok(call(`/api/planning/lines/${rmf}`, { method: 'PATCH', cookie, json: { item: 'TLWORLDRMF', thb: 20000 } }))
     expect((await get(cookie)).lines[0]).toMatchObject({ label: 'TLWORLDRMF', budget: { lineId: rmf, thb: 20000 } })
@@ -74,6 +74,19 @@ describe('tax', () => {
     expect((await put({ paid: 1, asOf: '2025-12', lump: 0 })).status).toBe(400)
     expect((await put({ paid: 1, asOf: '2026-13', lump: 0 })).status).toBe(400)
     expect((await put({ paid: -1, asOf: null, lump: 0 })).status).toBe(400)
+    // a paid amount needs the month it is paid up to
+    const noMonth = await put({ paid: 1, asOf: null, lump: 0 })
+    expect(noMonth.status).toBe(400)
+    expect(await noMonth.json()).toMatchObject({ error: 'ถ้ามียอดที่จ่ายแล้ว ต้องระบุว่าจ่ายถึงสิ้นเดือนไหน' })
+    expect((await put({ paid: 0, asOf: null, lump: 5 })).status).toBe(200)
+  })
+
+  it('keeps the stored amounts for fields a body leaves out', async () => {
+    const { cookie } = await login()
+    const rmf = await planLine(cookie, { type: 'Saving', item: 'RMF', thb: 26650, taxKind: 'ded_rmf' })
+    const t = await ok<Tax>(call(`/api/tax/${Y}/budget-lines/${rmf}`, { method: 'PUT', cookie, json: { paid: 90000, paidExpr: '60000+30000', asOf: '2026-09', lump: 1, lumpExpr: null } }))
+    const t2 = await ok<Tax>(call(`/api/tax/lines/${t.lines[0].id}`, { method: 'PATCH', cookie, json: { lump: 5 } }))
+    expect(t2.lines[0]).toMatchObject({ paid: 90000, paidExpr: '60000+30000', asOf: '2026-09', lump: 5 })
   })
 
   it('refuses amounts for plan lines that are not tax lines', async () => {

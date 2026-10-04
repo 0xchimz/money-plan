@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Planning } from '../shared/types'
+import type { Planning, Tax } from '../shared/types'
 import { call, login, ok, sql, uidOf } from './helpers'
 
 const get = (cookie: string) => ok<Planning>(call('/api/planning', { cookie }))
@@ -150,16 +150,60 @@ describe('planning', () => {
     it('keeps what was paid when the plan line is deleted', async () => {
       const { cookie, id, rows } = await setup(90000, 61316.49)
       await ok(call(`/api/planning/lines/${id}`, { method: 'DELETE', cookie, json: {} }))
-      expect((await rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 151316.49, expr: null, asOf: null, lump: 0 }])
+      expect((await rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 151316.49, expr: null, asOf: '2026-09', lump: 0 }])
     })
 
     it('keeps what was paid when the tag is removed, and drops an empty tax line', async () => {
       const a = await setup(90000, 0)
       await ok(patchLine(a.cookie, a.id, { taxKind: null }))
-      expect((await a.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 90000, expr: null, asOf: null, lump: 0 }])
+      expect((await a.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 90000, expr: null, asOf: '2026-09', lump: 0 }])
       const b = await setup(0, 0)
       await ok(patchLine(b.cookie, b.id, { taxKind: null }))
       expect((await b.rows()).results).toEqual([])
+    })
+
+    const taxLines = (cookie: string) => ok<Tax>(call('/api/tax?year=2026', { cookie })).then((t) => t.lines)
+
+    it('re-attaches the detached row when the same tag comes back', async () => {
+      const { cookie, id, rows } = await setup(90000, 61316.49)
+      await ok(patchLine(cookie, id, { taxKind: null }))
+      await ok(patchLine(cookie, id, { taxKind: 'ded_rmf' }))
+      expect((await rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: id, paid: 151316.49, expr: null, asOf: '2026-09', lump: 0 }])
+      const lines = await taxLines(cookie)
+      expect(lines).toHaveLength(1)
+      expect(lines[0]).toMatchObject({ budget: { lineId: id, thb: 26650 }, paid: 151316.49, asOf: '2026-09', lump: 0 })
+    })
+
+    it('re-attaches to the new line when a deleted line is added back (undo)', async () => {
+      const { cookie, id, rows } = await setup(90000, 61316.49)
+      await ok(call(`/api/planning/lines/${id}`, { method: 'DELETE', cookie, json: {} }))
+      await ok(add(cookie, 'main', line()))   // takes the freed id, so the re-added line gets a different one
+      const p = await ok<Planning>(add(cookie, 'main', line({ type: 'Saving', category: 'Investment', item: 'RMF', thb: 26650, taxKind: 'ded_rmf' })))
+      const newId = main(p).lines.find((l) => l.item === 'RMF')!.id
+      expect(newId).not.toBe(id)
+      expect((await rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: newId, paid: 151316.49, expr: null, asOf: '2026-09', lump: 0 }])
+      expect(await taxLines(cookie)).toHaveLength(1)
+    })
+
+    it('does not re-attach for another kind, nor a row whose amount was re-typed, nor another user', async () => {
+      const a = await setup(90000, 0)
+      await ok(patchLine(a.cookie, a.id, { taxKind: null }))
+      await ok(patchLine(a.cookie, a.id, { taxKind: 'ded_esg' }))
+      expect((await a.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 90000, expr: null, asOf: '2026-09', lump: 0 }])
+
+      const b = await setup(90000, 0)
+      await ok(patchLine(b.cookie, b.id, { taxKind: null }))
+      const t = await taxLines(b.cookie)
+      await ok(call(`/api/tax/lines/${t[0].id}`, { method: 'PATCH', cookie: b.cookie, json: { thb: 95000 } }))
+      await ok(patchLine(b.cookie, b.id, { taxKind: 'ded_rmf' }))
+      expect((await b.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 95000, expr: null, asOf: null, lump: 0 }])
+
+      const owner = await setup(90000, 0)
+      await ok(patchLine(owner.cookie, owner.id, { taxKind: null }))
+      const other = await login()
+      const p = await ok<Planning>(add(other.cookie, 'main', line({ type: 'Saving', category: 'Investment', item: 'RMF', thb: 26650 })))
+      await ok(patchLine(other.cookie, main(p).lines[0].id, { taxKind: 'ded_rmf' }))
+      expect((await owner.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 90000, expr: null, asOf: '2026-09', lump: 0 }])
     })
 
     it('keeps the link when the tag changes to another kind, and detaches when it becomes the tax reserve', async () => {

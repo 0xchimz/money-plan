@@ -1,3 +1,6 @@
+# WARNING: this script's SQL deletes rows from budget_lines. Since migration 0003 that cascades to the tax_lines
+# rows linked to them and drops the tax tags (tax_kind) of the plan lines. Do not run it against a database where
+# the user has typed tax amounts or tagged plan lines (the Tax page) unless losing them is intended.
 """Nitcha's Excel ("Nitcha's Personal Finance - 2026.xlsx") → SQL that fills her money-plan data.
 
     uv run --no-project --with openpyxl python scripts/import-nitcha-excel.py "<xlsx>" out.sql [--main 102026] [--em unemployed]

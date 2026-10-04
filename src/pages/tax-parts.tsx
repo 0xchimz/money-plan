@@ -23,10 +23,10 @@ export function monthsUntil(from: string, to: string) {
   for (let m = from; m <= to; m = addMonth(m, 1)) out.push(m)
   return out
 }
-/** The as-of month a first typed amount gets: last month, kept inside [January of the tax year, last]; null before the year starts */
-export function defaultAsOf(tax: Tax, last: string): string | null {
+/** The as-of month a first typed amount gets: last month, kept inside [January of the tax year, last]; January when the year has not started */
+export function defaultAsOf(tax: Tax, last: string): string {
   const m = addMonth(tax.today, -1)
-  return m < `${tax.year}-01` ? null : m > last ? last : m
+  return m < `${tax.year}-01` ? `${tax.year}-01` : m > last ? last : m
 }
 export const rowKey = (l: TaxLine) => (l.budget ? `b${l.budget.lineId}` : `t${l.id}`)
 
@@ -49,12 +49,12 @@ export interface TaxActions {
 }
 
 export function MonthSelect({ months, value, onChange, label, empty, className }: {
-  months: string[]; value: string | null; onChange: (m: string | null) => void; label: string; empty: string; className?: string
+  months: string[]; value: string | null; onChange: (m: string | null) => void; label: string; empty?: string; className?: string
 }) {
   return (
     <select aria-label={label} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)}
       className={cn('h-9 rounded-lg border border-input bg-background px-2 text-sm max-lg:h-11 max-lg:text-base', className)}>
-      <option value="">{empty}</option>
+      {empty != null && <option value="">{empty}</option>}
       {months.map((m) => <option key={m} value={m}>{monBE(m)}</option>)}
     </select>
   )
@@ -125,7 +125,7 @@ export function ReserveCard({ tax, view, onSave }: { tax: Tax; view: TaxView; on
         <span className="font-semibold">เงินสำรองภาษี</span>
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-muted-foreground">มีอยู่ ณ สิ้น</span>
-          <MonthSelect months={monthsUntil(`${tax.year}-01`, filing)} value={res.asOf} label="เงินสำรอง ณ สิ้นเดือน" empty="เดือนที่แล้ว"
+          <MonthSelect months={monthsUntil(`${tax.year}-01`, filing)} value={res.asOf ?? defaultAsOf(tax, filing)} label="เงินสำรอง ณ สิ้นเดือน"
             onChange={(asOf) => onSave({ thb: res.thb, expr: res.expr, asOf })} />
           <MoneyInput value={res.thb} expr={res.expr} min={0} label="เงินสำรองภาษีที่มีอยู่"
             className="ml-auto w-36 rounded-lg border border-input max-lg:[&_input]:h-11 max-lg:[&_input]:text-base"
@@ -176,9 +176,9 @@ function LinkedEditor({ row, tax, onSave }: { row: TaxRowView; tax: Tax; onSave:
     <div className="grid grid-cols-[9.5rem_9rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 border-t border-border/70 bg-muted/40 px-4 py-3 text-sm">
       <span>จ่ายแล้วสะสม</span>
       <MoneyInput value={l.paid} expr={l.paidExpr} min={0} label={`จ่ายแล้วสะสม ${l.label}`} className={field}
-        onCommit={(paid, paidExpr) => onSave({ ...cur, paid, paidExpr, asOf: cur.asOf ?? defaultAsOf(tax, last) })} />
+        onCommit={(paid, paidExpr) => onSave({ ...cur, paid, paidExpr, asOf: paid > 0 ? (cur.asOf ?? defaultAsOf(tax, last)) : cur.asOf })} />
       <span className="flex items-center gap-2 text-muted-foreground">ถึงสิ้นเดือน
-        <MonthSelect months={monthsUntil(`${tax.year}-01`, last)} value={l.asOf} label={`ยอดสะสมของ ${l.label} ถึงสิ้นเดือน`} empty="ยังไม่ได้จ่าย" onChange={(asOf) => onSave({ ...cur, asOf })} />
+        <MonthSelect months={monthsUntil(`${tax.year}-01`, last)} value={l.asOf} label={`ยอดสะสมของ ${l.label} ถึงสิ้นเดือน`} empty="ยังไม่ได้จ่าย" onChange={(asOf) => onSave(asOf ? { ...cur, asOf } : { ...cur, asOf: null, paid: 0, paidExpr: null })} />
       </span>
       <span>ยอดก้อนที่จะมีเพิ่ม</span>
       <MoneyInput value={l.lump} expr={l.lumpExpr} min={0} label={`ยอดก้อน ${l.label}`} className={field} onCommit={(lump, lumpExpr) => onSave({ ...cur, lump, lumpExpr })} />

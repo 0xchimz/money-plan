@@ -63,9 +63,9 @@ export function TaxPage() {
       patch(l, { ...(p.label != null ? { label: p.label } : {}), ...(p.thb != null ? { paid: p.thb, paidExpr: p.expr ?? null } : {}) })
       return mutate(api.updateTaxLine(l.id!, p))
     },
-    remove: (l) => {
-      mutate(api.deleteTaxLine(l.id!))
-      toast(`ลบ ${l.label} แล้ว`, { action: { label: 'เลิกทำ', onClick: () => mutate(api.addTaxLine(year, { kind: l.kind, label: l.label, thb: l.paid, expr: l.paidExpr })) } })
+    remove: async (l) => {
+      // the toast (and its undo) only after the delete worked, or undo would add a duplicate
+      if (await mutate(api.deleteTaxLine(l.id!))) toast(`ลบ ${l.label} แล้ว`, { action: { label: 'เลิกทำ', onClick: () => mutate(api.addTaxLine(year, { kind: l.kind, label: l.label, thb: l.paid, expr: l.paidExpr })) } })
     },
     add: (v) => mutate(api.addTaxLine(year, v)),
   }

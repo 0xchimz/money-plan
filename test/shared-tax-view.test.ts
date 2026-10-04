@@ -49,7 +49,7 @@ describe('buildView', () => {
     expect(home.capped).toEqual([{ label: 'ดอกเบี้ยบ้าน', entered: 163_000, counted: 100_000 }])
     const give = buildView({ ...chin, lines: [...chin.lines, typed('don_double', 'ศิริราช', 100_000)] }).sections.find((s) => s.section === 'donation')!
     expect(give.total).toBe(146_106.35)                                   // 2 × 100,000 capped at 10%
-    expect(give.capped).toEqual([{ label: 'บริจาคการศึกษา / กีฬา / โรงพยาบาลรัฐ (2 เท่า)', entered: 200_000, counted: 146_106.35 }])
+    expect(give.capped).toEqual([{ label: 'บริจาคการศึกษา / กีฬา / โรงพยาบาลรัฐ (2 เท่า · e-Donation)', entered: 200_000, counted: 146_106.35 }])
   })
 
   it('marks linked lines nothing was typed for, and lines whose as-of month is old', () => {

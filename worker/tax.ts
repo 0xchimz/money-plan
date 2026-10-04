@@ -94,18 +94,27 @@ export async function setLinkedLine(db: Db, uid: number, year: number, lineId: n
   const b = await one<{ item: string; taxKind: string }>(db, "SELECT item, tax_kind AS taxKind FROM budget_lines WHERE id = ? AND user_id = ? AND scenario = 'main' AND tax_kind IS NOT NULL", lineId, uid)
   if (!b) throw notFound('ไม่พบรายการแผนเงินที่ติดป้ายภาษี')
   typedKind(TAX_RULES[year], b.taxKind)
+  // a field the body leaves out keeps what is stored; a field sent as null is applied
+  const cur = await one<{ paid: number; paidExpr: string | null; asOf: string | null; lump: number; lumpExpr: string | null }>(db,
+    'SELECT paid_thb AS paid, paid_expr AS paidExpr, as_of AS asOf, lump_thb AS lump, lump_expr AS lumpExpr FROM tax_lines WHERE user_id = ? AND year = ? AND budget_line_id = ?', uid, year, lineId)
+  const paid = amount(p.paid === undefined ? cur?.paid ?? 0 : p.paid, 'ยอดที่จ่ายแล้ว')
+  const lump = amount(p.lump === undefined ? cur?.lump ?? 0 : p.lump, 'ยอดก้อน')
+  const paidExpr = p.paidExpr === undefined ? cur?.paidExpr ?? null : exprOf(p.paidExpr)
+  const lumpExpr = p.lumpExpr === undefined ? cur?.lumpExpr ?? null : exprOf(p.lumpExpr)
+  const rawAsOf = p.asOf === undefined ? cur?.asOf ?? null : p.asOf
   let asOf: string | null = null
-  if (p.asOf != null) {
-    if (typeof p.asOf !== 'string' || !isMonth(p.asOf) || !p.asOf.startsWith(`${year}-`)) throw bad('เดือนต้องอยู่ในปีภาษีนี้')
-    asOf = p.asOf
+  if (rawAsOf != null) {
+    if (typeof rawAsOf !== 'string' || !isMonth(rawAsOf) || !rawAsOf.startsWith(`${year}-`)) throw bad('เดือนต้องอยู่ในปีภาษีนี้')
+    asOf = rawAsOf
   }
+  if (paid > 0 && asOf == null) throw bad('ถ้ามียอดที่จ่ายแล้ว ต้องระบุว่าจ่ายถึงสิ้นเดือนไหน')
   await db.batch([
     ensureYear(db, uid, year),
     stmt(db, `INSERT INTO tax_lines (user_id, year, kind, label, budget_line_id, paid_thb, paid_expr, as_of, lump_thb, lump_expr)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT (user_id, year, budget_line_id) DO UPDATE SET kind = excluded.kind, label = excluded.label,
         paid_thb = excluded.paid_thb, paid_expr = excluded.paid_expr, as_of = excluded.as_of, lump_thb = excluded.lump_thb, lump_expr = excluded.lump_expr`,
-      uid, year, b.taxKind, b.item, lineId, amount(p.paid ?? 0, 'ยอดที่จ่ายแล้ว'), exprOf(p.paidExpr), asOf, amount(p.lump ?? 0, 'ยอดก้อน'), exprOf(p.lumpExpr)),
+      uid, year, b.taxKind, b.item, lineId, paid, paidExpr, asOf, lump, lumpExpr),
   ])
 }
 
@@ -126,7 +135,8 @@ export async function updateTaxLine(db: Db, uid: number, id: number, p: Raw): Pr
     if (!label) throw bad('ต้องมีชื่อรายการ')
     sets.push('label = ?'); vals.push(label)
   }
-  if (p.thb !== undefined) { sets.push('paid_thb = ?'); vals.push(amount(p.thb, 'ยอด')) }
+  // a re-typed amount is no longer a candidate for linking back to a plan line (as_of marks a detached row)
+  if (p.thb !== undefined) { sets.push('paid_thb = ?', 'as_of = NULL'); vals.push(amount(p.thb, 'ยอด')) }
   if (p.expr !== undefined) { sets.push('paid_expr = ?'); vals.push(exprOf(p.expr)) }
   if (!sets.length) throw bad('ไม่มีอะไรให้แก้')
   await run(db, `UPDATE tax_lines SET ${sets.join(', ')} WHERE id = ? AND user_id = ?`, ...vals, id, uid)

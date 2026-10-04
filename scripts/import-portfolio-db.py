@@ -1,3 +1,6 @@
+# WARNING: this script's SQL deletes rows from budget_lines. Since migration 0003 that cascades to the tax_lines
+# rows linked to them and drops the tax tags (tax_kind) of the plan lines. Do not run it against a database where
+# the user has typed tax amounts or tagged plan lines (the Tax page) unless losing them is intended.
 """Chin's apps/portfolio database → SQL that fills his money-plan data (c.soonue@gmail.com).
 
     uv run --no-project python scripts/import-portfolio-db.py ../portfolio/data/portfolio.db out.sql
