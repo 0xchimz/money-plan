@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router'
-import { ArrowDown, ClipboardList, LayoutDashboard, Loader2, LogOut, Scale } from 'lucide-react'
+import { ArrowDown, ClipboardList, LayoutDashboard, Loader2, LogOut, Percent, Scale } from 'lucide-react'
 import { toast } from 'sonner'
 import { Avatar } from '@/components/avatar'
 import { PULL_THRESHOLD, RefreshContext, usePullToRefresh } from '@/components/mobile/pull-to-refresh'
@@ -14,6 +14,7 @@ export const MOBILE_PAGES = [
   { to: '/', label: 'ภาพรวม', icon: LayoutDashboard },
   { to: '/planning', label: 'แผนเงิน', icon: ClipboardList },
   { to: '/balance', label: 'งบดุล', icon: Scale },
+  { to: '/tax', label: 'ภาษี', icon: Percent },
 ]
 
 type Slots = { inline: HTMLElement | null; below: HTMLElement | null }
@@ -87,7 +88,7 @@ export function AppShell({ me, onLogout, mobile, desktopHeader, children }: { me
           {children}
         </main>
         {mobile && <nav aria-label="เมนูหลัก" className="fixed inset-x-0 bottom-0 z-30 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-          <div className="mx-auto grid h-16 max-w-[640px] grid-cols-3">
+          <div className="mx-auto grid h-16 max-w-[640px] grid-cols-4">
             {MOBILE_PAGES.map(({ to, label, icon: Icon }) => (
               <NavLink key={to} to={to} end
                 className={({ isActive }) => cn('flex flex-col items-center justify-center gap-0.5 text-[11px]', isActive ? 'font-semibold text-foreground' : 'text-muted-foreground')}>

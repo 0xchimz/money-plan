@@ -12,6 +12,7 @@ const links = [
   { to: '/', label: 'Overview' },
   { to: '/planning', label: 'Planning' },
   { to: '/balance', label: 'Balance' },
+  { to: '/tax', label: 'ภาษี' },
 ]
 
 export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {

@@ -6,6 +6,7 @@ import { BalancePage } from '@/pages/balance'
 import { LoginPage } from '@/pages/login'
 import { OverviewPage } from '@/pages/overview'
 import { PlanningPage } from '@/pages/planning'
+import { TaxPage } from '@/pages/tax'
 
 /** Who is logged in decides between the login page and the app */
 export function App() {
@@ -37,6 +38,7 @@ export function App() {
         <Route index element={<OverviewPage />} />
         <Route path="planning" element={<PlanningPage />} />
         <Route path="balance" element={<BalancePage />} />
+        <Route path="tax" element={<TaxPage />} />
       </Route>
     </Routes>
   )
