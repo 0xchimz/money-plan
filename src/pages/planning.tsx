@@ -20,6 +20,7 @@ import { useIsMobile } from '@/lib/use-is-mobile'
 import { cn } from '@/lib/utils'
 import { PLANNING_CHIPS, unusedChips } from '@shared/categories'
 import { debtOf, partOf, totals } from '@shared/planning'
+import { TaxKindSelect } from '@/components/tax-kind-select'
 import { LineSheet, MobileLineRow, type LineSheetState } from './planning-mobile'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -129,7 +130,7 @@ export function PlanningPage() {
   const remove = (l: BudgetLineRow) => {
     mutate(api.deleteLine(l.id))
     toast(`ลบ ${l.item} แล้ว`, {
-      action: { label: 'เลิกทำ', onClick: () => mutate(api.addLine(l.scenario, { type: l.type, category: l.category, item: l.item, thb: l.thb, expr: l.expr, account: l.account })) },
+      action: { label: 'เลิกทำ', onClick: () => mutate(api.addLine(l.scenario, { type: l.type, category: l.category, item: l.item, thb: l.thb, expr: l.expr, account: l.account, taxKind: l.taxKind })) },
     })
   }
 
@@ -180,7 +181,7 @@ export function PlanningPage() {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-6 lg:col-span-8">
           {SECTIONS.map((s) => (
-            <SectionCard key={`${sc.id}:${s.type}`} section={s} lines={sc.lines.filter((l) => l.type === s.type)} income={t.income}
+            <SectionCard key={`${sc.id}:${s.type}`} section={s} lines={sc.lines.filter((l) => l.type === s.type)} income={t.income} showTax={sc.id === 'main'}
               onPatch={patch} onRemove={remove}
               onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)}
               onEdit={mobile ? (l) => setSheet({ mode: 'edit', line: l }) : undefined}
@@ -209,7 +210,7 @@ export function PlanningPage() {
         </aside>
       </div>
       {mobile && (
-        <LineSheet state={sheet} income={t.income} lines={sc.lines} onClose={() => setSheet(null)}
+        <LineSheet state={sheet} income={t.income} showTax={sc.id === 'main'} lines={sc.lines} onClose={() => setSheet(null)}
           onSave={(l, p) => patch(l, p)}
           onAdd={(line) => mutate(api.addLine(sc.id, line), `เพิ่ม ${line.item} แล้ว`)}
           onRemove={(l) => remove(l)} />
@@ -342,10 +343,11 @@ function ScenarioTable({ scenarios, active }: { scenarios: Planning['scenarios']
   )
 }
 
-function SectionCard({ section, lines, income, onPatch, onRemove, onAdd, onEdit, onNew }: {
+function SectionCard({ section, lines, income, showTax, onPatch, onRemove, onAdd, onEdit, onNew }: {
   section: (typeof SECTIONS)[number]
   lines: BudgetLineRow[]
   income: number
+  showTax: boolean
   onPatch: (l: BudgetLineRow, p: Partial<BudgetLineInput>) => void
   onRemove: (l: BudgetLineRow) => void
   onAdd: (line: BudgetLineInput) => void
@@ -389,7 +391,7 @@ function SectionCard({ section, lines, income, onPatch, onRemove, onAdd, onEdit,
               <ul className="flex flex-col">
                 {cl.map((l) => onEdit
                   ? <MobileLineRow key={l.id} line={l} income={income} onOpen={() => onEdit(l)} />
-                  : <LineRow key={l.id} line={l} income={income} categories={cats} onPatch={onPatch} onRemove={onRemove} />)}
+                  : <LineRow key={l.id} line={l} income={income} showTax={showTax} categories={cats} onPatch={onPatch} onRemove={onRemove} />)}
               </ul>
             </div>
           )
@@ -436,9 +438,10 @@ function InlineText({ value, onSave, label, className, placeholder }: { value: s
   )
 }
 
-function LineRow({ line: l, income, categories, onPatch, onRemove }: {
+function LineRow({ line: l, income, showTax, categories, onPatch, onRemove }: {
   line: BudgetLineRow
   income: number
+  showTax: boolean
   categories: string[]
   onPatch: (l: BudgetLineRow, p: Partial<BudgetLineInput>) => void
   onRemove: (l: BudgetLineRow) => void
@@ -447,12 +450,14 @@ function LineRow({ line: l, income, categories, onPatch, onRemove }: {
   const [cat, setCat] = useState(l.category)
   return (
     <li className="group/row">
-      <div className="grid grid-cols-[minmax(0,1fr)_minmax(7.5rem,9.5rem)_1.75rem] items-center gap-x-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40 md:grid-cols-[minmax(0,1fr)_10rem_minmax(8rem,9.5rem)_3.5rem_1.75rem]">
+      <div className={cn('grid grid-cols-[minmax(0,1fr)_minmax(7.5rem,9.5rem)_1.75rem] items-center gap-x-2 rounded-lg px-1 py-0.5 transition-colors hover:bg-muted/40',
+        showTax ? 'md:grid-cols-[minmax(0,1fr)_9rem_10.5rem_minmax(8rem,9.5rem)_3.5rem_1.75rem]' : 'md:grid-cols-[minmax(0,1fr)_10rem_minmax(8rem,9.5rem)_3.5rem_1.75rem]')}>
         <div className="flex min-w-0 flex-col">
           <InlineText value={l.item} label="ชื่อรายการ" className="text-sm font-medium" onSave={(v) => v && onPatch(l, { item: v })} />
           <InlineText value={l.account ?? ''} label="บัญชี / ที่มาเงิน" placeholder="บัญชี" className="text-xs text-muted-foreground md:hidden" onSave={(v) => onPatch(l, { account: v || null })} />
         </div>
         <InlineText value={l.account ?? ''} label="บัญชี / ที่มาเงิน" placeholder="บัญชี" className="hidden text-xs text-muted-foreground md:block" onSave={(v) => onPatch(l, { account: v || null })} />
+        {showTax && <TaxKindSelect type={l.type} value={l.taxKind} onChange={(taxKind) => onPatch(l, { taxKind })} className="hidden md:block" />}
         <MoneyInput value={l.thb} expr={l.expr} min={0} label={`ยอด ${l.item}`} onCommit={(v, expr) => onPatch(l, { thb: v, expr })} />
         <span className="tabular hidden text-right text-xs text-muted-foreground md:block">{income > 0 && l.type !== 'Income' ? pct(l.thb / income) : ''}</span>
         <DropdownMenu>

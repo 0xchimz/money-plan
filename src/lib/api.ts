@@ -1,4 +1,4 @@
-import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tier, TierTargets } from '@shared/types'
+import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tax, TaxChange, TaxLinkedInput, Tier, TierTargets } from '@shared/types'
 
 export * from '@shared/types'
 
@@ -61,6 +61,17 @@ export const api = {
   updateLine: (id: number, patch: Partial<BudgetLineInput>) => request<Planning>('PATCH', `/api/planning/lines/${id}`, patch),
   deleteLine: (id: number) => request<Planning>('DELETE', `/api/planning/lines/${id}`),
   copyScenario: (to: ScenarioId) => request<Planning>('POST', `/api/planning/${to}/copy`, { from: 'main' }),
+  tax: (year?: number) => get<Tax>(`/api/tax${year ? `?year=${year}` : ''}`),
+  addTaxLine: (year: number, line: { kind: string; label: string; thb: number; expr: string | null }) => request<Tax>('POST', `/api/tax/${year}/lines`, line),
+  updateTaxLine: (id: number, patch: { label?: string; thb?: number; expr?: string | null }) => request<Tax>('PATCH', `/api/tax/lines/${id}`, patch),
+  deleteTaxLine: (id: number) => request<Tax>('DELETE', `/api/tax/lines/${id}`),
+  /** paid so far / as-of month / one-off of a tagged plan line */
+  setTaxBudgetLine: (year: number, lineId: number, v: TaxLinkedInput) => request<Tax>('PUT', `/api/tax/${year}/budget-lines/${lineId}`, v),
+  setTaxReserve: (year: number, v: { thb: number; expr: string | null; asOf: string | null }) => request<Tax>('PUT', `/api/tax/${year}/reserve`, v),
+  addTaxScenario: (year: number, s: { name: string; changes: TaxChange[] }) => request<Tax>('POST', `/api/tax/${year}/scenarios`, s),
+  updateTaxScenario: (id: number, s: { name?: string; changes?: TaxChange[] }) => request<Tax>('PATCH', `/api/tax/scenarios/${id}`, s),
+  deleteTaxScenario: (id: number) => request<Tax>('DELETE', `/api/tax/scenarios/${id}`),
+  applyTaxScenario: (id: number) => request<Tax>('POST', `/api/tax/scenarios/${id}/apply`),
 
   balance: (month?: string | null) => get<Balance>(`/api/balance${month ? `?month=${month}` : ''}`),
   startMonth: (month: string) => request<Balance>('POST', `/api/balance/${month}/start`),

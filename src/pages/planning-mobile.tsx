@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import { AmountField, readAmount } from '@/components/mobile/amount-field'
 import { Sheet } from '@/components/mobile/sheet'
+import { TaxKindSelect } from '@/components/tax-kind-select'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import type { BudgetLineInput, BudgetLineRow, BudgetType } from '@/lib/api'
@@ -34,9 +35,10 @@ export function MobileLineRow({ line: l, income, onOpen }: { line: BudgetLineRow
 const keyOf = (s: LineSheetState) => (!s ? '' : s.mode === 'edit' ? `e${s.line.id}` : `a${s.type}:${s.category}:${s.item}`)
 
 /** Edit or add one plan line on a phone: name, account, category (chips + own), amount with + − × ÷ */
-export function LineSheet({ state: current, income, lines, onClose, onSave, onAdd, onRemove }: {
+export function LineSheet({ state: current, income, showTax, lines, onClose, onSave, onAdd, onRemove }: {
   state: LineSheetState
   income: number
+  showTax: boolean
   lines: BudgetLineRow[]
   onClose: () => void
   onSave: (l: BudgetLineRow, p: Partial<BudgetLineInput>) => Promise<boolean>
@@ -48,8 +50,8 @@ export function LineSheet({ state: current, income, lines, onClose, onSave, onAd
   if (current && current !== last) setLast(current)
   const state = current ?? last
   const fresh = (s: LineSheetState) => s?.mode === 'edit'
-    ? { key: keyOf(s), item: s.line.item, account: s.line.account ?? '', category: s.line.category, text: s.line.expr ?? String(s.line.thb), own: false }
-    : { key: keyOf(s), item: s?.item ?? '', account: '', category: s?.category ?? '', text: '', own: false }
+    ? { key: keyOf(s), item: s.line.item, account: s.line.account ?? '', category: s.line.category, text: s.line.expr ?? String(s.line.thb), own: false, taxKind: s.line.taxKind }
+    : { key: keyOf(s), item: s?.item ?? '', account: '', category: s?.category ?? '', text: '', own: false, taxKind: null as string | null }
   const [form, setForm] = useState(() => fresh(state))
   const f = form.key === keyOf(state) ? form : fresh(state)
   const set = (p: Partial<typeof f>) => setForm({ ...f, ...p })
@@ -63,7 +65,7 @@ export function LineSheet({ state: current, income, lines, onClose, onSave, onAd
   const ready = !!f.item.trim() && !!f.category.trim() && ok && !saving
   const submit = async () => {
     if (!ready) return
-    const next = { item: f.item.trim(), account: f.account.trim() || null, category: f.category.trim(), thb: value!, expr }
+    const next = { item: f.item.trim(), account: f.account.trim() || null, category: f.category.trim(), thb: value!, expr, taxKind: f.taxKind }
     setSaving(true)
     try {
       let done: boolean
@@ -73,6 +75,7 @@ export function LineSheet({ state: current, income, lines, onClose, onSave, onAd
         if (next.item !== l.item) p.item = next.item
         if (next.account !== l.account) p.account = next.account
         if (next.category !== l.category) p.category = next.category
+        if (next.taxKind !== l.taxKind) p.taxKind = next.taxKind
         if (Math.abs(next.thb - l.thb) >= 0.005 || next.expr !== l.expr) { p.thb = next.thb; p.expr = next.expr }
         done = Object.keys(p).length ? await onSave(l, p) : true
       } else {
@@ -110,6 +113,12 @@ export function LineSheet({ state: current, income, lines, onClose, onSave, onAd
           </div>
           {f.own && <Input autoFocus value={f.category} onChange={(e) => set({ category: e.target.value })} placeholder="ชื่อหมวด เช่น Pets" className="h-11" />}
         </div>
+        {showTax && (
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            ใช้กับภาษี
+            <TaxKindSelect type={type} value={f.taxKind} onChange={(taxKind) => set({ taxKind })} className="h-11 border-input px-3 text-base text-foreground" />
+          </label>
+        )}
         <span className="text-xs text-muted-foreground">บาท / เดือน</span>
         <AmountField text={f.text} onText={(text) => set({ text })} unit="THB" min={0} label="ยอดต่อเดือน" onEnter={submit}
           hint={income > 0 && type !== 'Income' && ok ? `${pct(value! / income)} ของรายรับ` : undefined} />
