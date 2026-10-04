@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { PageState } from '@/components/layout'
+import { Sheet } from '@/components/mobile/sheet'
 import { TopBarSlot } from '@/components/mobile/shell'
 import { usePageRefresh } from '@/components/mobile/pull-to-refresh'
 import { Card, CardContent } from '@/components/ui/card'
@@ -12,6 +13,7 @@ import { cn } from '@/lib/utils'
 import type { Advice } from '@shared/tax'
 import { buildView } from '@shared/tax-view'
 import { AdviceCard, be, ReserveCard, ResultCard, TaxSectionCard, type TaxActions } from './tax-parts'
+import { ResultBar, TaxLineSheet, type TaxSheetState } from './tax-mobile'
 import { ScenarioPanel } from './tax-scenarios'
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e))
@@ -22,6 +24,8 @@ export function TaxPage() {
   const [error, setError] = useState<unknown>()
   const seq = useRef(0)
   const [mode, setMode] = useState<'real' | 'scenario'>('real')
+  const [sheet, setSheet] = useState<TaxSheetState>(null)
+  const [resultOpen, setResultOpen] = useState(false)
 
   useEffect(() => {
     api.tax().then(setData, setError)
@@ -80,7 +84,7 @@ export function TaxPage() {
   )
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className={cn('flex flex-col gap-6', mobile && mode === 'real' && 'pb-20')}>
       {mobile
         ? <TopBarSlot below={modeTabs} />
         : (
@@ -104,13 +108,16 @@ export function TaxPage() {
       )}
       <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
         <div className="flex flex-col gap-4 lg:col-span-7">
-          {view.sections.map((sv) => <TaxSectionCard key={sv.section} sv={sv} tax={data} view={view} actions={actions} />)}
+          {view.sections.map((sv) => <TaxSectionCard key={sv.section} sv={sv} tax={data} view={view} actions={actions}
+            onOpen={mobile ? (row) => setSheet({ mode: 'edit', row }) : undefined} onNew={mobile ? (section) => setSheet({ mode: 'add', section }) : undefined} />)}
         </div>
-        <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:col-span-5">
-          <ResultCard view={view} />
-          <ReserveCard tax={data} view={view} onSave={saveReserve} />
-          <AdviceCard view={view} onTry={tryAdvice} />
-        </div>
+        {!mobile && (
+          <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:col-span-5">
+            <ResultCard view={view} />
+            <ReserveCard tax={data} view={view} onSave={saveReserve} />
+            <AdviceCard view={view} onTry={tryAdvice} />
+          </div>
+        )}
       </div>
       </>)}
       {mode === 'scenario' && (
@@ -121,6 +128,17 @@ export function TaxPage() {
           onApply={async (id) => { if (await mutate(api.applyTaxScenario(id), 'เพิ่มเข้าตัวเลขจริงแล้ว')) setMode('real') }} />
       )}
       <p className="text-xs text-muted-foreground">ประมาณการจากข้อมูลที่กรอก ตรวจกับกรมสรรพากรก่อนยื่นจริง</p>
+      {mobile && mode === 'real' && <ResultBar view={view} onOpen={() => setResultOpen(true)} />}
+      {mobile && (
+        <Sheet open={resultOpen} onOpenChange={setResultOpen} title={`ภาษีปี ${be(year)}`}>
+          <div className="flex flex-col gap-3 pb-2">
+            <ResultCard view={view} />
+            <ReserveCard tax={data} view={view} onSave={saveReserve} />
+            <AdviceCard view={view} onTry={async (a) => { setResultOpen(false); await tryAdvice(a) }} />
+          </div>
+        </Sheet>
+      )}
+      {mobile && <TaxLineSheet state={sheet} tax={data} view={view} actions={actions} onClose={() => setSheet(null)} />}
     </div>
   )
 }
