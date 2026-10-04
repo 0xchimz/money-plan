@@ -62,6 +62,15 @@ pnpm exec wrangler secret put ALLOWED_EMAILS
 
 Removing an email locks that person out on their next request, even with a live session.
 
+## ภาษี (Tax page)
+
+`/tax` — ประมาณการภาษีเงินได้บุคคลธรรมดาต่อ user ต่อปีภาษี: เงินได้ 40(1) / 40(2) / 40(5), ค่าลดหย่อน, ขั้นภาษี, จ่ายเพิ่มหรือได้คืน, เงินสำรองภาษีพอไหม, ช่องลดหย่อนที่ยังเหลือ และฉากทัศน์เทียบกัน เป็นตัวช่วยประมาณการ ไม่ใช่ที่ยื่นภาษี
+
+- **ที่มาของตัวเลข:** แถวงบชุด ปัจจุบัน ในหน้า Planning เลือก "ภาษี: …" ได้ (เงินได้ / ลดหย่อน / หัก ณ ที่จ่าย / เงินสำรองภาษี) → ยอดทั้งปี = จ่ายแล้วสะสม (ถึงเดือนที่ระบุ) + ยอดก้อน + งบต่อเดือน × เดือนที่เหลือ · ของที่ไม่อยู่ในงบ กด "+ เพิ่มรายการ" ในแต่ละหมวดแล้วกรอกยอดทั้งปีเอง
+- **โค้ด:** กติกาต่อปีเป็นข้อมูลใน `shared/tax-rules.ts` · ตัวคำนวณล้วนใน `shared/tax.ts` · `shared/tax-view.ts` แปลงข้อมูลจาก API เป็นสิ่งที่หน้าแสดง · Worker (`worker/tax.ts`) เก็บเฉพาะสิ่งที่กรอก ภาษีคำนวณในเบราว์เซอร์ทุกครั้ง · ตาราง `tax_years`, `tax_lines`, `tax_scenarios` + คอลัมน์ `budget_lines.tax_kind` (migration `0003_tax.sql`)
+- **ขึ้นปีภาษีใหม่:** อ่าน `docs/superpowers/notes/2026-10-04-tax-follow-ups.md` หัวข้อแรกก่อน (ต้องมีตัวเลือกปีก่อน) → คัดลอกชุดกติกาปีล่าสุดใน `shared/tax-rules.ts` แก้ตามที่กรมสรรพากรเปลี่ยน ใส่ใน `TAX_RULES` → เพิ่ม test ที่มีผลลัพธ์ที่รู้คำตอบ 1 ชุด → push
+- กติกาปี 2569 ตรวจกับกรมสรรพากรแล้ว 4 Oct 2026: `docs/superpowers/notes/2026-10-04-tax-rules-2569-check.md`
+
 ## Import from Excel
 
 Two one-person importers write SQL; what each maps and what it refuses to overwrite is in its docstring.

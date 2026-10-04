@@ -1,6 +1,6 @@
 # money-plan: หน้าภาษี — design spec
 
-> วันที่: 4 Oct 2026 · สถานะ: **รอ Chin ตรวจ spec** · ที่มา: brainstorming 3–4 Oct + โน้ตไอเดีย `knowledge/finance/money-plan-tax-feature.md` (repo ChinOS) · mockup อยู่ใน `2026-10-04-tax-mockups/` (`1-directions.html` = 3 แนว เลือก **A**, `2-a-screens.html` = จอที่เหลือของ A)
+> วันที่: 4 Oct 2026 · สถานะ: **Chin อนุมัติ 4 Oct · สร้างเสร็จ 4 Oct บน branch `tax` (ยังไม่ deploy)** · plan `../plans/2026-10-04-tax.md` · งานค้าง `../notes/2026-10-04-tax-follow-ups.md` · ที่มา: brainstorming 3–4 Oct + โน้ตไอเดีย `knowledge/finance/money-plan-tax-feature.md` (repo ChinOS) · mockup อยู่ใน `2026-10-04-tax-mockups/` (`1-directions.html` = 3 แนว เลือก **A**, `2-a-screens.html` = จอที่เหลือของ A)
 
 ## 1. เป้าหมายและขอบเขต
 
