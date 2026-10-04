@@ -3,6 +3,7 @@ import { authRoutes, requireUser } from './auth'
 import type { AppEnv } from './env'
 import { HttpError, jsonOnly, body, idParam, monthParam } from './http'
 import { getMe } from './users'
+import { addScenario, addTaxLine, applyScenario, deleteScenario, deleteTaxLine, getTax, setLinkedLine, setReserve, updateScenario, updateTaxLine, yearParam } from './tax'
 import { addLine, copyScenario, deleteLine, getPlanning, updateLine } from './planning'
 import { addItem, classifyItem, closeMonth, confirmRows, discardDraft, getBalance, removeEntry, restoreEntry, setCurrency, setEntry, setRate, setTransfer, startMonth } from './balance'
 import { ecbUsdThb } from './fx'
@@ -45,6 +46,35 @@ app.post('/api/planning/:scenario/copy', async (c) => {
   await copyScenario(c.env.DB, c.var.uid, c.req.param('scenario'), from)
   return c.json(await getPlanning(c.env.DB, c.var.uid))
 })
+
+// ---- Tax ----
+const taxOf = (c: { env: AppEnv['Bindings']; var: AppEnv['Variables'] }, year: number) => getTax(c.env.DB, c.var.uid, year)
+app.get('/api/tax', async (c) => c.json(await taxOf(c, yearParam(c.req.query('year')))))
+app.post('/api/tax/:year/lines', async (c) => {
+  const y = yearParam(c.req.param('year'))
+  await addTaxLine(c.env.DB, c.var.uid, y, await body(c))
+  return c.json(await taxOf(c, y))
+})
+app.patch('/api/tax/lines/:id', async (c) => c.json(await taxOf(c, await updateTaxLine(c.env.DB, c.var.uid, idParam(c), await body(c)))))
+app.delete('/api/tax/lines/:id', async (c) => c.json(await taxOf(c, await deleteTaxLine(c.env.DB, c.var.uid, idParam(c)))))
+app.put('/api/tax/:year/budget-lines/:lineId', async (c) => {
+  const y = yearParam(c.req.param('year'))
+  await setLinkedLine(c.env.DB, c.var.uid, y, idParam(c, 'lineId'), await body(c))
+  return c.json(await taxOf(c, y))
+})
+app.put('/api/tax/:year/reserve', async (c) => {
+  const y = yearParam(c.req.param('year'))
+  await setReserve(c.env.DB, c.var.uid, y, await body(c))
+  return c.json(await taxOf(c, y))
+})
+app.post('/api/tax/:year/scenarios', async (c) => {
+  const y = yearParam(c.req.param('year'))
+  await addScenario(c.env.DB, c.var.uid, y, await body(c))
+  return c.json(await taxOf(c, y))
+})
+app.patch('/api/tax/scenarios/:id', async (c) => c.json(await taxOf(c, await updateScenario(c.env.DB, c.var.uid, idParam(c), await body(c)))))
+app.delete('/api/tax/scenarios/:id', async (c) => c.json(await taxOf(c, await deleteScenario(c.env.DB, c.var.uid, idParam(c)))))
+app.post('/api/tax/scenarios/:id/apply', async (c) => c.json(await taxOf(c, await applyScenario(c.env.DB, c.var.uid, idParam(c)))))
 
 // ---- Balance ----
 const balanceOf = (c: { env: AppEnv['Bindings']; var: AppEnv['Variables'] }, month: string | null) => getBalance(c.env.DB, c.var.uid, month)
