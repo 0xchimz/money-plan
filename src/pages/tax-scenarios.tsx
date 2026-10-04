@@ -17,7 +17,7 @@ const signedMoney = (v: number) => `${v >= 0 ? '+' : '−'}${money(Math.abs(v))}
 /** Name + the list of changes of one scenario. Rows with no amount yet stay here and are not sent. */
 function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }: {
   scenario: TaxScenario; view: TaxView; capped: string[]
-  onUpdate: (id: number, s: { name?: string; changes?: TaxChange[] }) => void
+  onUpdate: (id: number, s: { name?: string; changes?: TaxChange[] }) => Promise<boolean>
   onDelete: (id: number) => void
   onApply: (id: number) => void
 }) {
@@ -25,13 +25,16 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
   const [draft, setDraft] = useState<TaxChange[]>(scenario.changes)
   const kinds = view.rules.kinds.filter((k) => k.auto == null && k.section !== 'reserve')
   const sections = [...new Set(kinds.map((k) => k.section))]
-  const commit = (next: TaxChange[]) => { setDraft(next); onUpdate(scenario.id, { changes: next.filter((c) => c.thb !== 0) }) }
+  const commit = async (next: TaxChange[]) => {
+    setDraft(next)
+    if (!(await onUpdate(scenario.id, { changes: next.filter((c) => c.thb !== 0) }))) setDraft(scenario.changes)
+  }
   const hasCut = draft.some((c) => c.thb < 0)
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 text-sm">
         <Input aria-label="ชื่อฉากทัศน์" value={name} onChange={(e) => setName(e.target.value)} className="font-semibold max-lg:h-11 max-lg:text-base"
-          onBlur={() => { const v = name.trim(); if (v && v !== scenario.name) onUpdate(scenario.id, { name: v }); else setName(scenario.name) }} />
+          onBlur={async () => { const v = name.trim(); if (v && v !== scenario.name) { if (!(await onUpdate(scenario.id, { name: v }))) setName(scenario.name) } else setName(scenario.name) }} />
         {draft.map((c, i) => (
           <div key={i} className="flex items-center gap-2">
             <select aria-label="ชนิดที่เปลี่ยน" value={c.kind} onChange={(e) => commit(draft.map((x, j) => (j === i ? { ...x, kind: e.target.value } : x)))}
@@ -71,7 +74,7 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
 export function ScenarioPanel({ tax, view, onAdd, onUpdate, onDelete, onApply }: {
   tax: Tax; view: TaxView
   onAdd: (s: { name: string; changes: TaxChange[] }) => Promise<boolean>
-  onUpdate: (id: number, s: { name?: string; changes?: TaxChange[] }) => void
+  onUpdate: (id: number, s: { name?: string; changes?: TaxChange[] }) => Promise<boolean>
   onDelete: (id: number) => void
   onApply: (id: number) => void
 }) {

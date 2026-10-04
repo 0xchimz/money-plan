@@ -300,7 +300,7 @@ export function TaxSectionCard({ sv, tax, view, actions, onOpen, onNew }: {
         </div>
       ))}
       <div className="border-t border-border/70">
-        {adding
+        {adding && !onNew
           ? <AddLineForm sv={sv} view={view} onAdd={actions.add} onCancel={() => setAdding(false)} />
           : <button type="button" onClick={() => (onNew ? onNew(sv.section) : setAdding(true))} className="min-h-11 w-full px-4 py-2 text-left text-sm font-medium text-muted-foreground hover:text-foreground">
               + {ADD_LABEL[sv.section] ?? 'เพิ่มรายการ'}

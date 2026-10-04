@@ -123,7 +123,7 @@ export function TaxPage() {
       {mode === 'scenario' && (
         <ScenarioPanel tax={data} view={view}
           onAdd={(s) => mutate(api.addTaxScenario(year, s))}
-          onUpdate={(id, s) => { mutate(api.updateTaxScenario(id, s)) }}
+          onUpdate={(id, s) => mutate(api.updateTaxScenario(id, s))}
           onDelete={(id) => { mutate(api.deleteTaxScenario(id)) }}
           onApply={async (id) => { if (await mutate(api.applyTaxScenario(id), 'เพิ่มเข้าตัวเลขจริงแล้ว')) setMode('real') }} />
       )}

@@ -47,9 +47,9 @@ export function TaxLineSheet({ state: current, tax, view, actions, onClose }: {
   const fresh = (s: TaxSheetState) => {
     if (s?.mode === 'edit') {
       const l = s.row.line
-      return { key: keyOf(s), kind: l.kind, label: l.label, paid: l.paidExpr ?? String(l.paid), lump: l.lumpExpr ?? String(l.lump), asOf: l.asOf }
+      return { key: keyOf(s), kind: l.kind, label: l.label, paid: l.paidExpr ?? String(l.paid), lump: l.lumpExpr ?? String(l.lump), asOf: l.asOf, asOfPicked: false }
     }
-    return { key: keyOf(s), kind: s ? kindsOf(s.section)[0]?.key ?? '' : '', label: '', paid: '', lump: '', asOf: null as string | null }
+    return { key: keyOf(s), kind: s ? kindsOf(s.section)[0]?.key ?? '' : '', label: '', paid: '', lump: '', asOf: null as string | null, asOfPicked: false }
   }
   const [form, setForm] = useState(() => fresh(state))
   const f = form.key === keyOf(state) ? form : fresh(state)
@@ -63,7 +63,7 @@ export function TaxLineSheet({ state: current, tax, view, actions, onClose }: {
   const paid = readAmount(f.paid, 2, 0), lump = readAmount(f.lump, 2, 0)
   const lastMonth = `${tax.year}-12`
   // the as-of month a first typed amount gets, shown before saving so the total below is what will be stored
-  const asOf = f.asOf ?? (linked && paid.ok && paid.value! > 0 ? defaultAsOf(tax, lastMonth) : null)
+  const asOf = f.asOfPicked ? f.asOf : (f.asOf ?? (linked && paid.ok && paid.value! > 0 ? defaultAsOf(tax, lastMonth) : null))
   const annual = linked && paid.ok && lump.ok ? annualOf({ budget: line!.budget, paid: paid.value!, lump: lump.value!, asOf }, tax.year) : null
   const ready = paid.ok && (!linked || lump.ok) && (state.mode === 'edit' || !!f.kind) && !saving
   const submit = async () => {
@@ -102,7 +102,7 @@ export function TaxLineSheet({ state: current, tax, view, actions, onClose }: {
         {linked && (
           <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
             จ่ายแล้วสะสม ถึงสิ้นเดือน
-            <MonthSelect months={monthsUntil(`${tax.year}-01`, lastMonth)} value={asOf} label="ยอดสะสมถึงสิ้นเดือน" empty="ยังไม่ได้จ่าย" onChange={(m) => set({ asOf: m })} />
+            <MonthSelect months={monthsUntil(`${tax.year}-01`, lastMonth)} value={asOf} label="ยอดสะสมถึงสิ้นเดือน" empty="ยังไม่ได้จ่าย" onChange={(m) => set({ asOf: m, asOfPicked: true })} />
           </div>
         )}
         {!linked && <span className="text-xs text-muted-foreground">ยอดทั้งปี</span>}
