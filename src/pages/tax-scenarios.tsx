@@ -95,7 +95,7 @@ export function ScenarioPanel({ tax, view, epoch, onAdd, onUpdate, onDelete, onA
   ]
   return (
     <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-      <Card className="py-2 lg:col-span-7">
+      <Card className="min-w-0 py-2 lg:col-span-7">
         <div className="overflow-x-auto">
           <table className="tabular w-full text-sm">
             <thead>
@@ -123,7 +123,7 @@ export function ScenarioPanel({ tax, view, epoch, onAdd, onUpdate, onDelete, onA
         {!cols.length && <p className="px-4 py-3 text-sm text-muted-foreground">ยังไม่มีฉากทัศน์ — ลองเพิ่ม/ลดยอดโดยไม่แตะตัวเลขจริง เช่น "RMF เพิ่ม 100,000" เทียบกับ "บริจาค 2 เท่า 50,000"</p>}
         <p className="px-4 pt-2 pb-1 text-xs text-muted-foreground">ผลสุทธิ = ภาษีที่ลดลง − เงินที่ออกจากกระเป๋าจริง (เงินที่ลงกองทุนยังเป็นของเรา)</p>
       </Card>
-      <div className="flex flex-col gap-4 lg:col-span-5">
+      <div className="flex min-w-0 flex-col gap-4 lg:col-span-5">
         {current && <ScenarioEditor key={`${current.s.id}:${epoch}`} scenario={current.s} view={view} capped={current.sum.capped} onUpdate={onUpdate} onDelete={onDelete} onApply={onApply} />}
         <Button type="button" variant="outline" className="self-start max-lg:h-11"
           onClick={async () => { if (await onAdd({ name: `ฉากทัศน์ ${tax.scenarios.length + 1}`, changes: [] })) setSel(null) }}>

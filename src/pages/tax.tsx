@@ -43,7 +43,10 @@ export function TaxPage() {
       return true
     } catch (e) {
       toast.error('บันทึกไม่ได้', { description: errMsg(e) })
-      api.tax(data?.year).then((d) => { if (n === seq.current) { setData(d); setEpoch((e) => e + 1) } }, () => {})
+      api.tax(data?.year).then(
+        (d) => { if (n === seq.current) { setData(d); setEpoch((e) => e + 1) } },
+        () => { if (n === seq.current) setEpoch((e) => e + 1) },
+      )
       return false
     }
   }
@@ -108,12 +111,12 @@ export function TaxPage() {
         </Card>
       )}
       <div className="grid gap-4 lg:grid-cols-12 lg:items-start">
-        <div className="flex flex-col gap-4 lg:col-span-7">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-7">
           {view.sections.map((sv) => <TaxSectionCard key={sv.section} sv={sv} tax={data} view={view} actions={actions}
             onOpen={mobile ? (row) => setSheet({ mode: 'edit', row }) : undefined} onNew={mobile ? (section) => setSheet({ mode: 'add', section }) : undefined} />)}
         </div>
         {!mobile && (
-          <div className="flex flex-col gap-4 lg:sticky lg:top-20 lg:col-span-5">
+          <div className="flex min-w-0 flex-col gap-4 lg:sticky lg:top-20 lg:col-span-5">
             <ResultCard view={view} />
             <ReserveCard tax={data} view={view} onSave={saveReserve} />
             <AdviceCard view={view} onTry={tryAdvice} />
