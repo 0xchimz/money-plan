@@ -110,7 +110,7 @@ interface TaxKind {
 
 **4.5 เงินสำรองภาษี** — `reserveStatus(...)`: มีถึงวันยื่น = ยอดที่กรอก + ผลรวมแถวงบชนิดเงินสำรอง × เดือนหลัง `reserveAsOf` จนถึง `filingMonth` · เทียบกับยอดจ่ายเพิ่ม → พอ (เหลือเท่าไหร่) หรือขาด (เท่าไหร่ + ต้องกันเพิ่มต่อเดือน) · ถ้าได้คืนภาษี การ์ดแสดงแค่ยอดที่มี
 
-## 5. ข้อมูล (`migrations/0003_tax.sql`)
+## 5. ข้อมูล (`migrations/0004_tax.sql`)
 
 ```sql
 ALTER TABLE budget_lines ADD COLUMN tax_kind TEXT;   -- NULL = ไม่ใช้กับภาษี · key ของ TaxKind

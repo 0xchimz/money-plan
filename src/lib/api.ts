@@ -1,4 +1,4 @@
-import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tax, TaxChange, TaxLinkedInput, Tier, TierTargets } from '@shared/types'
+import type { AuthConfig, Balance, BudgetLineInput, Classification, Currency, EfTarget, EfTargetInput, FxQuote, Me, NewBalanceItem, Overview, Planning, ScenarioId, Tax, TaxChange, TaxLinkedInput, Tier, TierTargets } from '@shared/types'
 
 export * from '@shared/types'
 
@@ -61,6 +61,8 @@ export const api = {
   updateLine: (id: number, patch: Partial<BudgetLineInput>) => request<Planning>('PATCH', `/api/planning/lines/${id}`, patch),
   deleteLine: (id: number) => request<Planning>('DELETE', `/api/planning/lines/${id}`),
   copyScenario: (to: ScenarioId) => request<Planning>('POST', `/api/planning/${to}/copy`, { from: 'main' }),
+  setEfTarget: (t: EfTargetInput) => request<EfTarget>('PUT', '/api/ef-target', t),
+
   tax: (year?: number) => get<Tax>(`/api/tax${year ? `?year=${year}` : ''}`),
   addTaxLine: (year: number, line: { kind: string; label: string; thb: number; expr: string | null }) => request<Tax>('POST', `/api/tax/${year}/lines`, line),
   updateTaxLine: (id: number, patch: { label?: string; thb?: number; expr?: string | null }) => request<Tax>('PATCH', `/api/tax/lines/${id}`, patch),

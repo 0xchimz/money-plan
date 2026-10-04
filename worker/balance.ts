@@ -11,6 +11,7 @@ import { transfers } from '../shared/transfers'
 import { TIERS, type Balance, type BalanceRow, type BalanceSide, type BudgetLineRow, type MonthStatus, type Tier } from '../shared/types'
 import { all, isConstraint, now, one, run, stmt, type Db } from './db'
 import { bad, conflict, notFound } from './http'
+import { getEfTarget } from './planning'
 
 interface Item { id: number; side: BalanceSide; category: string; item: string; tier: Tier | null; type: string | null; country: string | null; active: number; sort: number }
 interface Cell { thb: number; usd: number | null; expr: string | null; confirmed: boolean }
@@ -61,13 +62,15 @@ function typed(m: Month, uid: number, p: Record<string, unknown>): { thb: string
 }
 
 export async function getBalance(db: Db, uid: number, requested?: string | null): Promise<Balance> {
-  const [months, em, planLines] = await Promise.all([
+  const [months, efTarget, em, planLines] = await Promise.all([
     monthList(db, uid),
+    getEfTarget(db, uid),
     all<Pick<BudgetLineRow, 'type' | 'category' | 'thb'>>(db, "SELECT type, category, thb FROM budget_lines WHERE user_id = ? AND scenario = 'em'", uid),
     all<Pick<BudgetLineRow, 'type' | 'category' | 'item' | 'thb' | 'account'>>(db,
       "SELECT type, category, item, thb, account FROM budget_lines WHERE user_id = ? AND scenario = 'main' ORDER BY sort, id", uid),
   ])
-  const target = efStatus(0, totals(em)).target
+  const emExpense = totals(em).expense
+  const target = efStatus(0, totals(em), efTarget).target
   const targets: Record<string, number> = target != null ? { 'Emergency Funds': target } : {}
   const next = months[0] && months[0].status !== 'draft' ? addMonth(months[0].month, 1) : null
   const hasClosed = months.some((m) => m.status === 'closed')
@@ -75,7 +78,7 @@ export async function getBalance(db: Db, uid: number, requested?: string | null)
   const monthsOut = months.map(({ month, status }) => ({ month, status }))
   if (!current) {
     return { months: monthsOut, next, firstMonths: firstMonthOptions(), month: null, status: null, prevMonth: null,
-      fx: { usdThb: null, confirmed: true, prev: null }, rows: [], hidden: [], history: [], targets, transfers: null, hasClosed }
+      fx: { usdThb: null, confirmed: true, prev: null }, rows: [], hidden: [], history: [], targets, efTarget, emExpense, transfers: null, hasClosed }
   }
   const prevM = months.find((m) => m.month < current.month) ?? null
   const [list, cells, prev, sums, done] = await Promise.all([
@@ -118,7 +121,7 @@ export async function getBalance(db: Db, uid: number, requested?: string | null)
   return {
     months: monthsOut, next, firstMonths: [], month: current.month, status: current.status, prevMonth: prevM?.month ?? null,
     fx: { usdThb: current.usd_thb, confirmed: current.status === 'closed' || current.usd_thb_at != null, prev: prevM?.usd_thb ?? null },
-    rows, hidden, history, targets, transfers: transfers(planLines, new Map(done.map((d) => [d.bank, d.done_at]))), hasClosed,
+    rows, hidden, history, targets, efTarget, emExpense, transfers: transfers(planLines, new Map(done.map((d) => [d.bank, d.done_at]))), hasClosed,
   }
 }
 

@@ -4,7 +4,7 @@ import type { AppEnv } from './env'
 import { HttpError, jsonOnly, body, idParam, monthParam } from './http'
 import { getMe } from './users'
 import { addScenario, addTaxLine, applyScenario, deleteScenario, deleteTaxLine, getTax, setLinkedLine, setReserve, updateScenario, updateTaxLine, yearParam } from './tax'
-import { addLine, copyScenario, deleteLine, getPlanning, updateLine } from './planning'
+import { addLine, copyScenario, deleteLine, getEfTarget, getPlanning, setEfTarget, updateLine } from './planning'
 import { addItem, classifyItem, closeMonth, confirmRows, discardDraft, getBalance, removeEntry, restoreEntry, setCurrency, setEntry, setRate, setTransfer, startMonth } from './balance'
 import { ecbUsdThb } from './fx'
 import { getOverview, setTierTargets } from './overview'
@@ -45,6 +45,10 @@ app.post('/api/planning/:scenario/copy', async (c) => {
   const { from } = await body<{ from?: unknown }>(c)
   await copyScenario(c.env.DB, c.var.uid, c.req.param('scenario'), from)
   return c.json(await getPlanning(c.env.DB, c.var.uid))
+})
+app.put('/api/ef-target', async (c) => {
+  await setEfTarget(c.env.DB, c.var.uid, await body(c))
+  return c.json(await getEfTarget(c.env.DB, c.var.uid))
 })
 
 // ---- Tax ----
