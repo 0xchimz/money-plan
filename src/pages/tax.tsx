@@ -23,6 +23,7 @@ export function TaxPage() {
   const [data, setData] = useState<Tax | null>(null)
   const [error, setError] = useState<unknown>()
   const seq = useRef(0)
+  const [epoch, setEpoch] = useState(0)
   const [mode, setMode] = useState<'real' | 'scenario'>('real')
   const [sheet, setSheet] = useState<TaxSheetState>(null)
   const [resultOpen, setResultOpen] = useState(false)
@@ -42,7 +43,7 @@ export function TaxPage() {
       return true
     } catch (e) {
       toast.error('บันทึกไม่ได้', { description: errMsg(e) })
-      api.tax(data?.year).then((d) => n === seq.current && setData(d), () => {})
+      api.tax(data?.year).then((d) => { if (n === seq.current) { setData(d); setEpoch((e) => e + 1) } }, () => {})
       return false
     }
   }
@@ -121,7 +122,7 @@ export function TaxPage() {
       </div>
       </>)}
       {mode === 'scenario' && (
-        <ScenarioPanel tax={data} view={view}
+        <ScenarioPanel tax={data} view={view} epoch={epoch}
           onAdd={(s) => mutate(api.addTaxScenario(year, s))}
           onUpdate={(id, s) => mutate(api.updateTaxScenario(id, s))}
           onDelete={(id) => { mutate(api.deleteTaxScenario(id)) }}

@@ -27,7 +27,8 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
   const sections = [...new Set(kinds.map((k) => k.section))]
   const commit = async (next: TaxChange[]) => {
     setDraft(next)
-    if (!(await onUpdate(scenario.id, { changes: next.filter((c) => c.thb !== 0) }))) setDraft(scenario.changes)
+    // a failed save is repaired by the page: it reloads and remounts the editor (epoch in the key)
+    void onUpdate(scenario.id, { changes: next.filter((c) => c.thb !== 0) })
   }
   const hasCut = draft.some((c) => c.thb < 0)
   return (
@@ -71,8 +72,8 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
 }
 
 /** Real numbers next to every scenario; tap a column to edit that scenario */
-export function ScenarioPanel({ tax, view, onAdd, onUpdate, onDelete, onApply }: {
-  tax: Tax; view: TaxView
+export function ScenarioPanel({ tax, view, epoch, onAdd, onUpdate, onDelete, onApply }: {
+  tax: Tax; view: TaxView; epoch: number
   onAdd: (s: { name: string; changes: TaxChange[] }) => Promise<boolean>
   onUpdate: (id: number, s: { name?: string; changes?: TaxChange[] }) => Promise<boolean>
   onDelete: (id: number) => void
@@ -123,7 +124,7 @@ export function ScenarioPanel({ tax, view, onAdd, onUpdate, onDelete, onApply }:
         <p className="px-4 pt-2 pb-1 text-xs text-muted-foreground">ผลสุทธิ = ภาษีที่ลดลง − เงินที่ออกจากกระเป๋าจริง (เงินที่ลงกองทุนยังเป็นของเรา)</p>
       </Card>
       <div className="flex flex-col gap-4 lg:col-span-5">
-        {current && <ScenarioEditor key={current.s.id} scenario={current.s} view={view} capped={current.sum.capped} onUpdate={onUpdate} onDelete={onDelete} onApply={onApply} />}
+        {current && <ScenarioEditor key={`${current.s.id}:${epoch}`} scenario={current.s} view={view} capped={current.sum.capped} onUpdate={onUpdate} onDelete={onDelete} onApply={onApply} />}
         <Button type="button" variant="outline" className="self-start max-lg:h-11"
           onClick={async () => { if (await onAdd({ name: `ฉากทัศน์ ${tax.scenarios.length + 1}`, changes: [] })) setSel(null) }}>
           <Plus /> ฉากทัศน์ใหม่
