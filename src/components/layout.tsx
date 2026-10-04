@@ -25,7 +25,7 @@ export function Layout({ me, onLogout }: { me: Me; onLogout: () => void }) {
   const desktopHeader = (
       <header className="sticky top-0 z-10 border-b bg-background/85 backdrop-blur">
         <div className="flex h-14 items-center gap-6 px-8">
-          <span className="font-semibold tracking-tight">money-plan</span>
+          <span className="flex items-center gap-2 font-semibold tracking-tight"><img src="/favicon.svg" alt="" className="size-7" />money-plan</span>
           <nav className="flex gap-1 text-sm">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} end
