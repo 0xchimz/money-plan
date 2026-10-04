@@ -1,0 +1,187 @@
+<style>
+  .win { border-radius:12px; overflow:hidden; border:1px solid #dcdcd8; box-shadow:0 10px 30px -14px rgb(0 0 0 / .25); margin-bottom:1.25rem;
+         font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; font-size:12px; text-align:left;
+         --ink:#1f1f1e; --mut:#77776f; --b:#e6e6e2; --card:#fcfcfb; --chip:#efefec; --good:#2e7d4f; --warn:#b26a00; --acc:#3b5bdb; background:#f9f9f7; color:var(--ink); }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ecece8; border-bottom:1px solid #dcdcd8; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#c8c8c2; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f9f9f7; border-radius:6px; padding:2px 10px; color:var(--mut); font-size:10.5px; }
+  .app-top { display:flex; align-items:center; gap:18px; padding:10px 22px; border-bottom:1px solid var(--b); background:#fff; }
+  .brand { font-weight:700; }
+  .tabs { display:flex; gap:4px; }
+  .tab { padding:4px 10px; border-radius:7px; color:var(--mut); }
+  .tab.on { background:var(--chip); color:var(--ink); font-weight:600; }
+  .main { padding:16px 22px 20px; }
+  .ph { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; }
+  .ph h5 { margin:0; font-size:20px; letter-spacing:-.01em; }
+  .muted { color:var(--mut); }
+  .num { font-variant-numeric:tabular-nums; }
+  .r { text-align:right; }
+  .c { background:var(--card); border:1px solid var(--b); border-radius:12px; padding:12px 14px; }
+  .segs { display:inline-flex; background:var(--chip); border-radius:12px; padding:3px; }
+  .segs span { padding:4px 12px; border-radius:9px; color:var(--mut); }
+  .segs span.on { background:#fff; color:var(--ink); font-weight:600; box-shadow:0 1px 3px rgb(0 0 0 / .12); }
+  .big { font-size:28px; font-weight:650; letter-spacing:-.02em; }
+  .sc { background:var(--card); border:1px solid var(--b); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .sc-h { display:flex; justify-content:space-between; align-items:baseline; padding:10px 12px 7px; }
+  .sc-h b { font-size:13px; }
+  .row { display:grid; grid-template-columns:1fr 130px; gap:10px; align-items:center; padding:7px 12px; border-top:1px solid #f0f0ec; }
+  .row small { display:block; color:var(--mut); font-size:10.5px; margin-top:1px; }
+  .link { display:inline-block; font-size:9.5px; font-weight:600; color:var(--acc); background:#e9edfc; border-radius:5px; padding:0 5px; margin-left:5px; vertical-align:1px; }
+  .cap { display:inline-block; font-size:9.5px; color:var(--warn); background:#fbf0dc; border-radius:5px; padding:0 5px; margin-left:5px; }
+  .add { padding:7px 12px; border-top:1px solid #f0f0ec; color:var(--acc); font-weight:600; }
+  .bar { display:flex; height:16px; border-radius:5px; overflow:hidden; margin:8px 0 4px; }
+  .bar span { display:block; }
+  .kv { display:flex; justify-content:space-between; padding:3px 0; }
+  .rec { border:1px solid var(--b); border-radius:10px; padding:8px 10px; margin-top:7px; background:#fff; }
+  .rec b { color:var(--good); }
+  .g2 { display:grid; grid-template-columns:7fr 5fr; gap:12px; align-items:start; }
+  .g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .step { display:grid; grid-template-columns:22px 1fr 150px; gap:10px; align-items:center; padding:9px 12px; border-top:1px solid #f0f0ec; }
+  .step i { width:20px; height:20px; border-radius:50%; background:var(--chip); display:grid; place-items:center; font-style:normal; font-size:10px; font-weight:700; }
+  .step.sum { background:#f4f4f1; font-weight:650; }
+  .sub { padding:2px 12px 8px 44px; }
+  .sub .kv { color:#44443f; font-size:11.5px; }
+  .pill { display:inline-block; border:1px solid var(--b); border-radius:7px; padding:2px 8px; background:#fff; }
+  .ok { color:var(--good); font-weight:650; }
+  h3.dir { margin:1.4rem 0 .5rem; }
+</style>
+
+<h2>หน้า "ภาษี" — เลือกแนวจัดหน้า</h2>
+<p class="subtitle">ตัวเลขคือภาษีปี 2569 ของ Chin จริง (ยอดสะสม/งบของเงินเดือนยังไม่ได้แยก) · ป้าย <span class="link" style="font-size:11px">งบ</span> = บรรทัดที่ดึงจากแถว Planning ที่ติดป้ายภาษี · บรรทัดอื่นคือกรอกเอง · ดูครบ 3 แบบแล้วกดเลือกด้านล่าง</p>
+
+<!-- ================= A ================= -->
+<h3 class="dir">A · กรอกซ้าย ผลลัพธ์ขวา (แบบ iTax)</h3>
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.c-soonue.workers.dev/tax</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span><span class="tab on">ภาษี</span></div></div>
+  <div class="main">
+    <div class="ph"><div><div class="muted">ภาษีเงินได้บุคคลธรรมดา · ประมาณการ ณ ต.ค.</div><h5>ปีภาษี 2569</h5></div>
+      <span class="segs"><span class="on">ตัวเลขจริง</span><span>ฉากทัศน์</span></span></div>
+    <div class="g2">
+      <div>
+        <div class="sc"><div class="sc-h"><b>เงินได้</b><span class="num">2,365,558.00</span></div>
+          <div class="row"><span>เงินเดือน + โบนัส <span class="muted">40(1)</span><span class="link">งบ</span><small>สะสมถึง ก.ย. + งบ × 3 เดือน + โบนัสก้อน</small></span><span class="num r">2,063,058.00</span></div>
+          <div class="row"><span>Freelance <span class="muted">40(2)</span><small>กรอกเอง</small></span><span class="num r">148,500.00</span></div>
+          <div class="row"><span>ค่าเช่า TLW <span class="muted">40(5)</span><span class="link">งบ</span><small>สะสมถึง ก.ย. 88,000.00 + งบ 22,000.00 × 3</small></span><span class="num r">154,000.00</span></div>
+          <div class="add">+ เพิ่มเงินได้</div></div>
+        <div class="sc"><div class="sc-h"><b>กองทุนและการออม</b><span class="num">483,074.49</span></div>
+          <div class="row"><span>RMF<span class="link">งบ</span><small>สะสมถึง ก.ย. 90,000.00 + ก้อน 87,966.49 + งบ 26,650.00 × 2</small></span><span class="num r">231,266.49</span></div>
+          <div class="row"><span>PVD<span class="link">งบ</span><small>สะสมถึง ก.ย. 66,906.00 + งบ 7,434.00 × 3</small></span><span class="num r">89,208.00</span></div>
+          <div class="row"><span>Thai ESG<small>กรอกเอง · เพดาน 300,000.00</small></span><span class="num r">162,600.00</span></div>
+          <div class="add">+ เพิ่มรายการ</div></div>
+        <div class="sc"><div class="sc-h"><b>ประกัน</b><span class="num">85,220.00</span></div>
+          <div class="row"><span>ประกันสังคม<span class="link">งบ</span></span><span class="num r">10,500.00</span></div>
+          <div class="row"><span>ประกันชีวิต</span><span class="num r">49,720.00</span></div>
+          <div class="row"><span>ประกันสุขภาพตัวเอง<span class="cap">เต็มเพดาน 25,000</span></span><span class="num r">25,000.00</span></div>
+          <div class="add">+ เพิ่มรายการ</div></div>
+        <div class="muted">… ครอบครัว 90,000.00 · บ้าน 100,000.00 · บริจาค 0.00 · หัก ณ ที่จ่าย 209,254.41</div>
+      </div>
+      <div>
+        <div class="c">
+          <div class="muted">ต้องจ่ายเพิ่มตอนยื่น</div>
+          <div class="big num">21,011.47</div>
+          <div class="bar"><span style="width:10%;background:#d9d9d4"></span><span style="width:10%;background:#c3cdf5"></span><span style="width:14%;background:#a3b2ee"></span><span style="width:17%;background:#8296e6"></span><span style="width:17%;background:#6079de"></span><span style="width:32%;background:#3b5bdb"></span></div>
+          <div class="muted">เงินได้สุทธิ 1,461,063.51 · อยู่ขั้น <b style="color:var(--ink)">25%</b></div>
+          <div style="margin-top:8px">
+            <div class="kv"><span>ภาษีทั้งปี</span><span class="num">230,265.88</span></div>
+            <div class="kv"><span>หัก ณ ที่จ่ายแล้ว</span><span class="num">−209,254.41</span></div>
+            <div class="kv"><span>เงินสำรองภาษีถึงวันยื่น</span><span class="num ok">22,178.09 พอ</span></div>
+          </div>
+        </div>
+        <div class="c" style="margin-top:10px"><b>ลดภาษีได้อีก</b>
+          <div class="rec">RMF / PVD เหลือช่อง 179,525.51<br><b class="num">ลดภาษีประมาณ 44,881.38</b></div>
+          <div class="rec">Thai ESG เหลือช่อง 137,400.00<br><b class="num">ลดภาษีประมาณ 34,350.00</b></div>
+          <div class="rec">ประกันชีวิต เหลือช่อง 25,280.00<br><b class="num">ลดภาษีประมาณ 6,320.00</b></div>
+          <div class="muted" style="margin-top:6px">+ อีก 2 ข้อ (ประกันสุขภาพพ่อแม่, บริจาค)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= B ================= -->
+<h3 class="dir">B · ผลลัพธ์และคำแนะนำอยู่บน ที่กรอกอยู่ล่าง</h3>
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.c-soonue.workers.dev/tax</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span><span class="tab on">ภาษี</span></div></div>
+  <div class="main">
+    <div class="ph"><div><div class="muted">ภาษีเงินได้บุคคลธรรมดา · ประมาณการ ณ ต.ค.</div><h5>ปีภาษี 2569</h5></div>
+      <span class="segs"><span class="on">ตัวเลขจริง</span><span>ฉากทัศน์</span></span></div>
+    <div class="c" style="display:grid;grid-template-columns:4fr 8fr;gap:22px;margin-bottom:10px">
+      <div><div class="muted">ต้องจ่ายเพิ่มตอนยื่น</div><div class="big num">21,011.47</div>
+        <div class="muted">ภาษีทั้งปี 230,265.88 · หักแล้ว 209,254.41</div>
+        <div style="margin-top:4px">เงินสำรองภาษี <span class="ok num">22,178.09 พอ</span></div></div>
+      <div><div class="kv"><b>เงินได้สุทธิ 1,461,063.51</b><span>ขั้น <b>25%</b> · ขั้นถัดไป 30% ที่ 2,000,000.00</span></div>
+        <div class="bar" style="height:22px"><span style="width:10%;background:#d9d9d4"></span><span style="width:10%;background:#c3cdf5"></span><span style="width:14%;background:#a3b2ee"></span><span style="width:17%;background:#8296e6"></span><span style="width:17%;background:#6079de"></span><span style="width:32%;background:#3b5bdb"></span></div>
+        <div class="kv muted num" style="font-size:10.5px"><span>0%</span><span>5% · 7,500</span><span>10% · 20,000</span><span>15% · 37,500</span><span>20% · 50,000</span><span>25% · 115,265.88</span></div></div>
+    </div>
+    <div class="g3" style="margin-bottom:12px">
+      <div class="rec" style="margin:0">RMF / PVD เหลือช่อง 179,525.51<br><b class="num">ลดภาษีประมาณ 44,881.38</b><br><span class="muted">เงินยังเป็นของเรา ล็อกถึงอายุ 55</span></div>
+      <div class="rec" style="margin:0">Thai ESG เหลือช่อง 137,400.00<br><b class="num">ลดภาษีประมาณ 34,350.00</b><br><span class="muted">ถือ 5 ปี</span></div>
+      <div class="rec" style="margin:0">ประกันชีวิต เหลือช่อง 25,280.00<br><b class="num">ลดภาษีประมาณ 6,320.00</b><br><span class="muted">เงินออกจากกระเป๋า</span></div>
+    </div>
+    <div style="margin-bottom:8px"><span class="segs"><span class="on">เงินได้ 3</span><span>ลดหย่อน 9</span><span>หัก ณ ที่จ่าย 1</span></span></div>
+    <div class="sc"><div class="sc-h"><b>เงินได้</b><span class="num">2,365,558.00</span></div>
+      <div class="row"><span>เงินเดือน + โบนัส <span class="muted">40(1)</span><span class="link">งบ</span><small>สะสมถึง ก.ย. + งบ × 3 เดือน + โบนัสก้อน</small></span><span class="num r">2,063,058.00</span></div>
+      <div class="row"><span>Freelance <span class="muted">40(2)</span><small>กรอกเอง</small></span><span class="num r">148,500.00</span></div>
+      <div class="row"><span>ค่าเช่า TLW <span class="muted">40(5)</span><span class="link">งบ</span><small>สะสมถึง ก.ย. 88,000.00 + งบ 22,000.00 × 3</small></span><span class="num r">154,000.00</span></div>
+      <div class="add">+ เพิ่มเงินได้</div></div>
+  </div>
+</div>
+
+<!-- ================= C ================= -->
+<h3 class="dir">C · ไล่ทีละขั้นแบบใบคำนวณ กดเปิดแต่ละขั้นเพื่อกรอก</h3>
+<div class="win">
+  <div class="win-bar"><i></i><i></i><i></i><span class="win-url">money-plan.c-soonue.workers.dev/tax</span></div>
+  <div class="app-top"><span class="brand">money-plan</span><div class="tabs"><span class="tab">Overview</span><span class="tab">Planning</span><span class="tab">Balance</span><span class="tab on">ภาษี</span></div></div>
+  <div class="main">
+    <div class="ph"><div><div class="muted">ภาษีเงินได้บุคคลธรรมดา · ประมาณการ ณ ต.ค.</div><h5>ปีภาษี 2569</h5></div>
+      <span class="segs"><span class="on">ตัวเลขจริง</span><span>ฉากทัศน์</span></span></div>
+    <div class="g2">
+      <div class="sc" style="margin:0">
+        <div class="step" style="border-top:0"><i>1</i><span><b>เงินได้</b> <span class="muted">3 รายการ ▾</span></span><span class="num r">2,365,558.00</span></div>
+        <div class="step"><i>2</i><span><b>หักค่าใช้จ่าย</b> <span class="muted">คำนวณให้ ▸</span></span><span class="num r">−146,200.00</span></div>
+        <div class="step"><i>3</i><span><b>ค่าลดหย่อน</b> <span class="muted">9 รายการ ▾</span></span><span class="num r">−758,294.49</span></div>
+        <div class="sub">
+          <div class="kv"><span>ส่วนตัว + บิดา</span><span class="num">90,000.00</span></div>
+          <div class="kv"><span>RMF<span class="link">งบ</span> <span class="muted">90,000.00 + 87,966.49 + 26,650.00 × 2</span></span><span class="num">231,266.49</span></div>
+          <div class="kv"><span>PVD<span class="link">งบ</span></span><span class="num">89,208.00</span></div>
+          <div class="kv"><span>Thai ESG</span><span class="num">162,600.00</span></div>
+          <div class="kv"><span>ประกัน 3 รายการ</span><span class="num">85,220.00</span></div>
+          <div class="kv"><span>ดอกเบี้ยบ้าน<span class="cap">เต็มเพดาน</span></span><span class="num">100,000.00</span></div>
+          <div class="kv" style="color:var(--acc);font-weight:600"><span>+ เพิ่มรายการ</span></div>
+        </div>
+        <div class="step sum"><i>=</i><span>เงินได้สุทธิ · ขั้น 25%</span><span class="num r">1,461,063.51</span></div>
+        <div class="step"><i>4</i><span><b>ภาษีทั้งปี</b> <span class="muted">ดูขั้นบันได ▸</span></span><span class="num r">230,265.88</span></div>
+        <div class="step"><i>5</i><span><b>หัก ณ ที่จ่าย</b> <span class="muted">1 รายการ ▸</span></span><span class="num r">−209,254.41</span></div>
+        <div class="step sum"><i>=</i><span>ต้องจ่ายเพิ่มตอนยื่น</span><span class="num r" style="font-size:16px">21,011.47</span></div>
+        <div class="step"><i>6</i><span><b>เงินสำรองภาษีถึงวันยื่น</b></span><span class="num r ok">22,178.09 พอ</span></div>
+      </div>
+      <div class="c"><b>ลดภาษีได้อีก</b>
+        <div class="rec">RMF / PVD เหลือช่อง 179,525.51<br><b class="num">ลดภาษีประมาณ 44,881.38</b></div>
+        <div class="rec">Thai ESG เหลือช่อง 137,400.00<br><b class="num">ลดภาษีประมาณ 34,350.00</b></div>
+        <div class="rec">ประกันชีวิต เหลือช่อง 25,280.00<br><b class="num">ลดภาษีประมาณ 6,320.00</b></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Planning tag ================= -->
+<h3 class="dir">หน้า Planning · เลือกว่าแถวงบใช้กับภาษีแบบไหน (เหมือนกันทั้ง 3 แบบ)</h3>
+<div class="win">
+  <div class="main">
+    <div class="sc" style="margin:0"><div class="sc-h"><b>ออม / ลงทุน</b><span class="num">62,537.00</span></div>
+      <div class="row" style="grid-template-columns:1fr 110px 150px 170px"><span>TLWORLDRMF</span><span class="num r pill">26,650.00</span><span class="muted">KKP/WealthX</span><span class="pill">ภาษี: ลดหย่อน · RMF ▾</span></div>
+      <div class="row" style="grid-template-columns:1fr 110px 150px 170px"><span>PVD</span><span class="num r pill">7,434.00</span><span class="muted">หักจากเงินเดือน</span><span class="pill">ภาษี: ลดหย่อน · PVD ▾</span></div>
+      <div class="row" style="grid-template-columns:1fr 110px 150px 170px"><span>TLWORLD-X (Core)</span><span class="num r pill">25,000.00</span><span class="muted">WealthX</span><span class="pill muted">ภาษี: ไม่ใช้ ▾</span></div>
+    </div>
+    <div class="muted" style="margin-top:8px">รายรับเลือกได้: เงินเดือน 40(1) / freelance 40(2) / ค่าเช่า 40(5) / ไม่ใช้ · ออมและรายจ่ายเลือกได้: หมวดลดหย่อน (RMF, PVD, ประกันสังคม, ประกันชีวิต, ประกันสุขภาพ, ดอกเบี้ยบ้าน, บริจาค ...) / ไม่ใช้ · ใช้เฉพาะงบชุด "ปัจจุบัน"</div>
+  </div>
+</div>
+
+<h3>เอาแนวไหน?</h3>
+<div class="options">
+  <div class="option" data-choice="A" onclick="toggleSelect(this)"><div class="letter">A</div><div class="content"><h3>กรอกซ้าย ผลลัพธ์ขวา (แนะนำ)</h3><p>แก้ตัวเลขแล้วเห็นภาษีเปลี่ยนข้างๆ ทันที · หมวดแบบ iTax · บนมือถือผลลัพธ์ย่อเป็นแถบติดล่างจอ</p></div></div>
+  <div class="option" data-choice="B" onclick="toggleSelect(this)"><div class="letter">B</div><div class="content"><h3>ผลลัพธ์และคำแนะนำอยู่บน</h3><p>เปิดมาเห็นคำตอบก่อน เหมาะกับการเข้ามาดูมากกว่ากรอก · ตอนกรอกต้องเลื่อนขึ้นไปดูผล</p></div></div>
+  <div class="option" data-choice="C" onclick="toggleSelect(this)"><div class="letter">C</div><div class="content"><h3>ไล่ทีละขั้นแบบใบคำนวณ</h3><p>เห็นที่มาของภาษีชัดสุด ตรวจกับ ภ.ง.ด.90 ง่าย · รายการลดหย่อนเยอะแล้วยาว หมวดไม่แยกชัดเท่า A</p></div></div>
+</div>

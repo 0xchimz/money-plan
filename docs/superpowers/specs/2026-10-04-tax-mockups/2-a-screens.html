@@ -1,0 +1,185 @@
+<style>
+  .win, .phone { font-family:-apple-system,"Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif; font-size:12px; text-align:left;
+         --ink:#1f1f1e; --mut:#77776f; --b:#e6e6e2; --card:#fcfcfb; --chip:#efefec; --good:#2e7d4f; --warn:#b26a00; --acc:#3b5bdb; background:#f9f9f7; color:var(--ink); }
+  .win { border-radius:12px; overflow:hidden; border:1px solid #dcdcd8; box-shadow:0 10px 30px -14px rgb(0 0 0 / .25); margin-bottom:1.25rem; }
+  .win-bar { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#ecece8; border-bottom:1px solid #dcdcd8; }
+  .win-bar i { width:9px; height:9px; border-radius:50%; background:#c8c8c2; display:inline-block; }
+  .win-url { margin-left:10px; flex:1; max-width:360px; background:#f9f9f7; border-radius:6px; padding:2px 10px; color:var(--mut); font-size:10.5px; }
+  .main { padding:16px 22px 20px; }
+  .ph { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:12px; }
+  .ph h5 { margin:0; font-size:20px; letter-spacing:-.01em; }
+  .muted { color:var(--mut); } .num { font-variant-numeric:tabular-nums; } .r { text-align:right; }
+  .c { background:var(--card); border:1px solid var(--b); border-radius:12px; padding:12px 14px; }
+  .segs { display:inline-flex; background:var(--chip); border-radius:12px; padding:3px; }
+  .segs span { padding:4px 12px; border-radius:9px; color:var(--mut); }
+  .segs span.on { background:#fff; color:var(--ink); font-weight:600; box-shadow:0 1px 3px rgb(0 0 0 / .12); }
+  .big { font-size:26px; font-weight:650; letter-spacing:-.02em; }
+  .sc { background:var(--card); border:1px solid var(--b); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .sc-h { display:flex; justify-content:space-between; align-items:baseline; padding:10px 12px 7px; }
+  .sc-h b { font-size:13px; }
+  .row { display:grid; grid-template-columns:1fr 130px; gap:10px; align-items:center; padding:7px 12px; border-top:1px solid #f0f0ec; }
+  .row small, .small { display:block; color:var(--mut); font-size:10.5px; margin-top:1px; }
+  .link { display:inline-block; font-size:9.5px; font-weight:600; color:var(--acc); background:#e9edfc; border-radius:5px; padding:0 5px; margin-left:5px; vertical-align:1px; }
+  .cap { display:inline-block; font-size:9.5px; color:var(--warn); background:#fbf0dc; border-radius:5px; padding:0 5px; margin-left:5px; }
+  .add { padding:7px 12px; border-top:1px solid #f0f0ec; color:var(--acc); font-weight:600; }
+  .kv { display:flex; justify-content:space-between; padding:3px 0; gap:10px; }
+  .rec { border:1px solid var(--b); border-radius:10px; padding:8px 10px; margin-top:7px; background:#fff; }
+  .rec b { color:var(--good); }
+  .g2 { display:grid; grid-template-columns:7fr 5fr; gap:12px; align-items:start; }
+  .ok { color:var(--good); font-weight:650; }
+  .edit { background:#f3f5fd; border-top:1px solid #dfe5fa; padding:10px 12px; }
+  .f { display:grid; grid-template-columns:150px 150px 1fr; gap:8px; align-items:center; padding:3px 0; }
+  .inp { border:1px solid #d6d6d0; border-radius:7px; padding:4px 8px; background:#fff; display:inline-block; }
+  .btn { display:inline-block; padding:5px 11px; border-radius:8px; background:#1f1f1e; color:#fff; font-weight:600; font-size:11px; }
+  .btn.ghost { background:#fff; color:#1f1f1e; border:1px solid #d6d6d0; }
+  .cmp { width:100%; border-collapse:collapse; } .cmp td, .cmp th { padding:6px 8px; border-top:1px solid #f0f0ec; text-align:right; } .cmp th { font-weight:600; border-top:0; } .cmp td:first-child, .cmp th:first-child { text-align:left; }
+  .cmp .on { background:#f3f5fd; }
+  h3.dir { margin:1.4rem 0 .5rem; }
+  .phones { display:flex; gap:18px; flex-wrap:wrap; align-items:flex-start; }
+  .phone { width:290px; border:1px solid #cfcfca; border-radius:26px; overflow:hidden; box-shadow:0 10px 30px -14px rgb(0 0 0 / .3); position:relative; }
+  .p-top { padding:12px 14px 8px; background:#fff; border-bottom:1px solid var(--b); display:flex; justify-content:space-between; align-items:center; }
+  .p-body { padding:10px 10px 0; height:430px; overflow:hidden; }
+  .p-res { background:#1f1f1e; color:#fff; margin:0 10px; border-radius:12px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; position:absolute; left:0; right:0; bottom:54px; }
+  .p-nav { display:flex; justify-content:space-around; padding:9px 0 12px; background:#fff; border-top:1px solid var(--b); color:var(--mut); font-size:10.5px; }
+  .p-nav b { color:var(--ink); }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:#fff; border-radius:18px 18px 0 0; padding:8px 14px 16px; box-shadow:0 -10px 30px rgb(0 0 0 / .25); }
+  .sheet::before { content:""; display:block; width:36px; height:4px; border-radius:2px; background:#d6d6d0; margin:0 auto 8px; }
+  .dim { position:absolute; inset:0; background:rgb(0 0 0 / .35); }
+  .cap-p { font-size:11px; color:#666; margin:6px 2px 0; max-width:290px; }
+</style>
+
+<h2>แบบ A — หน้าจอที่เหลือ</h2>
+<p class="subtitle">1) แก้บรรทัดที่ผูกงบ + เพิ่มบรรทัดเอง · 2) ฉากทัศน์ · 3) มือถือ · ตัวเลขของ Chin ปี 2569 (ฉากทัศน์เป็นตัวอย่าง)</p>
+
+<h3 class="dir">1 · กดบรรทัดเพื่อแก้ (desktop)</h3>
+<div class="win"><div class="main">
+  <div class="g2">
+    <div>
+      <div class="sc"><div class="sc-h"><b>กองทุนและการออม</b><span class="num">483,074.49</span></div>
+        <div class="row" style="background:#f3f5fd"><span><b>RMF</b><span class="link">งบ</span><small>แถวงบ "RMF" 26,650.00 ต่อเดือน</small></span><span class="num r"><b>231,266.49</b></span></div>
+        <div class="edit">
+          <div class="f"><span>จ่ายแล้วสะสม</span><span class="inp num r">90,000.00</span><span class="muted">ถึงสิ้นเดือน <span class="inp">ก.ย. ▾</span></span></div>
+          <div class="f"><span>ยอดก้อนที่จะจ่ายเพิ่ม</span><span class="inp num r">26650+61316.49</span><span class="muted">= 87,966.49 · ยอดครั้งเดียวที่ไม่อยู่ในงบรายเดือน</span></div>
+          <div class="f"><span class="muted">จากงบที่เหลือ</span><span class="num r muted" style="padding-right:9px">53,300.00</span><span class="muted">26,650.00 × 2 เดือน (พ.ย.–ธ.ค.) · แก้ที่ Planning</span></div>
+          <div class="f" style="border-top:1px solid #dfe5fa;margin-top:4px;padding-top:6px"><span><b>ทั้งปี</b></span><span class="num r" style="padding-right:9px"><b>231,266.49</b></span><span class="muted">เพดาน 30% ของเงินได้ = 709,667.40 · กลุ่มเกษียณเหลือ 179,525.51</span></div>
+        </div>
+        <div class="row"><span>PVD<span class="link">งบ</span><small>สะสมถึง ก.ย. + งบ × 3</small></span><span class="num r">89,208.00</span></div>
+        <div class="row"><span>Thai ESG<small>กรอกเอง · เพดาน 300,000.00</small></span><span class="num r">162,600.00</span></div>
+        <div class="edit">
+          <div class="muted" style="margin-bottom:5px"><b style="color:var(--ink)">เพิ่มรายการ</b> — เลือกชนิดในหมวดนี้ แล้วใส่ชื่อกับยอดทั้งปี</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span class="inp">ประกันบำนาญ ▾</span><span class="inp" style="width:150px">ชื่อ เช่น AIA Annuity</span><span class="inp num r" style="width:100px">0.00</span><span class="btn">เพิ่ม</span><span class="btn ghost">ยกเลิก</span></div>
+          <div class="small">ชนิดที่เลือกได้ในหมวดนี้: RMF · PVD · กบข. · ประกันบำนาญ · กอช. · Thai ESG · ระบบรู้เพดานของแต่ละชนิดเอง</div>
+        </div>
+      </div>
+    </div>
+    <div class="c"><b>อ่านยังไง</b>
+      <div class="muted" style="margin-top:6px;line-height:1.6">
+        บรรทัดที่มีป้าย <span class="link">งบ</span> มาจากแถว Planning ที่เลือก "ภาษี: …" ไว้ ลบที่นี่ไม่ได้ ต้องไปเอาป้ายออกที่ Planning<br>
+        ยอดทั้งปี = จ่ายแล้วสะสม + ยอดก้อน + งบต่อเดือน × เดือนหลังจากเดือนที่ระบุ<br>
+        ทุกสิ้นเดือน: แก้ยอดสะสมแล้วเลื่อนเดือน · ถ้าไม่แก้ ระบบยังคิดจากเดือนเดิมให้ถูกต้อง และขึ้นป้ายเตือนเมื่อค้างเกิน 2 เดือน<br>
+        ช่องยอดพิมพ์สูตรได้เหมือนหน้าอื่น (26650+61316.49)
+      </div></div>
+  </div>
+</div></div>
+
+<h3 class="dir">2 · ฉากทัศน์ — ลองเพิ่ม/ลดโดยไม่แตะตัวเลขจริง</h3>
+<div class="win"><div class="main">
+  <div class="ph"><div><div class="muted">ภาษีเงินได้บุคคลธรรมดา</div><h5>ปีภาษี 2569</h5></div><span class="segs"><span>ตัวเลขจริง</span><span class="on">ฉากทัศน์</span></span></div>
+  <div class="g2">
+    <div class="c" style="padding:4px 6px">
+      <table class="cmp num">
+        <tr><th></th><th>ตัวเลขจริง</th><th class="on">RMF เพิ่ม 100,000</th><th>บริจาค 2 เท่า 50,000</th></tr>
+        <tr><td>เงินได้สุทธิ</td><td>1,461,063.51</td><td class="on">1,361,063.51</td><td>1,361,063.51</td></tr>
+        <tr><td>ขั้นภาษี</td><td>25%</td><td class="on">25%</td><td>25%</td></tr>
+        <tr><td>ภาษีทั้งปี</td><td>230,265.88</td><td class="on">205,265.88</td><td>205,265.88</td></tr>
+        <tr><td><b>จ่ายเพิ่ม / ได้คืน</b></td><td><b>จ่าย 21,011.47</b></td><td class="on"><b class="ok">ได้คืน 3,988.53</b></td><td><b class="ok">ได้คืน 3,988.53</b></td></tr>
+        <tr><td>ภาษีลดลง</td><td class="muted">–</td><td class="on ok">25,000.00</td><td class="ok">25,000.00</td></tr>
+        <tr><td>เงินที่ต้องใช้</td><td class="muted">–</td><td class="on">100,000.00</td><td>50,000.00</td></tr>
+        <tr><td>เงินยังเป็นของเรา</td><td class="muted">–</td><td class="on">100,000.00 <span class="muted">ล็อกถึงอายุ 55</span></td><td>0.00</td></tr>
+        <tr><td><b>ต้นทุนสุทธิ</b></td><td class="muted">–</td><td class="on"><b class="ok">+25,000.00</b></td><td><b>−25,000.00</b></td></tr>
+      </table>
+    </div>
+    <div>
+      <div class="c"><b>RMF เพิ่ม 100,000</b> <span class="muted">· กำลังแก้</span>
+        <div class="kv" style="margin-top:6px"><span><span class="inp">RMF ▾</span></span><span class="inp num r" style="width:110px">+100,000.00</span></div>
+        <div class="add" style="border:0;padding:6px 0 0">+ เพิ่มรายการที่เปลี่ยน</div>
+        <div class="small">รายการที่เปลี่ยน = ชนิดเงินได้/ลดหย่อน + ยอดบวกหรือลบ · ผ่านเพดานเดียวกับตัวเลขจริง (ใส่เกินช่องที่เหลือ ส่วนเกินไม่ถูกนับและขึ้นป้ายเตือน)</div>
+        <div style="margin-top:8px"><span class="btn ghost">ใช้ฉากทัศน์นี้เป็นตัวเลขจริง</span> <span class="btn ghost">ลบ</span></div>
+      </div>
+      <div class="c" style="margin-top:10px"><span class="btn">+ ฉากทัศน์ใหม่</span> <span class="muted">หรือกดจากการ์ด "ลดภาษีได้อีก" → "ลองในฉากทัศน์"</span></div>
+    </div>
+  </div>
+</div></div>
+
+<h3 class="dir">3 · มือถือ (ต่ำกว่า 1024px)</h3>
+<div class="phones">
+  <div><div class="phone">
+    <div class="p-top"><b>ภาษี 2569</b><span class="segs" style="font-size:10.5px"><span class="on">จริง</span><span>ฉากทัศน์</span></span></div>
+    <div class="p-body">
+      <div class="sc"><div class="sc-h"><b>เงินได้</b><span class="num">2,365,558.00</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>เงินเดือน + โบนัส<span class="link">งบ</span><small>40(1)</small></span><span class="num r">2,063,058.00</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>Freelance<small>40(2)</small></span><span class="num r">148,500.00</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>ค่าเช่า TLW<span class="link">งบ</span><small>40(5)</small></span><span class="num r">154,000.00</span></div>
+        <div class="add">+ เพิ่มเงินได้</div></div>
+      <div class="sc"><div class="sc-h"><b>กองทุนและการออม</b><span class="num">483,074.49</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>RMF<span class="link">งบ</span></span><span class="num r">231,266.49</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>PVD<span class="link">งบ</span></span><span class="num r">89,208.00</span></div>
+        <div class="row" style="grid-template-columns:1fr auto"><span>Thai ESG</span><span class="num r">162,600.00</span></div></div>
+    </div>
+    <div class="p-res"><span><span style="opacity:.7;font-size:10.5px">จ่ายเพิ่ม · ขั้น 25%</span><br><b class="num" style="font-size:15px">21,011.47</b></span><span style="font-size:10.5px;text-align:right">ลดได้อีก<br><b style="color:#8fd9ad" class="num">44,881.38</b> ▴</span></div>
+    <div class="p-nav"><span>ภาพรวม</span><span>แผนเงิน</span><span>งบดุล</span><b>ภาษี</b></div>
+  </div><p class="cap-p">3a · รายการหมวดเรียงลงมา · แถบผลลัพธ์ติดเหนือเมนูล่างตลอด แตะเพื่อเปิด 3b</p></div>
+
+  <div><div class="phone">
+    <div class="p-top"><b>ภาษี 2569</b><span class="muted">จริง</span></div>
+    <div class="p-body"></div><div class="dim"></div>
+    <div class="sheet">
+      <div class="muted">ต้องจ่ายเพิ่มตอนยื่น</div><div class="big num">21,011.47</div>
+      <div class="muted">เงินได้สุทธิ 1,461,063.51 · ขั้น 25%</div>
+      <div style="margin-top:6px">
+        <div class="kv"><span>ภาษีทั้งปี</span><span class="num">230,265.88</span></div>
+        <div class="kv"><span>หัก ณ ที่จ่าย</span><span class="num">−209,254.41</span></div>
+        <div class="kv"><span>เงินสำรองภาษีถึง มี.ค.</span><span class="num ok">22,178.09 พอ</span></div>
+      </div>
+      <b style="display:block;margin-top:8px">ลดภาษีได้อีก</b>
+      <div class="rec">RMF / PVD เหลือช่อง 179,525.51<br><b class="num">ลดภาษีประมาณ 44,881.38</b><span class="small">เงินยังเป็นของเรา ล็อกถึงอายุ 55 · ลองในฉากทัศน์ ›</span></div>
+      <div class="rec">Thai ESG เหลือช่อง 137,400.00<br><b class="num">ลดภาษีประมาณ 34,350.00</b></div>
+      <div class="rec">ประกันชีวิต เหลือช่อง 25,280.00<br><b class="num">ลดภาษีประมาณ 6,320.00</b></div>
+    </div>
+  </div><p class="cap-p">3b · แผ่นผลลัพธ์ + คำแนะนำ (ปัดลงเพื่อปิด)</p></div>
+
+  <div><div class="phone">
+    <div class="p-top"><b>ภาษี 2569</b><span class="muted">จริง</span></div>
+    <div class="p-body"></div><div class="dim"></div>
+    <div class="sheet">
+      <b style="font-size:14px">RMF</b><span class="link">งบ</span>
+      <div class="small">แถวงบ "RMF" 26,650.00 ต่อเดือน</div>
+      <div style="margin-top:10px" class="muted">จ่ายแล้วสะสม ถึงสิ้นเดือน <span class="inp">ก.ย. ▾</span></div>
+      <div class="inp num r" style="display:block;font-size:16px;padding:8px 10px;margin-top:4px">90,000.00</div>
+      <div style="margin-top:10px" class="muted">ยอดก้อนที่จะจ่ายเพิ่ม</div>
+      <div class="inp num r" style="display:block;font-size:16px;padding:8px 10px;margin-top:4px">87,966.49</div>
+      <div class="kv muted" style="margin-top:10px"><span>จากงบ 26,650.00 × 2 เดือน</span><span class="num">53,300.00</span></div>
+      <div class="kv" style="border-top:1px solid var(--b);padding-top:6px"><b>ทั้งปี</b><b class="num">231,266.49</b></div>
+      <div class="small">กลุ่มเกษียณเหลือช่อง 179,525.51</div>
+      <div class="btn" style="display:block;text-align:center;padding:10px;margin-top:10px;font-size:13px">บันทึก</div>
+    </div>
+  </div><p class="cap-p">3c · แตะบรรทัด → แผ่นแก้ยอด (ช่องยอดใช้แป้นตัวเลข + ปุ่ม + − × ÷ เหมือนงบดุล)</p></div>
+</div>
+
+<h3 class="dir">4 · การ์ดเงินสำรองภาษี (คอลัมน์ขวาของ desktop)</h3>
+<div class="win"><div class="main" style="max-width:420px">
+  <div class="c"><b>เงินสำรองภาษี</b>
+    <div class="f" style="grid-template-columns:1fr 120px;margin-top:6px"><span>มีอยู่ตอนนี้ <span class="muted">ณ สิ้น <span class="inp">ก.ย. ▾</span></span></span><span class="inp num r">14,378.09</span></div>
+    <div class="kv muted"><span>งบ "Tax Reserve" 1,300.00 × 6 เดือน (ต.ค.–มี.ค.)<span class="link">งบ</span></span><span class="num">7,800.00</span></div>
+    <div class="kv" style="border-top:1px solid var(--b);padding-top:6px"><b>มีถึงวันยื่น (มี.ค. 2570)</b><b class="num">22,178.09</b></div>
+    <div class="kv"><span>ต้องจ่ายเพิ่ม</span><span class="num">21,011.47</span></div>
+    <div class="kv"><span class="ok">พอ เหลือ 1,166.62</span><span class="muted">ถ้าขาด: บอกยอดที่ต้องกันเพิ่มต่อเดือน</span></div>
+  </div>
+  <div class="small" style="margin-top:6px">Balance ของ Chin ไม่มีแถวเงินสำรองภาษีแยก (อยู่ในบัญชีย่อย) จึงให้กรอกยอดที่มีเอง · ยอดรายเดือนดึงจากแถวงบที่เลือก "ภาษี: เงินสำรองภาษี"</div>
+</div></div>
+
+<h3>หน้าจอชุดนี้โอเคไหม?</h3>
+<div class="options">
+  <div class="option" data-choice="ok" onclick="toggleSelect(this)"><div class="letter">✓</div><div class="content"><h3>โอเค ใช้ชุดนี้</h3><p>ไปตรวจ spec ต่อ</p></div></div>
+  <div class="option" data-choice="change" onclick="toggleSelect(this)"><div class="letter">✎</div><div class="content"><h3>มีที่อยากแก้</h3><p>พิมพ์บอกในแชทว่าจอไหน แก้อะไร</p></div></div>
+</div>
