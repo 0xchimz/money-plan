@@ -34,7 +34,7 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
   return (
     <Card>
       <CardContent className="flex flex-col gap-3 text-sm">
-        <Input aria-label="ชื่อฉากทัศน์" value={name} onChange={(e) => setName(e.target.value)} className="font-semibold max-lg:h-11 max-lg:text-base"
+        <Input aria-label="ชื่อแผน" value={name} onChange={(e) => setName(e.target.value)} className="font-semibold max-lg:h-11 max-lg:text-base"
           onBlur={async () => { const v = name.trim(); if (v && v !== scenario.name) { if (!(await onUpdate(scenario.id, { name: v }))) setName(scenario.name) } else setName(scenario.name) }} />
         {draft.map((c, i) => (
           <div key={i} className="flex items-center gap-2">
@@ -60,12 +60,12 @@ function ScenarioEditor({ scenario, view, capped, onUpdate, onDelete, onApply }:
           className="min-h-11 self-start text-sm font-medium text-muted-foreground hover:text-foreground disabled:opacity-50">+ เพิ่มรายการที่เปลี่ยน</button>
         <div className="flex flex-wrap gap-2 border-t pt-3">
           <Button type="button" variant="outline" size="sm" className="max-lg:h-11" disabled={hasCut || !draft.some((c) => c.thb > 0)}
-            onClick={() => { if (window.confirm(`เพิ่มรายการของ "${scenario.name}" เข้าตัวเลขจริง แล้วลบฉากทัศน์นี้?`)) onApply(scenario.id) }}>
-            ใช้ฉากทัศน์นี้เป็นตัวเลขจริง
+            onClick={() => { if (window.confirm(`เพิ่มรายการของ "${scenario.name}" เข้าตัวเลขจริง แล้วลบแผนนี้?`)) onApply(scenario.id) }}>
+            ใช้แผนนี้เป็นตัวเลขจริง
           </Button>
           <Button type="button" variant="ghost" size="sm" className="text-critical max-lg:h-11" onClick={() => onDelete(scenario.id)}><Trash /> ลบ</Button>
         </div>
-        {hasCut && <span className="text-xs text-muted-foreground">ฉากทัศน์ที่มีรายการลดยอด ใช้เป็นตัวเลขจริงไม่ได้ ให้ไปลดยอดที่รายการจริงเอง</span>}
+        {hasCut && <span className="text-xs text-muted-foreground">แผนที่มีรายการลดยอด ใช้เป็นตัวเลขจริงไม่ได้ ให้ไปลดยอดที่รายการจริงเอง</span>}
       </CardContent>
     </Card>
   )
@@ -120,14 +120,14 @@ export function ScenarioPanel({ tax, view, epoch, onAdd, onUpdate, onDelete, onA
             </tbody>
           </table>
         </div>
-        {!cols.length && <p className="px-4 py-3 text-sm text-muted-foreground">ยังไม่มีฉากทัศน์ — ลองเพิ่ม/ลดยอดโดยไม่แตะตัวเลขจริง เช่น "RMF เพิ่ม 100,000" เทียบกับ "บริจาค 2 เท่า 50,000"</p>}
+        {!cols.length && <p className="px-4 py-3 text-sm text-muted-foreground">ยังไม่มีแผน — ลองเพิ่ม/ลดยอดโดยไม่แตะตัวเลขจริง เช่น "RMF เพิ่ม 100,000" เทียบกับ "บริจาค 2 เท่า 50,000"</p>}
         <p className="px-4 pt-2 pb-1 text-xs text-muted-foreground">ผลสุทธิ = ภาษีที่ลดลง − เงินที่ออกจากกระเป๋าจริง (เงินที่ลงกองทุนยังเป็นของเรา)</p>
       </Card>
       <div className="flex min-w-0 flex-col gap-4 lg:col-span-5">
         {current && <ScenarioEditor key={`${current.s.id}:${epoch}`} scenario={current.s} view={view} capped={current.sum.capped} onUpdate={onUpdate} onDelete={onDelete} onApply={onApply} />}
         <Button type="button" variant="outline" className="self-start max-lg:h-11"
-          onClick={async () => { if (await onAdd({ name: `ฉากทัศน์ ${tax.scenarios.length + 1}`, changes: [] })) setSel(null) }}>
-          <Plus /> ฉากทัศน์ใหม่
+          onClick={async () => { if (await onAdd({ name: `แผน ${tax.scenarios.length + 1}`, changes: [] })) setSel(null) }}>
+          <Plus /> แผนใหม่
         </Button>
       </div>
     </div>

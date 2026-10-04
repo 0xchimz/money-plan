@@ -158,7 +158,7 @@ export function AdviceCard({ view, onTry }: { view: TaxView; onTry?: (a: Advice)
             <span>{a.label} <span className="tabular text-muted-foreground">เหลือช่อง {money(a.room)}</span></span>
             <span className="tabular font-semibold text-good">ลดภาษีประมาณ {money(a.saving)}</span>
             <span className="text-xs text-muted-foreground">{a.note}{a.perMonth != null && ` · เฉลี่ยเดือนละ ${money(a.perMonth)} ใน ${view.monthsLeft} เดือนที่เหลือ`}</span>
-            {onTry && <button type="button" onClick={() => onTry(a)} className="mt-1 self-start text-xs font-medium underline underline-offset-2 max-lg:min-h-11">ลองในฉากทัศน์</button>}
+            {onTry && <button type="button" onClick={() => onTry(a)} className="mt-1 self-start text-xs font-medium underline underline-offset-2 max-lg:min-h-11">ลองวางแผนภาษี</button>}
           </div>
         ))}
       </CardContent>

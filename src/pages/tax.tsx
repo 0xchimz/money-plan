@@ -78,7 +78,7 @@ export function TaxPage() {
   }
   const modeTabs = (
     <div className={cn('inline-flex rounded-2xl bg-muted p-1 text-sm', mobile && 'flex w-full')} role="tablist" aria-label="มุมมอง">
-      {([['real', 'ตัวเลขจริง'], ['scenario', `ฉากทัศน์${data.scenarios.length ? ` ${data.scenarios.length}` : ''}`]] as const).map(([id, label]) => (
+      {([['real', 'ตัวเลขจริง'], ['scenario', `วางแผนภาษี${data.scenarios.length ? ` ${data.scenarios.length}` : ''}`]] as const).map(([id, label]) => (
         <button key={id} type="button" role="tab" aria-selected={mode === id} onClick={() => setMode(id)}
           className={cn('rounded-xl px-4 py-1.5 transition-colors', mobile && 'min-h-11 flex-1 px-2', mode === id ? 'bg-card font-medium shadow-[var(--card-shadow)]' : 'text-muted-foreground hover:text-foreground')}>
           {label}

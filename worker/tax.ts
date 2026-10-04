@@ -165,12 +165,12 @@ export async function setReserve(db: Db, uid: number, year: number, p: Raw) {
 
 function cleanName(v: unknown) {
   const name = String(v ?? '').trim().slice(0, 60)
-  if (!name) throw bad('ต้องมีชื่อฉากทัศน์')
+  if (!name) throw bad('ต้องมีชื่อแผน')
   return name
 }
 function cleanChanges(rules: TaxRules, v: unknown): string {
   if (!Array.isArray(v)) throw bad('รายการที่เปลี่ยนไม่ถูกต้อง')
-  if (v.length > 20) throw bad('ฉากทัศน์หนึ่งเปลี่ยนได้ไม่เกิน 20 รายการ')
+  if (v.length > 20) throw bad('แผนหนึ่งเปลี่ยนได้ไม่เกิน 20 รายการ')
   return JSON.stringify(v.map((c: Raw) => {
     const k = typedKind(rules, c?.kind)
     if (typeof c.thb !== 'number' || !Number.isFinite(c.thb) || c.thb === 0) throw bad('ยอดที่เปลี่ยนต้องเป็นตัวเลขที่ไม่ใช่ 0')
@@ -192,7 +192,7 @@ const scenarioOf = (db: Db, uid: number, id: number) =>
 
 export async function updateScenario(db: Db, uid: number, id: number, p: Raw): Promise<number> {
   const row = await scenarioOf(db, uid, id)
-  if (!row) throw notFound('ไม่พบฉากทัศน์นี้')
+  if (!row) throw notFound('ไม่พบแผนนี้')
   const sets: string[] = [], vals: unknown[] = []
   if (p.name !== undefined) { sets.push('name = ?'); vals.push(cleanName(p.name)) }
   if (p.changes !== undefined) { sets.push('changes = ?'); vals.push(cleanChanges(TAX_RULES[row.year], p.changes)) }
@@ -203,7 +203,7 @@ export async function updateScenario(db: Db, uid: number, id: number, p: Raw): P
 
 export async function deleteScenario(db: Db, uid: number, id: number): Promise<number> {
   const row = await scenarioOf(db, uid, id)
-  if (!row) throw notFound('ไม่พบฉากทัศน์นี้')
+  if (!row) throw notFound('ไม่พบแผนนี้')
   await run(db, 'DELETE FROM tax_scenarios WHERE id = ? AND user_id = ?', id, uid)
   return row.year
 }
@@ -211,10 +211,10 @@ export async function deleteScenario(db: Db, uid: number, id: number): Promise<n
 /** Each change becomes a hand-typed line named after the scenario, then the scenario goes */
 export async function applyScenario(db: Db, uid: number, id: number): Promise<number> {
   const row = await scenarioOf(db, uid, id)
-  if (!row) throw notFound('ไม่พบฉากทัศน์นี้')
+  if (!row) throw notFound('ไม่พบแผนนี้')
   const rules = TAX_RULES[row.year]
   const changes = readChanges(rules, row.changes)
-  if (changes.some((c) => c.thb < 0)) throw conflict('ฉากทัศน์นี้มีรายการที่ลดยอด ให้ไปลดยอดที่รายการจริงเอง')
+  if (changes.some((c) => c.thb < 0)) throw conflict('แผนนี้มีรายการที่ลดยอด ให้ไปลดยอดที่รายการจริงเอง')
   await db.batch([
     ...changes.map((c, i) => stmt(db, `INSERT INTO tax_lines (user_id, year, kind, label, paid_thb, sort)
       VALUES (?1, ?2, ?3, ?4, ?5, (SELECT COALESCE(MAX(sort), 0) + 1 FROM tax_lines WHERE user_id = ?1 AND year = ?2) + ?6)`,

@@ -224,6 +224,10 @@
   html {
     @apply font-sans;
     }
+  /* anything clickable shows the hand pointer (Tailwind 4 leaves buttons on the default arrow) */
+  a[href], button:not(:disabled), [role='tab'], [role='button'], [role='menuitem'], summary, select, label[for] {
+    cursor: pointer;
+    }
 }
 @layer utilities {
   .tabular { font-variant-numeric: tabular-nums; }
