@@ -20,4 +20,13 @@ describe('scaffold', () => {
     await expect(sql("INSERT INTO balance_months (user_id, month, status, updated_at) VALUES (999999, '2026-01', 'draft', 'x')").run())
       .rejects.toThrow(/FOREIGN KEY/i)
   })
+
+  it('creates the tax tables and enforces their foreign keys', async () => {
+    const { results } = await sql("SELECT name FROM sqlite_master WHERE type = 'table'").all<{ name: string }>()
+    expect(results.map((r) => r.name)).toEqual(expect.arrayContaining(['tax_years', 'tax_lines', 'tax_scenarios']))
+    const cols = await sql("SELECT name FROM pragma_table_info('budget_lines')").all<{ name: string }>()
+    expect(cols.results.map((c) => c.name)).toContain('tax_kind')
+    // a tax line needs its tax year, and cannot point at a plan line that is not this user's
+    await expect(sql("INSERT INTO tax_lines (user_id, year, kind, label) VALUES (999999, 2026, 'ded_rmf', 'x')").run()).rejects.toThrow(/FOREIGN KEY/i)
+  })
 })

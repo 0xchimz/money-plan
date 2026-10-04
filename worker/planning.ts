@@ -1,6 +1,8 @@
 // Planning page: the monthly plan (income / saving & investing / expenses) in three fixed scenarios per user
+import { bangkokMonth } from '../shared/month'
+import { kindOf, rulesFor } from '../shared/tax-rules'
 import { BUDGET_TYPES, type BudgetLineInput, type BudgetLineRow, type BudgetType, type MonthStatus, type Planning, type ScenarioId } from '../shared/types'
-import { all, one, run, type Db } from './db'
+import { all, one, run, stmt, type Db } from './db'
 import { bad, conflict, notFound } from './http'
 
 const SCENARIO_IDS: ScenarioId[] = ['main', 'proj', 'em']
@@ -21,7 +23,7 @@ export function latestEf(db: Db, uid: number) {
 export async function getPlanning(db: Db, uid: number): Promise<Planning> {
   const [scenarios, lines, ef] = await Promise.all([
     all<{ id: ScenarioId; name: string; note: string | null }>(db, 'SELECT id, name, note FROM budget_scenarios WHERE user_id = ? ORDER BY sort, id', uid),
-    all<BudgetLineRow>(db, `SELECT id, scenario, type, category, item, thb, expr, account FROM budget_lines WHERE user_id = ?
+    all<BudgetLineRow>(db, `SELECT id, scenario, type, category, item, thb, expr, account, tax_kind AS taxKind FROM budget_lines WHERE user_id = ?
       ORDER BY CASE type WHEN 'Income' THEN 0 WHEN 'Saving' THEN 1 ELSE 2 END, sort, id`, uid),
     latestEf(db, uid),
   ])
@@ -49,7 +51,36 @@ function clean(p: RawLine): Partial<BudgetLineInput> {
   }
   if (p.expr !== undefined) out.expr = p.expr ? String(p.expr) : null
   if (p.account !== undefined) out.account = typeof p.account === 'string' && p.account.trim() ? p.account.trim() : null
+  if (p.taxKind !== undefined) {
+    if (p.taxKind != null && typeof p.taxKind !== 'string') throw bad('ชนิดภาษีไม่ถูกต้อง')
+    out.taxKind = p.taxKind || null
+  }
   return out
+}
+
+const COLUMN: Record<keyof BudgetLineInput, string> = { type: 'type', category: 'category', item: 'item', thb: 'thb', expr: 'expr', account: 'account', taxKind: 'tax_kind' }
+
+/** A tax kind fits a plan line when the line is in ปัจจุบัน and the year's rules offer that kind to lines of its type */
+function checkTaxKind(scenario: string, type: BudgetType, taxKind: string | null | undefined) {
+  if (taxKind == null) return
+  if (scenario !== 'main') throw bad('ป้ายภาษีใช้ได้เฉพาะชุด ปัจจุบัน')
+  const k = kindOf(rulesFor(Number(bangkokMonth().slice(0, 4))), taxKind)
+  if (!k || k.auto != null || !k.budgetTypes.includes(type)) throw bad('ชนิดภาษีนี้ใช้กับรายการประเภทนี้ไม่ได้')
+}
+
+/**
+ * Before a plan line is deleted or loses its tax tag: tax lines linked to it that hold money become hand-typed lines
+ * (paid so far + one-off, no more monthly projection); empty ones go. Run these statements in the same batch as the change.
+ */
+export function detachTaxLines(db: Db, uid: number, lineId: number) {
+  return [
+    stmt(db, `UPDATE tax_lines SET
+        kind = COALESCE((SELECT tax_kind FROM budget_lines WHERE id = ?1 AND user_id = ?2), kind),
+        label = COALESCE((SELECT item FROM budget_lines WHERE id = ?1 AND user_id = ?2), label),
+        paid_thb = ROUND(paid_thb + lump_thb, 2), paid_expr = NULL, lump_thb = 0, lump_expr = NULL, as_of = NULL, budget_line_id = NULL
+      WHERE user_id = ?2 AND budget_line_id = ?1 AND paid_thb + lump_thb > 0`, lineId, uid),
+    stmt(db, 'DELETE FROM tax_lines WHERE user_id = ?2 AND budget_line_id = ?1', lineId, uid),
+  ]
 }
 
 export async function addLine(db: Db, uid: number, scenario: string, p: RawLine) {
@@ -58,23 +89,31 @@ export async function addLine(db: Db, uid: number, scenario: string, p: RawLine)
   }
   const v = clean(p)
   if (!v.type || !v.category || !v.item) throw bad('ต้องมีประเภท หมวด และชื่อรายการ')
+  checkTaxKind(scenario, v.type, v.taxKind)
   const sort = (await one<{ s: number | null }>(db, 'SELECT MAX(sort) AS s FROM budget_lines WHERE user_id = ? AND scenario = ?', uid, scenario))?.s ?? 0
-  await run(db, 'INSERT INTO budget_lines (user_id, scenario, type, category, item, thb, expr, account, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    uid, scenario, v.type, v.category, v.item, v.thb ?? 0, v.expr ?? null, v.account ?? null, sort + 1)
+  await run(db, 'INSERT INTO budget_lines (user_id, scenario, type, category, item, thb, expr, account, tax_kind, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    uid, scenario, v.type, v.category, v.item, v.thb ?? 0, v.expr ?? null, v.account ?? null, v.taxKind ?? null, sort + 1)
 }
 
 export async function updateLine(db: Db, uid: number, id: number, p: RawLine) {
   const v = clean(p)
   const keys = Object.keys(v) as (keyof BudgetLineInput)[]
   if (!keys.length) throw bad('ไม่มีอะไรให้แก้')
-  const r = await run(db, `UPDATE budget_lines SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ? AND user_id = ?`,
-    ...keys.map((k) => v[k] ?? null), id, uid)
-  if (!r.meta.changes) throw notFound('ไม่พบรายการนี้')
+  const cur = await one<{ scenario: string; type: BudgetType; taxKind: string | null }>(db, 'SELECT scenario, type, tax_kind AS taxKind FROM budget_lines WHERE id = ? AND user_id = ?', id, uid)
+  if (!cur) throw notFound('ไม่พบรายการนี้')
+  const nextKind = v.taxKind !== undefined ? v.taxKind : cur.taxKind
+  if (v.taxKind !== undefined || v.type !== undefined) checkTaxKind(cur.scenario, v.type ?? cur.type, nextKind)
+  // the tag goes away (or becomes the reserve, which has no tax line): keep what was already paid as a hand-typed line
+  const detach = cur.taxKind != null && nextKind !== cur.taxKind && (nextKind == null || nextKind === 'reserve')
+  await db.batch([
+    ...(detach ? detachTaxLines(db, uid, id) : []),
+    stmt(db, `UPDATE budget_lines SET ${keys.map((k) => `${COLUMN[k]} = ?`).join(', ')} WHERE id = ? AND user_id = ?`, ...keys.map((k) => v[k] ?? null), id, uid),
+  ])
 }
 
 export async function deleteLine(db: Db, uid: number, id: number) {
-  const r = await run(db, 'DELETE FROM budget_lines WHERE id = ? AND user_id = ?', id, uid)
-  if (!r.meta.changes) throw notFound('ไม่พบรายการนี้')
+  const res = await db.batch([...detachTaxLines(db, uid, id), stmt(db, 'DELETE FROM budget_lines WHERE id = ? AND user_id = ?', id, uid)])
+  if (!res.at(-1)!.meta.changes) throw notFound('ไม่พบรายการนี้')
 }
 
 /** Fill an empty Projection with every line of ปัจจุบัน, or an empty ตกงาน with its expenses only */

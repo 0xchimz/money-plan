@@ -96,4 +96,78 @@ describe('planning', () => {
       uid, ef!.id, uid, ef!.id, uid, cash!.id).run()
     expect((await get(cookie)).ef).toEqual({ month: '2026-08', status: 'draft', thb: 50000 })
   })
+
+  const patchLine = (cookie: string, id: number, json: Record<string, unknown>) => call(`/api/planning/lines/${id}`, { method: 'PATCH', cookie, json })
+
+  it('tags a main line with a tax kind and clears it again', async () => {
+    const { cookie } = await login()
+    let p = await ok<Planning>(add(cookie, 'main', line({ type: 'Saving', category: 'Investment', item: 'RMF', thb: 26650 })))
+    const l = main(p).lines[0]
+    expect(l.taxKind).toBeNull()
+    p = await ok<Planning>(patchLine(cookie, l.id, { taxKind: 'ded_rmf' }))
+    expect(main(p).lines[0].taxKind).toBe('ded_rmf')
+    p = await ok<Planning>(patchLine(cookie, l.id, { taxKind: null }))
+    expect(main(p).lines[0].taxKind).toBeNull()
+    // a new line can carry its tag (used by "undo delete")
+    p = await ok<Planning>(add(cookie, 'main', line({ type: 'Income', category: 'Salary', item: 'เงินเดือน', thb: 1, taxKind: 'inc_wage' })))
+    expect(main(p).lines.find((x) => x.item === 'เงินเดือน')?.taxKind).toBe('inc_wage')
+  })
+
+  it.each([
+    ['a deduction on an income line', 'Income', 'ded_rmf'],
+    ['an income kind on a saving line', 'Saving', 'inc_wage'],
+    ['a kind nobody types (personal allowance)', 'Saving', 'ded_self'],
+    ['an unknown kind', 'Saving', 'nope'],
+    ['a non-string kind', 'Saving', 5],
+  ])('rejects %s', async (_, type, taxKind) => {
+    const { cookie } = await login()
+    const p = await ok<Planning>(add(cookie, 'main', line({ type, category: 'X', item: 'x' })))
+    expect((await patchLine(cookie, main(p).lines[0].id, { taxKind })).status).toBe(400)
+  })
+
+  it('allows tax kinds on the main scenario only and never copies them', async () => {
+    const { cookie } = await login()
+    await add(cookie, 'main', line({ type: 'Saving', category: 'Investment', item: 'RMF', taxKind: 'ded_rmf' }))
+    const p = await ok<Planning>(call('/api/planning/proj/copy', { cookie, json: { from: 'main' } }))
+    const proj = p.scenarios.find((s) => s.id === 'proj')!.lines[0]
+    expect(proj.taxKind).toBeNull()
+    expect((await patchLine(cookie, proj.id, { taxKind: 'ded_rmf' })).status).toBe(400)
+    expect((await add(cookie, 'em', line({ taxKind: 'ded_life' }))).status).toBe(400)
+  })
+
+  describe('a plan line that already has tax amounts', () => {
+    const setup = async (paid: number, lump: number) => {
+      const { email, cookie } = await login()
+      const uid = await uidOf(email)
+      const p = await ok<Planning>(add(cookie, 'main', line({ type: 'Saving', category: 'Investment', item: 'RMF', thb: 26650, taxKind: 'ded_rmf' })))
+      const id = main(p).lines[0].id
+      await sql('INSERT INTO tax_years (user_id, year) VALUES (?, 2026)', uid).run()
+      await sql("INSERT INTO tax_lines (user_id, year, kind, label, budget_line_id, paid_thb, paid_expr, as_of, lump_thb) VALUES (?, 2026, 'ded_rmf', 'RMF', ?, ?, '1+1', '2026-09', ?)", uid, id, paid, lump).run()
+      const rows = () => sql('SELECT kind, label, budget_line_id AS b, paid_thb AS paid, paid_expr AS expr, as_of AS asOf, lump_thb AS lump FROM tax_lines WHERE user_id = ?', uid).all()
+      return { cookie, id, rows }
+    }
+
+    it('keeps what was paid when the plan line is deleted', async () => {
+      const { cookie, id, rows } = await setup(90000, 61316.49)
+      await ok(call(`/api/planning/lines/${id}`, { method: 'DELETE', cookie, json: {} }))
+      expect((await rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 151316.49, expr: null, asOf: null, lump: 0 }])
+    })
+
+    it('keeps what was paid when the tag is removed, and drops an empty tax line', async () => {
+      const a = await setup(90000, 0)
+      await ok(patchLine(a.cookie, a.id, { taxKind: null }))
+      expect((await a.rows()).results).toEqual([{ kind: 'ded_rmf', label: 'RMF', b: null, paid: 90000, expr: null, asOf: null, lump: 0 }])
+      const b = await setup(0, 0)
+      await ok(patchLine(b.cookie, b.id, { taxKind: null }))
+      expect((await b.rows()).results).toEqual([])
+    })
+
+    it('keeps the link when the tag changes to another kind, and detaches when it becomes the tax reserve', async () => {
+      const a = await setup(90000, 0)
+      await ok(patchLine(a.cookie, a.id, { taxKind: 'ded_esg' }))
+      expect((await a.rows()).results[0]).toMatchObject({ b: a.id, paid: 90000 })
+      await ok(patchLine(a.cookie, a.id, { taxKind: 'reserve' }))
+      expect((await a.rows()).results[0]).toMatchObject({ kind: 'ded_esg', b: null, paid: 90000 })
+    })
+  })
 })

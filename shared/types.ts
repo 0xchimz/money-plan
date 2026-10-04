@@ -20,13 +20,38 @@ export interface BudgetLineRow {
   thb: number
   expr: string | null
   account: string | null
+  taxKind: string | null                                     // main scenario only: a key of shared/tax-rules.ts
 }
-export type BudgetLineInput = Pick<BudgetLineRow, 'type' | 'category' | 'item' | 'thb' | 'expr' | 'account'>
+export type BudgetLineInput = Pick<BudgetLineRow, 'type' | 'category' | 'item' | 'thb' | 'expr' | 'account'> & { taxKind?: string | null }
 export interface Scenario { id: ScenarioId; name: string; note: string | null; lines: BudgetLineRow[] }
 export interface Planning {
   scenarios: Scenario[]
   /** Emergency Funds total on the latest balance month (draft included); null before any month exists */
   ef: { month: string; status: MonthStatus; thb: number } | null
+}
+
+// ---- Tax (one tax year; the browser computes everything from these inputs with shared/tax.ts) ----
+export interface TaxLine {
+  id: number | null                                          // null = a tagged plan line nothing was typed for yet
+  kind: string
+  label: string
+  budget: { lineId: number; thb: number } | null             // linked plan line and its monthly amount; null = typed by hand
+  paid: number                                               // by hand: the whole year · linked: paid so far
+  paidExpr: string | null
+  asOf: string | null                                        // YYYY-MM `paid` is as of (linked lines)
+  lump: number                                               // one-off still to come this year (linked lines)
+  lumpExpr: string | null
+}
+export interface TaxChange { kind: string; thb: number }     // thb may be negative
+export interface TaxScenario { id: number; name: string; changes: TaxChange[] }
+export type TaxLinkedInput = Pick<TaxLine, 'paid' | 'paidExpr' | 'asOf' | 'lump' | 'lumpExpr'>
+export interface Tax {
+  year: number                                               // CE
+  years: number[]                                            // years that have rules
+  lines: TaxLine[]
+  reserve: { thb: number; expr: string | null; asOf: string | null; monthly: number }   // monthly = plan lines tagged as tax reserve
+  scenarios: TaxScenario[]
+  today: string                                              // YYYY-MM in Bangkok
 }
 
 // ---- Balance (month-end balance sheet) ----
